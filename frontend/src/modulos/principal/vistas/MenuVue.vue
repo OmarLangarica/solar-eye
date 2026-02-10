@@ -26,5 +26,8 @@
 </script>
 
 <style scoped>
-
+.navbar {
+  position: relative;
+  z-index: 2000;
+}
 </style>
