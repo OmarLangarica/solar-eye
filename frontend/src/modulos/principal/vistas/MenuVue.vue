@@ -1,24 +1,12 @@
 <template>
-    <nav class="navbar navbar-expand-lg bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand text-white" href="#">Solar Eye</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div class="navbar-nav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item margin">
-                        <RouterLink class="nav-link item text-muted" to="/mapa">Mapa</RouterLink>
-                    </li>
-                    <li class="nav-item margin">
-                        <RouterLink class="nav-link item text-muted" to="/reportes">Reportes</RouterLink>
-                    </li>
-                </ul>
-            </div>
-            </div>
-        </div>
-</nav>
+  <header class="navbar">
+    <div class="logo"><span>☀️</span> Solar Eye</div>
+    <nav class="menu">
+      <a href="#">Inicio</a>
+      <RouterLink to="/mapa" class="active">Calculadora</RouterLink>
+      <a href="#">Cómo Funciona</a>
+    </nav>
+  </header>
 </template>
 
 <script setup lang="ts">
@@ -26,8 +14,35 @@
 </script>
 
 <style scoped>
+/* Navbar */
 .navbar {
+  background: white;
+  padding: 1rem 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
   position: relative;
   z-index: 2000;
+}
+.logo { 
+  font-weight: bold; 
+  font-size: 1.25rem; 
+  color: #f97316; 
+}
+.menu { 
+  display: flex; 
+  gap: 2rem; 
+}
+.menu a { 
+  text-decoration: none; 
+  color: #64748b; 
+  font-size: 0.9rem; 
+  font-weight: 500; 
+}
+.menu a.active { 
+  color: #f97316; 
+  border-bottom: 2px solid #f97316; 
+  padding-bottom: 4px; 
 }
 </style>
