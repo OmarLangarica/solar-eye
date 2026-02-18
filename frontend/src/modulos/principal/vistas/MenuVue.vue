@@ -1,16 +1,16 @@
 <template>
   <header class="navbar">
-    <div class="logo"><span>☀️</span> Solar Eye</div>
+    <div class="logo">Solar Eye</div>
     <nav class="menu">
-      <a href="#">Inicio</a>
-      <RouterLink to="/mapa" class="active">Calculadora</RouterLink>
-      <a href="#">Cómo Funciona</a>
+      <RouterLink to="/">Inicio</RouterLink>
+      <RouterLink to="/clientes">Gestión de Clientes</RouterLink>
+      <RouterLink to="/simulacion">Nueva Simulación</RouterLink>
     </nav>
   </header>
 </template>
 
 <script setup lang="ts">
-
+import { RouterLink } from 'vue-router';
 </script>
 
 <style scoped>
@@ -38,9 +38,14 @@
   text-decoration: none; 
   color: #64748b; 
   font-size: 0.9rem; 
-  font-weight: 500; 
+  font-weight: 500;
+  transition: all 0.3s;
 }
-.menu a.active { 
+.menu a:hover {
+  color: #f97316;
+}
+.menu a.active,
+.menu a.router-link-active { 
   color: #f97316; 
   border-bottom: 2px solid #f97316; 
   padding-bottom: 4px; 
