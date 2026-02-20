@@ -34,15 +34,33 @@
           <div class="form-grid">
             <div class="form-group">
               <label>Dirección Completa *</label>
-              <input v-model="formData.ubicacion.direccion" type="text" placeholder="Calle, número, colonia">
+              <input 
+                v-model="formData.ubicacion.direccion" 
+                type="text" 
+                :class="{ 'input-error': errors.direccion }"
+                placeholder="Calle, número, colonia"
+              >
+              <span v-if="errors.direccion" class="error-text">{{ errors.direccion }}</span>
             </div>
             <div class="form-group">
               <label>Ciudad *</label>
-              <input v-model="formData.ubicacion.ciudad" type="text" placeholder="Ciudad">
+              <input
+                v-model="formData.ubicacion.ciudad"
+                type="text"
+                :class="{ 'input-error': errors.ciudad }"
+                placeholder="Ciudad"
+              >
+              <span v-if="errors.ciudad" class="error-text">{{ errors.ciudad }}</span>
             </div>
             <div class="form-group">
               <label>Estado *</label>
-              <input v-model="formData.ubicacion.estado" type="text" placeholder="Estado">
+              <input
+                v-model="formData.ubicacion.estado"
+                type="text"
+                :class="{ 'input-error': errors.estado }"
+                placeholder="Estado"
+              >
+              <span v-if="errors.estado" class="error-text">{{ errors.estado }}</span>
             </div>
           </div>
 
@@ -57,7 +75,7 @@
             <small v-if="mensajeBusqueda">{{ mensajeBusqueda }}</small>
           </div>
 
-          <div class="map-container">
+          <div class="map-container" :class="{ 'map-error': errors.mapa }">
             <div id="map" :class="{ 'cursor-crosshair': drawing }"></div>
             <div class="map-controls">
               <button @click="startDrawing" :class="['btn-map', { 'btn-active': drawing }]">
@@ -74,6 +92,7 @@
               </div>
             </div>
           </div>
+          <span v-if="errors.mapa" class="error-text">{{ errors.mapa }}</span>
         </div>
 
         <div class="form-section">
@@ -86,15 +105,24 @@
             </div>
             <div class="form-group">
               <label>Tipo de Techo *</label>
-              <select v-model="formData.techo.tipo">
+              <select v-model="formData.techo.tipo" :class="{ 'input-error': errors.techoTipo }">
                 <option value="">Seleccione...</option>
                 <option value="plano">Plano</option>
                 <option value="inclinado">Inclinado</option>
               </select>
+              <span v-if="errors.techoTipo" class="error-text">{{ errors.techoTipo }}</span>
             </div>
             <div class="form-group">
               <label>Orientación (Azimut °) *</label>
-              <input v-model.number="formData.techo.orientacion" type="number" min="0" max="360" placeholder="0-360 (0=Norte, 180=Sur)">
+              <input
+                v-model.number="formData.techo.orientacion"
+                type="number"
+                min="0"
+                max="360"
+                :class="{ 'input-error': errors.orientacion }"
+                placeholder="0-360 (0=Norte, 180=Sur)"
+              >
+              <span v-if="errors.orientacion" class="error-text">{{ errors.orientacion }}</span>
             </div>
           </div>
         </div>
@@ -108,24 +136,43 @@
           <div class="form-grid">
             <div class="form-group">
               <label>Nombre del Cliente *</label>
-              <input v-model="formData.cliente.nombre" type="text" placeholder="Nombre completo">
+              <input
+                v-model="formData.cliente.nombre"
+                type="text"
+                :class="{ 'input-error': errors.nombre }"
+                placeholder="Nombre completo"
+              >
+              <span v-if="errors.nombre" class="error-text">{{ errors.nombre }}</span>
             </div>
             <div class="form-group">
               <label>Email *</label>
-              <input v-model="formData.cliente.email" type="email" placeholder="correo@ejemplo.com">
+              <input
+                v-model="formData.cliente.email"
+                type="email"
+                :class="{ 'input-error': errors.email }"
+                placeholder="correo@ejemplo.com"
+              >
+              <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
             </div>
             <div class="form-group">
               <label>Teléfono *</label>
-              <input v-model="formData.cliente.telefono" type="tel" placeholder="+52 555 123 4567">
+              <input
+                v-model="formData.cliente.telefono"
+                type="tel"
+                :class="{ 'input-error': errors.telefono }"
+                placeholder="+52 555 123 4567"
+              >
+              <span v-if="errors.telefono" class="error-text">{{ errors.telefono }}</span>
             </div>
             <div class="form-group">
               <label>Tipo de Usuario *</label>
-              <select v-model="formData.cliente.tipoUsuario">
+              <select v-model="formData.cliente.tipoUsuario" :class="{ 'input-error': errors.tipoUsuario }">
                 <option value="">Seleccione...</option>
                 <option value="residencial">Residencial</option>
                 <option value="comercial">Comercial</option>
                 <option value="industrial">Industrial</option>
               </select>
+              <span v-if="errors.tipoUsuario" class="error-text">{{ errors.tipoUsuario }}</span>
             </div>
           </div>
         </div>
@@ -140,7 +187,13 @@
           <div class="form-grid">
             <div class="form-group">
               <label>Consumo Promedio Mensual (kWh) *</label>
-              <input v-model.number="formData.consumo.mensual" type="number" placeholder="0">
+              <input
+                v-model.number="formData.consumo.mensual"
+                type="number"
+                :class="{ 'input-error': errors.consumo }"
+                placeholder="0"
+              >
+              <span v-if="errors.consumo" class="error-text">{{ errors.consumo }}</span>
             </div>
             <div class="form-group">
               <label>Consumo Anual (kWh)</label>
@@ -148,7 +201,7 @@
             </div>
             <div class="form-group">
               <label>Tarifa Eléctrica Actual *</label>
-              <select v-model="formData.consumo.tarifa">
+              <select v-model="formData.consumo.tarifa" :class="{ 'input-error': errors.tarifa }">
                 <option value="">Seleccione...</option>
                 <option value="dac">DAC - Alto Consumo</option>
                 <option value="1">Residencial Tarifa 1</option>
@@ -157,10 +210,18 @@
                 <option value="1c">Residencial Tarifa 1C</option>
                 <option value="gdmto">GDMTO - Comercial</option>
               </select>
+              <span v-if="errors.tarifa" class="error-text">{{ errors.tarifa }}</span>
             </div>
             <div class="form-group">
               <label>Costo Promedio kWh (MXN) *</label>
-              <input v-model.number="formData.consumo.costoKwh" type="number" step="0.01" placeholder="0.00">
+              <input
+                v-model.number="formData.consumo.costoKwh"
+                type="number"
+                step="0.01"
+                :class="{ 'input-error': errors.costo }"
+                placeholder="0.00"
+              >
+              <span v-if="errors.costo" class="error-text">{{ errors.costo }}</span>
             </div>
             <div class="form-group">
               <label>Gasto Mensual Promedio (MXN)</label>
@@ -183,20 +244,34 @@
           <div class="form-grid">
             <div class="form-group">
               <label>Potencia del Sistema (kW) *</label>
-              <input v-model.number="formData.sistema.potencia" type="number" step="0.1" placeholder="0.0">
+              <input
+                v-model.number="formData.sistema.potencia"
+                type="number"
+                step="0.1"
+                :class="{ 'input-error': errors.potencia }"
+                placeholder="0.0"
+              >
+              <span v-if="errors.potencia" class="error-text">{{ errors.potencia }}</span>
               <small>Sugerencia: {{ potenciaSugerida }} kW basado en consumo</small>
             </div>
             <div class="form-group">
               <label>Tipo de Panel Solar *</label>
-              <select v-model="formData.sistema.tipoPaneles">
+              <select v-model="formData.sistema.tipoPaneles" :class="{ 'input-error': errors.tipoPaneles }">
                 <option value="">Seleccione...</option>
                 <option value="monocristalino">Monocristalino</option>
                 <option value="policristalino">Policristalino</option>
               </select>
+              <span v-if="errors.tipoPaneles" class="error-text">{{ errors.tipoPaneles }}</span>
             </div>
             <div class="form-group">
               <label>Potencia por Panel (W) *</label>
-              <input v-model.number="formData.sistema.potenciaPorPanel" type="number" placeholder="400-550W">
+              <input
+                v-model.number="formData.sistema.potenciaPorPanel"
+                type="number"
+                :class="{ 'input-error': errors.potenciaPorPanel }"
+                placeholder="400-550W"
+              >
+              <span v-if="errors.potenciaPorPanel" class="error-text">{{ errors.potenciaPorPanel }}</span>
             </div>
             <div class="form-group">
               <label>Número de Paneles</label>
@@ -232,7 +307,13 @@
           <div class="form-grid">
             <div class="form-group">
               <label>Costo Total del Sistema (MXN) *</label>
-              <input v-model.number="formData.financiero.costoTotal" type="number" placeholder="0">
+              <input
+                v-model.number="formData.financiero.costoTotal"
+                type="number"
+                :class="{ 'input-error': errors.costoTotal }"
+                placeholder="0"
+              >
+              <span v-if="errors.costoTotal" class="error-text">{{ errors.costoTotal }}</span>
             </div>
             <div class="form-group">
               <label>Costo por Watt Instalado (MXN)</label>
@@ -429,6 +510,7 @@ const onMapClick = (e: L.LeafletMouseEvent) => {
     
     // Mostrar el área en el polígono
     const center = polygon.getBounds().getCenter();
+    
     L.marker(center, {
       icon: L.divIcon({
         html: `<div style="background: #f97316; padding: 6px 12px; border-radius: 8px; font-weight: bold; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap;">${area.toFixed(2)} m²</div>`,
@@ -437,6 +519,43 @@ const onMapClick = (e: L.LeafletMouseEvent) => {
         iconAnchor: [50, 20]
       })
     }).addTo(drawnItems);
+
+    // Actualizar ubicacion basada en el centro del poligono dibujado
+    formData.value.ubicacion.latitud = center.lat;
+    formData.value.ubicacion.longitud = center.lng;
+    reverseGeocodeUbicacion(center.lat, center.lng);
+  }
+};
+
+const reverseGeocodeUbicacion = async (lat: number, lon: number) => {
+  mensajeBusqueda.value = 'Actualizando direccion desde el mapa...';
+
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`
+    );
+    const data = await response.json();
+
+    if (data && data.address) {
+      const address = data.address;
+
+      formData.value.ubicacion.direccion =
+        address.road || address.neighbourhood || address.suburb || '';
+      formData.value.ubicacion.ciudad =
+        address.city || address.town || address.village || address.municipality || '';
+      formData.value.ubicacion.estado =
+        address.state || '';
+
+      mensajeBusqueda.value = 'Direccion actualizada desde el mapa';
+      setTimeout(() => {
+        mensajeBusqueda.value = '';
+      }, 3000);
+    } else {
+      mensajeBusqueda.value = 'No se pudo obtener la direccion desde el mapa';
+    }
+  } catch (error) {
+    console.error('Error al hacer reverse geocoding:', error);
+    mensajeBusqueda.value = 'Error al obtener direccion desde el mapa';
   }
 };
 
@@ -656,11 +775,56 @@ const ahorroTotal25Anos = computed(() => {
   return total.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 });
 
+const errors = ref<Record<string, string>>({});
+
+// Función para validar cada paso
+const validateStep = (step: number): boolean => {
+  errors.value = {}; // Limpiar errores previos
+
+  if (step === 1) {
+    if (!formData.value.ubicacion.direccion) errors.value.direccion = 'La dirección es obligatoria';
+    if (!formData.value.ubicacion.ciudad) errors.value.ciudad = 'La ciudad es obligatoria';
+    if (!formData.value.ubicacion.estado) errors.value.estado = 'El estado es obligatorio';
+    if (!formData.value.techo.tipo) errors.value.techoTipo = 'Selecciona un tipo de techo';
+    if (formData.value.techo.orientacion === null || formData.value.techo.orientacion < 0 || formData.value.techo.orientacion > 360) {
+      errors.value.orientacion = 'Ingresa una orientacion valida (0-360)';
+    }
+    if (!areaCalculadaDesdeMapa.value) errors.value.mapa = 'Debes dibujar el área del techo en el mapa';
+  }
+
+  if (step === 2) {
+    if (!formData.value.cliente.nombre) errors.value.nombre = 'El nombre es obligatorio';
+    if (!formData.value.cliente.email || !/^\S+@\S+\.\S+$/.test(formData.value.cliente.email)) {
+      errors.value.email = 'Ingresa un correo electrónico válido';
+    }
+    if (!formData.value.cliente.telefono) errors.value.telefono = 'El teléfono es obligatorio';
+    if (!formData.value.cliente.tipoUsuario) errors.value.tipoUsuario = 'Selecciona el tipo de usuario';
+  }
+
+  if (step === 3) {
+    if (!formData.value.consumo.mensual || formData.value.consumo.mensual <= 0) {
+      errors.value.consumo = 'El consumo debe ser mayor a 0';
+    }
+    if (!formData.value.consumo.tarifa) errors.value.tarifa = 'Selecciona una tarifa';
+    if (!formData.value.consumo.costoKwh || formData.value.consumo.costoKwh <= 0) {
+      errors.value.costo = 'El costo por kWh es obligatorio';
+    }
+  }
+
+  if (step === 4) {
+    if (!formData.value.sistema.potencia) errors.value.potencia = 'Define la potencia del sistema';
+    if (!formData.value.sistema.tipoPaneles) errors.value.tipoPaneles = 'Selecciona el tipo de panel';
+    if (!formData.value.sistema.potenciaPorPanel) errors.value.potenciaPorPanel = 'Ingresa la potencia por panel';
+    if (!formData.value.financiero.costoTotal) errors.value.costoTotal = 'Ingresa el costo del proyecto';
+  }
+
+  return Object.keys(errors.value).length === 0;
+};
+
 // Funciones
 function nextStep() {
-  if (currentStep.value < 4) {
-    currentStep.value++;
-  }
+  if (!validateStep(currentStep.value)) return;
+  if (currentStep.value < 4) currentStep.value++;
 }
 
 function previousStep() {
@@ -769,6 +933,7 @@ function obtenerUbicacion() {
 }
 
 function guardarSimulacion() {
+  if (!validateStep(currentStep.value)) return;
   console.log('Guardando simulación:', formData.value);
   alert('Simulación guardada exitosamente!\n\nLos datos han sido procesados.');
 }
@@ -1199,5 +1364,30 @@ function guardarSimulacion() {
     right: 0.5rem;
     bottom: 0.5rem;
   }
+}
+
+/* Estilos para errores */
+.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.map-error {
+  border-color: #ef4444 !important;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+  animation: shake 0.4s linear;
+}
+
+/* Animación opcional para llamar la atención */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
 }
 </style>

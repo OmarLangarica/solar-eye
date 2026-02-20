@@ -203,6 +203,54 @@ function verDetalle(cliente: Cliente) {
 function editarCliente(cliente: Cliente) {
   console.log('Editar cliente:', cliente.nombre);
 }
+
+const errores = ref({
+  nombre: '',
+  email: '',
+  telefono: '',
+  inversion: '',
+  potencia: ''
+});
+
+// Función de validación
+const validarCliente = (datos: Cliente): boolean => {
+  let esValido = true;
+  
+  Object.keys(errores.value).forEach(key => (errores.value[key as keyof typeof errores.value] = ''));
+
+  // Validar Nombre
+  if (!datos.nombre || datos.nombre.length < 3) {
+    errores.value.nombre = 'El nombre debe tener al menos 3 caracteres.';
+    esValido = false;
+  }
+
+  // Validar Email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(datos.email)) {
+    errores.value.email = 'Por favor, ingresa un correo electrónico válido.';
+    esValido = false;
+  }
+
+  // Validar Teléfono (10 dígitos)
+  if (!/^\d{10}$/.test(datos.telefono.replace(/\s/g, ''))) {
+    errores.value.telefono = 'El teléfono debe contener 10 dígitos numéricos.';
+    esValido = false;
+  }
+
+  // Validar Inversión
+  if (datos.inversion <= 0) {
+    errores.value.inversion = 'La inversión debe ser un monto mayor a 0.';
+    esValido = false;
+  }
+
+  // Validar Potencia del Sistema
+  if (datos.sistema.potencia <= 0) {
+    errores.value.potencia = 'La potencia debe ser mayor a 0 kW.';
+    esValido = false;
+  }
+
+  return esValido;
+};
 </script>
 
 <style scoped>
@@ -659,5 +707,28 @@ function editarCliente(cliente: Cliente) {
 
 .btn-print:hover {
   background: #475569;
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+  display: block;
+}
+
+.error-message {
+  animation: shake 0.2s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
 }
 </style>
