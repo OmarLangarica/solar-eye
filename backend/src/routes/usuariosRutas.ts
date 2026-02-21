@@ -57,4 +57,15 @@ router.delete('/', async (req: Request, res: Response) => {
     }
 });
 
+// POST http://localhost:3001/api/usuarios/login
+router.post('/login', async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+        const usuario = await usuariosServices.encuentraUsuarioPorEmail(email);
+        res.status(200).send(usuario);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
 export default router;

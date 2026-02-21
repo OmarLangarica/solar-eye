@@ -1,4 +1,4 @@
-// ─── Zona climática automática ─────────────────────────────────
+//Zona climática automática
 const determinaZonaClimatica = (tempPromedio, irradiacion) => {
     if (irradiacion >= 6.5 && tempPromedio >= 28)
         return 'árida-caliente';
@@ -25,7 +25,7 @@ const consultaAltitud = async (latitud, longitud) => {
         return 0; // si falla no bloqueamos el flujo principal
     }
 };
-// ─── NASA POWER ────────────────────────────────────────────────
+//NASA POWER
 export const consultaNasaPower = async ({ latitud, longitud }) => {
     try {
         const params = new URLSearchParams({

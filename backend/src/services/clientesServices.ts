@@ -81,6 +81,7 @@ export const borrarCliente = async (id: number) => {
         );
         return results;
     } catch (err) {
+        console.error('Error MySQL borrar cliente:', err);
         return { error: 'No se pudo borrar el cliente' };
     }
 };

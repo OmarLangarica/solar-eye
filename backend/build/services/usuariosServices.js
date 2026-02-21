@@ -52,3 +52,12 @@ export const borrarUsuario = async (id) => {
         return { error: 'No se pudo borrar el usuario' };
     }
 };
+export const encuentraUsuarioPorEmail = async (email) => {
+    try {
+        const [results] = await conexion.query('SELECT id, nombre, apellido, email, password_hash, telefono, rol, activo FROM usuarios WHERE email = ? LIMIT 1', [email]);
+        return results;
+    }
+    catch (err) {
+        return { error: 'No se pudo encontrar el usuario' };
+    }
+};

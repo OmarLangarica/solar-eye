@@ -53,4 +53,15 @@ router.delete('/', async (req, res) => {
         res.status(500).json({ mensaje: 'No se pudo borrar el usuario' });
     }
 });
+// POST http://localhost:3001/api/usuarios/login
+router.post('/login', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const usuario = await usuariosServices.encuentraUsuarioPorEmail(email);
+        res.status(200).send(usuario);
+    }
+    catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
 export default router;
