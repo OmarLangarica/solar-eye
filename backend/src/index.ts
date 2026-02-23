@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const PUERTO = 3001;
+const PUERTO = 3000;
 
 app.use('/api/usuarios', usuariosRutas);
 app.use('/api/clientes', clientesRutas);
