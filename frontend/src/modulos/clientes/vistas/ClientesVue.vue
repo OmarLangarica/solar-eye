@@ -43,7 +43,7 @@
                         <td class="acciones">
                             <button class="btn-editar" @click="router.push(`/clientes/editar/${cliente.id}`)">Editar</button>
                             <button class="btn-eliminar" @click="confirmarEliminar(cliente)">Eliminar</button>
-                            <button class="btn-simulaciones" @click="router.push(`/simulaciones`)">Simulaciones</button>
+                            <button class="btn-simulaciones" @click="router.push({ path: `/simulaciones/${cliente.id}`, query: { nombre: `${cliente.nombre} ${cliente.apellido}` } })">Simulaciones</button>
                         </td>
                     </tr>
                 </tbody>
@@ -206,14 +206,14 @@ tr:hover td { background-color: #fafafa; }
 
 .btn-simulaciones {
     padding: 0.4rem 0.8rem;
-    background-color: #0bc6f5;
+    background-color: #06b6d4;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.85rem;
 }
-.btn-simulaciones:hover { background-color: #0bc6f5; }
+.btn-simulaciones:hover { background-color: #0891b2; }
 
 .btn-eliminar {
     padding: 0.4rem 0.8rem;

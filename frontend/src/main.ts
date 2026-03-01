@@ -3,6 +3,12 @@ import { createPinia } from 'pinia';
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
+import L from 'leaflet';
+import iconUrl from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow });
+L.Marker.prototype.options.icon = DefaultIcon;
 
 const app = createApp(App)
 
