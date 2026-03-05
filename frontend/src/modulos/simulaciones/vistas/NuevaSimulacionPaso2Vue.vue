@@ -157,6 +157,9 @@ import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
 import { useSimulaciones } from '../controladores/useSimulaciones';
 import type { DatosTecho, DatosGeograficos } from '../interfaces/simulaciones-interface';
+import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
+import 'leaflet-control-geocoder';
+
 
 const router = useRouter();
 const route = useRoute();
@@ -230,19 +233,40 @@ onMounted(() => {
     // Inicializa el mapa centrado en México
     mapa = L.map(mapaRef.value!, {
         center: [23.6345, -102.5528],
-        zoom: 5
+        zoom: 5,
     });
+
+    const buscador = (L.Control as any).geocoder({
+        defaultMarkGeocode: false, 
+        placeholder: 'Buscar dirección...',
+        errorMessage: 'No se encontró la ubicación.'
+    })
+    .on('markgeocode', function(e: any) {
+        const bbox = e.geocode.bbox;
+        const poly = L.polygon([
+            [bbox.getSouthEast().lat, bbox.getSouthEast().lng],
+            [bbox.getNorthEast().lat, bbox.getNorthEast().lng],
+            [bbox.getNorthWest().lat, bbox.getNorthWest().lng],
+            [bbox.getSouthWest().lat, bbox.getSouthWest().lng]
+        ]);
+        
+        // Ajustar el mapa a la ubicación encontrada con un zoom cercano
+        mapa?.fitBounds(poly.getBounds(), { maxZoom: 22 });
+    })
+    .addTo(mapa);
 
     // Capa de satélite
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles © Esri',
-        maxZoom: 20
+        maxNativeZoom: 18,
+        maxZoom: 22
     }).addTo(mapa);
 
     // Capa de etiquetas encima del satélite
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
         attribution: '',
-        maxZoom: 20
+        maxNativeZoom: 18,
+        maxZoom: 22
     }).addTo(mapa);
 
     // Capa editable para el dibujo
@@ -256,13 +280,17 @@ onMounted(() => {
             polygon: {
                 allowIntersection: false,
                 showArea: true,
-                shapeOptions: { color: '#FF7043', fillOpacity: 0.3 }
+                shapeOptions: {
+                    color: '#FF7043',
+                    fillOpacity: 0.3
+                },
+                maxPoints: 4 
             },
             polyline: false,
-            rectangle: false,
             circle: false,
             marker: false,
-            circlemarker: false
+            circlemarker: false,
+            rectangle: false
         }
     });
     mapa.addControl(controles);
@@ -534,4 +562,47 @@ const guardarYAvanzar = async () => {
     border-radius: 6px;
     font-size: 0.9rem;
 }
+
+:deep(.leaflet-control-geocoder) {
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+    border-radius: 8px !important;
+    width: 300px; /* Ancho fijo para que parezca buscador real */
+    background: white;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+:deep(.leaflet-control-geocoder-form) {
+    display: block !important;
+    width: 100%;
+}
+
+:deep(.leaflet-control-geocoder-form input) {
+    width: 100% !important;
+    height: 40px;
+    border: none !important;
+    padding: 0 12px 0 40px !important;
+    font-size: 0.95rem !important;
+    color: #333;
+    background-color: transparent;
+}
+
+:deep(.leaflet-control-geocoder-icon) {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background-color: transparent !important;
+    border: none !important;
+    opacity: 0.6;
+}
+
+:deep(.leaflet-control-geocoder-form input:focus) {
+    outline: none;
+    background-color: #fff;
+}
+
 </style>

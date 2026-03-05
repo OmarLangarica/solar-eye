@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
+import InicioVue from '../modulos/principal/vistas/InicioVue.vue';
 import LoginVue from '../modulos/auth/vistas/LoginVue.vue';
 import ClientesVue from '../modulos/clientes/vistas/ClientesVue.vue';
 import AgregarClienteVue from '../modulos/clientes/vistas/AgregarClienteVue.vue';
@@ -13,6 +14,12 @@ import ResultadosSimulacionVue from '@/modulos/simulaciones/vistas/ResultadosSim
 const router = createRouter({
     history: createWebHistory(),
     routes: [
+        {
+            path: '/',
+            name: 'inicio',
+            component: InicioVue,
+            meta: { publica: true }
+        },
         {
             path: '/login',
             name: 'login',
