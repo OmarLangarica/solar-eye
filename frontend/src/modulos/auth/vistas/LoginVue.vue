@@ -7,10 +7,10 @@
             </div>
 
             <div class="pestanas">
-                <button @click="modoActual = 'signin'" :class="{ activa: modoActual === 'signin' }" class="pestana">
+                <button @click="cambiarModo('signin')" :class="{ activa: modoActual === 'signin' }" class="pestana">
                     Iniciar Sesión
                 </button>
-                <button @click="modoActual = 'signup'" :class="{ activa: modoActual === 'signup' }" class="pestana">
+                <button @click="cambiarModo('signup')" :class="{ activa: modoActual === 'signup' }" class="pestana">
                     Registrarse
                 </button>
             </div>
@@ -121,7 +121,7 @@ import { useForm, useField } from 'vee-validate';
 import { loginSchema, registroSchema } from '../schemas/authSchema';
 import { useAuth } from '../controladores/useAuth';
 
-const { error, cargando, login, registrar } = useAuth();
+const { error, cargando, login, registrar, limpiarError } = useAuth();
 
 const modoActual = ref<'signin' | 'signup'>('signin');
 const exitoRegistro = ref(false);
@@ -134,6 +134,11 @@ const { value: passwordValue, errorMessage: passwordError } = useField<string>('
 const onSubmitLogin = handleLogin(async (values) => {
     await login({ email: values.email, password: values.password });
 });
+
+const cambiarModo = (nuevoModo: 'signin' | 'signup') => {
+    modoActual.value = nuevoModo;
+    limpiarError();
+};
 
 //Registro
 const { handleSubmit: handleRegistro, resetForm: resetRegistro } = useForm({ validationSchema: registroSchema });const { value: regNombre, errorMessage: regNombreError } = useField<string>('nombre');
