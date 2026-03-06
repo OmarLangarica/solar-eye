@@ -318,4 +318,38 @@ button[type="submit"]:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+/* Media Query para Tablets y Celulares (Pantallas menores a 768px) */
+@media (max-width: 768px) {
+    .login-card {
+        padding: 1.5rem;
+        max-width: 90%; /* Para que no pegue a los bordes del cel */
+    }
+
+    .fila-doble {
+        grid-template-columns: 1fr; /* Cambiamos de 2 columnas a 1 sola */
+        gap: 0.5rem;
+    }
+
+    .login-header h1 {
+        font-size: 1.4rem;
+    }
+}
+
+/* Media Query para celulares muy pequeños (Pantallas menores a 480px) */
+@media (max-width: 480px) {
+    .contenedor {
+        padding: 1rem;
+        align-items: flex-start; /* Para que el login no quede mocho si es muy largo */
+    }
+
+    .pestana {
+        font-size: 0.85rem; /* Letra un poco más chica para que quepa el texto */
+        padding: 8px 4px;
+    }
+    
+    button[type="submit"] {
+        font-size: 0.9rem;
+    }
+}
 </style>

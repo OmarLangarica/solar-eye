@@ -279,4 +279,100 @@ tr:hover td { background-color: #fafafa; }
 }
 .btn-confirmar-eliminar:hover { background-color: #dc2626; }
 .btn-confirmar-eliminar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+    .clientes-container { padding: 1rem; }
+    
+    .encabezado { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .acciones-header { width: 100%; justify-content: space-between; }
+    .btn-agregar, .btn-cerrar-sesion { flex: 1; padding: 0.5rem; text-align: center; }
+
+    /* --- TARJETAS FIJAS A PRUEBA DE FALLOS --- */
+    
+    .tabla-container {
+        box-shadow: none;
+        background: transparent;
+        overflow: visible !important; /* Dejamos que se vea absolutamente todo */
+    }
+
+    /* El box-sizing evita que el padding rompa el ancho de la pantalla */
+    table, tbody, tr, td {
+        display: block;
+        box-sizing: border-box; 
+    }
+
+    table {
+        width: 100% !important;
+        min-width: 0 !important; 
+    }
+    thead { display: none; }
+
+    tr {
+        display: grid;
+        grid-template-columns: 1fr 110px; 
+        grid-template-rows: repeat(5, auto);
+        gap: 5px;
+        background: white;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    td {
+        border: none;
+        padding: 0;
+        font-size: 0.9rem;
+        word-break: break-word; 
+    }
+
+    /* Coordenadas exactas para los datos (Columna 1) */
+    td:nth-child(1) { grid-column: 1; grid-row: 1; }
+    td:nth-child(2) { grid-column: 1; grid-row: 2; }
+    td:nth-child(3) { grid-column: 1; grid-row: 3; }
+    td:nth-child(4) { grid-column: 1; grid-row: 4; }
+    td:nth-child(5) { grid-column: 1; grid-row: 5; }
+
+    td:nth-child(1)::before { content: "Nombre: "; font-weight: 700; color: #666; }
+    td:nth-child(2)::before { content: "Email: "; font-weight: 700; color: #666; }
+    td:nth-child(3)::before { content: "Teléfono: "; font-weight: 700; color: #666; }
+    td:nth-child(4)::before { content: "Ciudad: "; font-weight: 700; color: #666; }
+    td:nth-child(5)::before { content: "Estado: "; font-weight: 700; color: #666; }
+
+    /* Coordenadas exactas para los botones (Columna 2) */
+    td.acciones {
+        grid-column: 2;
+        grid-row: 1 / 6; 
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.5rem;
+        border-left: 1px solid #eee;
+        padding-left: 10px;
+    }
+
+    .acciones button { 
+        width: 100%; 
+        font-size: 0.8rem; 
+        padding: 0.5rem 0; 
+        margin: 0;
+    }
+    
+    .centrado { display: none; } 
+}
+/* Diseño Responsivo para el Modal */
+@media (max-width: 480px) {
+    .modal-eliminar {
+        padding: 1.5rem;
+        width: 95%;
+    }
+
+    .modal-botones {
+        flex-direction: column; /* Apila los botones de confirmación */
+    }
+
+    .btn-cancelar, .btn-confirmar-eliminar {
+        width: 100%;
+    }
+}
 </style>

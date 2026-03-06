@@ -251,4 +251,43 @@ const onSubmit = handleSubmit(async (values) => {
 
 .btn-guardar:hover { background-color: #F4511E; }
 .btn-guardar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+    .contenedor {
+        padding: 1rem; /* Menos margen para ganar espacio */
+    }
+
+    .encabezado {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .btn-volver {
+        width: 100%;
+        text-align: center;
+    }
+
+    .card {
+        padding: 1.5rem;
+    }
+
+    /* Rompemos las filas para que todo sea una sola columna */
+    .fila-doble, .fila-triple {
+        grid-template-columns: 1fr; 
+        gap: 0.8rem;
+    }
+
+    /* Estilo para los botones de abajo */
+    .botones {
+        flex-direction: column-reverse; /* Guardar arriba, Cancelar abajo */
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-cancelar, .btn-guardar {
+        width: 100%;
+        padding: 0.8rem;
+    }
+}
 </style>

@@ -638,4 +638,86 @@ const descargarPDF = async () => {
         print-color-adjust: exact;
     }
 }
+
+@media (max-width: 780px) {
+
+.contenedor{
+    padding: 1rem;
+}
+
+/* Encabezado */
+.encabezado{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.encabezado h1{
+    font-size: 1.4rem;
+}
+
+/* Botones */
+.acciones-header{
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.acciones-header button{
+    flex: 1;
+    justify-content: center;
+}
+
+
+/* PASOS */
+.pasos{
+    overflow-x: auto;
+    padding: 1rem;
+    gap: .5rem;
+}
+
+.paso span{
+    font-size: .7rem;
+    text-align: center;
+}
+
+.paso-linea{
+    min-width: 30px;
+}
+
+
+/* TARJETAS RESUMEN */
+.tarjetas-resumen{
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* GRID RESULTADOS */
+.grid-resultados{
+    grid-template-columns: 1fr;
+}
+
+/* TARJETAS */
+.card{
+    padding: 1.2rem;
+}
+
+/* TABLAS */
+.fila-dato{
+    font-size: .82rem;
+}
+
+/* IMPACTO AMBIENTAL */
+.impacto-grid{
+    grid-template-columns: 1fr;
+}
+
+/* ICONOS TARJETAS */
+.tarjeta-icono{
+    font-size: 1.6rem;
+}
+
+.tarjeta-valor{
+    font-size: 1rem;
+}
+
+}
 </style>
