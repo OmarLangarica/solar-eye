@@ -7,13 +7,18 @@
                 <p>Cliente: <strong>{{ route.query.nombre }}</strong></p>
             </div>
             <div class="acciones-header">
+                <button class="btn-secundario" @click="imprimirReporte" v-if="resultados">
+                    <i class="bi bi-printer"></i> Imprimir
+                </button>
+                <button class="btn-primario" @click="descargarPDF" v-if="resultados">
+                    <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+                </button>
                 <button class="btn-volver" @click="router.push({ path: `/simulaciones/${route.query.cliente_id}`, query: { nombre: route.query.nombre } })">
                     ← Volver a simulaciones
                 </button>
             </div>
         </div>
 
-        <!-- Indicador de pasos -->
         <div class="pasos">
             <div class="paso completado">
                 <div class="paso-numero">✓</div>
@@ -41,9 +46,8 @@
             <span>Calculando simulación...</span>
         </div>
 
-        <div v-else-if="resultados">
+        <div v-else-if="resultados" id="reporte-area">
 
-            <!-- Tarjetas resumen -->
             <div class="tarjetas-resumen">
                 <div class="tarjeta tarjeta-produccion">
                     <div class="tarjeta-icono"><i class="bi bi-lightning-charge"></i></div>
@@ -77,10 +81,8 @@
 
             <div class="grid-resultados">
 
-                <!-- Columna izquierda -->
                 <div class="columna">
 
-                    <!-- Económico -->
                     <div class="card">
                         <h3><i class="bi bi-cash-coin"></i> Análisis económico</h3>
                         <div class="tabla-datos">
@@ -107,7 +109,6 @@
                         </div>
                     </div>
 
-                    <!-- Proyección tarifaria -->
                     <div class="card">
                         <h3><i class="bi bi-bar-chart"></i> Proyección tarifaria CFE</h3>
                         <p class="card-subtitulo">Con un incremento estimado del {{ resultados.tasa_incremento_tarifa_pct }}% anual:</p>
@@ -129,10 +130,8 @@
 
                 </div>
 
-                <!-- Columna derecha -->
                 <div class="columna">
 
-                    <!-- Energía -->
                     <div class="card">
                         <h3><i class="bi bi-lightning-charge"></i> Producción energética</h3>
                         <div class="tabla-datos">
@@ -154,7 +153,6 @@
                             </div>
                         </div>
 
-                        <!-- Barra de cobertura -->
                         <div class="barra-container">
                             <div class="barra-label">
                                 <span>Cobertura solar</span>
@@ -166,7 +164,6 @@
                         </div>
                     </div>
 
-                    <!-- Ambiental -->
                     <div class="card card-verde">
                         <h3><i class="bi bi-leaf"></i> Impacto ambiental</h3>
                         <div class="impacto-grid">
@@ -188,7 +185,6 @@
                         </div>
                     </div>
 
-                    <!-- Datos del sistema -->
                     <div class="card">
                         <h3><i class="bi bi-wrench"></i> Sistema propuesto</h3>
                         <div class="tabla-datos">
@@ -230,6 +226,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+// Importaciones nuevas para el PDF
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+
 import { useSimulaciones } from '../controladores/useSimulaciones';
 import type { ResultadosCalculo, DatosTecho, DatosGeograficos, ConsumoElectrico } from '../interfaces/simulaciones-interface';
 
@@ -253,16 +253,40 @@ const geo = ref<DatosGeograficos | null>(null);
 const consumo = ref<ConsumoElectrico | null>(null);
 
 onMounted(async () => {
-    const resultadosExistentes = await obtieneResultados(simulacion_id);
+    let resultadosExistentes = await obtieneResultados(simulacion_id);
 
+    // AQUÍ ESTÁ EL CAMBIO: Convertimos todo a números si ya existen en la base de datos
     if (resultadosExistentes && !resultadosExistentes.error) {
-        resultados.value = resultadosExistentes;
+        
+        // Por si tu backend manda un arreglo en vez de un objeto directo
+        const data = Array.isArray(resultadosExistentes) ? resultadosExistentes[0] : resultadosExistentes;
+
+        resultados.value = {
+            ...data,
+            produccion_anual_kwh: Number(data.produccion_anual_kwh || 0),
+            ahorro_mensual_mxn: Number(data.ahorro_mensual_mxn || 0),
+            porcentaje_cobertura: Number(data.porcentaje_cobertura || 0),
+            retorno_inversion_anios: Number(data.retorno_inversion_anios || 0),
+            costo_total_instalacion_mxn: Number(data.costo_total_instalacion_mxn || 0),
+            ahorro_anual_mxn: Number(data.ahorro_anual_mxn || 0),
+            ahorro_vida_util_mxn: Number(data.ahorro_vida_util_mxn || 0),
+            precio_kwh_proyectado_anio5: Number(data.precio_kwh_proyectado_anio5 || 0),
+            precio_kwh_proyectado_anio10: Number(data.precio_kwh_proyectado_anio10 || 0),
+            produccion_mensual_promedio_kwh: Number(data.produccion_mensual_promedio_kwh || 0),
+            excedente_kwh: Number(data.excedente_kwh || 0),
+            co2_evitado_anual_kg: Number(data.co2_evitado_anual_kg || 0),
+            co2_evitado_vida_util_kg: Number(data.co2_evitado_vida_util_kg || 0),
+            arboles_equivalentes: Number(data.arboles_equivalentes || 0),
+            tasa_incremento_tarifa_pct: Number(data.tasa_incremento_tarifa_pct || 0)
+        };
+
         techo.value = await obtieneDatosTecho(simulacion_id);
         geo.value = await obtieneDatosGeograficos(simulacion_id);
         consumo.value = await obtieneConsumoElectrico(simulacion_id);
         return;
     }
 
+    // EL RESTO SE QUEDA EXACTAMENTE IGUAL A COMO LO TENÍAS
     techo.value = await obtieneDatosTecho(simulacion_id);
     geo.value = await obtieneDatosGeograficos(simulacion_id);
     consumo.value = await obtieneConsumoElectrico(simulacion_id);
@@ -309,6 +333,41 @@ onMounted(async () => {
     await guardarResultados(calculados);
     resultados.value = calculados;
 });
+
+// --- FUNCIONES NUEVAS PARA EXPORTAR ---
+
+const imprimirReporte = () => {
+    window.print();
+};
+
+const descargarPDF = async () => {
+    const elemento = document.getElementById('reporte-area');
+    if (!elemento) return;
+
+    try {
+        const canvas = await html2canvas(elemento, { 
+            scale: 2, 
+            useCORS: true 
+        }); 
+        
+        const dataFormatoImagen = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const margin = 10;
+        const innerWidth = pdfWidth - (margin * 2);
+        const pdfHeight = (canvas.height * innerWidth) / canvas.width;
+        
+        pdf.addImage(dataFormatoImagen, 'PNG', margin, margin, innerWidth, pdfHeight);
+        
+        const nombreCliente = route.query.nombre ? String(route.query.nombre).replace(/\s+/g, '_') : 'Cliente';
+        pdf.save(`Reporte_Solar_${nombreCliente}.pdf`);
+        
+    } catch (error) {
+        console.error("Error al generar el PDF:", error);
+        alert("Hubo un problema al generar el PDF. Revisa la consola.");
+    }
+};
 </script>
 
 <style scoped>
@@ -336,6 +395,37 @@ onMounted(async () => {
     font-weight: 600;
 }
 .btn-volver:hover { background-color: #e0e0e0; }
+
+/* Estilos de los botones nuevos */
+.btn-primario {
+    padding: 0.6rem 1.2rem;
+    background-color: #FF7043;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+.btn-primario:hover { background-color: #f45b2c; }
+
+.btn-secundario {
+    padding: 0.6rem 1.2rem;
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+.btn-secundario:hover { background-color: #f5f5f5; }
 
 /* Pasos */
 .pasos {
@@ -522,4 +612,30 @@ onMounted(async () => {
 .impacto-label { font-size: 0.72rem; color: #4ade80; text-align: center; line-height: 1.3; }
 
 .sin-datos { text-align: center; padding: 4rem; color: #999; }
+
+/* REGLAS MÁGICAS PARA IMPRESIÓN */
+@media print {
+    /* Ocultar botones, encabezados y barras de navegación al imprimir */
+    .acciones-header, .pasos, .encabezado {
+        display: none !important;
+    }
+    
+    /* Quitar sombras y adaptar el contenedor a la hoja */
+    .contenedor {
+        padding: 0;
+        margin: 0;
+        max-width: 100%;
+    }
+    
+    .card, .tarjeta {
+        box-shadow: none !important;
+        border: 1px solid #eee;
+        break-inside: avoid;
+    }
+
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
 </style>
