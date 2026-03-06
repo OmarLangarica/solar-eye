@@ -424,4 +424,116 @@ const onSubmit = handleSubmit(async (values) => {
 
 .promedio-item:last-child { border-bottom: none; }
 .promedio-valor { font-weight: 600; color: #FF7043; }
+
+
+/* --- DISEÑO RESPONSIVO: PASO 3 CONSUMO --- */
+
+@media (max-width: 900px) {
+    .contenedor {
+        padding: 1rem;
+    }
+
+    /* 1. Apilamos los pasos verticalmente o los hacemos deslizables */
+    .pasos {
+        padding: 1rem;
+        flex-wrap: nowrap;
+        overflow-x: auto; /* Permite deslizar los pasos si no caben */
+        justify-content: flex-start;
+        gap: 1rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .paso {
+        min-width: 80px; /* Asegura que el texto no se encime */
+    }
+
+    .paso-linea {
+        min-width: 20px;
+    }
+
+    /* 2. Layout de una sola columna */
+    .layout {
+        grid-template-columns: 1fr; /* El panel de ayuda se va abajo */
+    }
+
+    /* 3. Inputs de uno por uno */
+    .fila-doble {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    /* 4. Botón de acción al 100% */
+    .botones {
+        justify-content: center;
+    }
+
+    .btn-siguiente {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .encabezado {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .btn-volver {
+        width: 100%;
+        text-align: center;
+    }
+
+    .card {
+        padding: 1.25rem;
+    }
+
+    .tarifa-calculada {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+/* --- DISEÑO RESPONSIVO PARA LOS PASOS EN MÓVIL --- */
+
+@media (max-width: 600px) {
+    .pasos {
+        padding: 0.75rem 0.5rem; /* Menos espacio interno */
+        gap: 0.2rem; /* Espacio mínimo entre elementos */
+        justify-content: space-between;
+    }
+
+    .paso {
+        min-width: 60px; /* Ancho reducido para que quepan los 4 */
+    }
+
+    .paso-numero {
+        width: 24px;  /* Círculos más chicos (antes 36px) */
+        height: 24px;
+        font-size: 0.75rem; /* Número más pequeño */
+    }
+
+    .paso span {
+        font-size: 0.65rem; /* Texto más chico */
+        text-align: center;
+        white-space: nowrap; /* Evita que el texto salte de línea */
+    }
+
+    .paso-linea {
+        margin-bottom: 1.1rem; /* Alinea la línea con los círculos más chicos */
+        height: 1px; /* Línea más fina */
+    }
+    
+}
+
+/* Ajuste extra para teléfonos muy delgados */
+@media (max-width: 380px) {
+    .paso span {
+        display: none; /* En pantallas minúsculas, solo dejamos los números para que no se encimen */
+    }
+    
+    .paso-linea {
+        margin-bottom: 0.7rem;
+    }
+}
 </style>

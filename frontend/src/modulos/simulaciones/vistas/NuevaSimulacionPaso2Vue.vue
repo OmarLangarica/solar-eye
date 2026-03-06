@@ -605,4 +605,51 @@ const guardarYAvanzar = async () => {
     background-color: #fff;
 }
 
+/* --- DISEÑO RESPONSIVO PARA SIMULACIÓN --- */
+
+@media (max-width: 900px) {
+    .contenedor {
+        padding: 1rem;
+    }
+
+    /* 1. Apilamos el Mapa y el Panel de Datos */
+    .layout {
+        grid-template-columns: 1fr; /* Una sola columna centrada */
+        gap: 1.5rem;
+    }
+
+    /* 2. Ajustamos la altura del mapa para que no sea eterno en cel */
+    #mapa {
+        height: 350px; 
+    }
+
+    /* 3. Centramos el indicador de pasos */
+    .pasos {
+        padding: 1rem;
+        overflow-x: auto; /* Por si los pasos no caben, que se puedan deslizar */
+        justify-content: flex-start;
+    }
+
+    .paso span {
+        font-size: 0.7rem;
+        white-space: nowrap;
+    }
+
+    /* 4. Forzamos que las tarjetas de datos ocupen el 100% y se centren */
+    .panel-datos {
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .card-datos {
+        padding: 1rem;
+    }
+
+    /* 5. En el grid de datos (m2, coordenadas, etc), mejor una sola columna */
+    .datos-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}
+
 </style>

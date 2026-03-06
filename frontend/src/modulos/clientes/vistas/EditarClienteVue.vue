@@ -278,4 +278,52 @@ const onSubmit = handleSubmit(async (values) => {
     padding: 3rem;
     color: #999;
 }
+
+/* --- DISEÑO RESPONSIVO PARA EDITAR CLIENTE --- */
+
+@media (max-width: 768px) {
+    .contenedor {
+        padding: 1rem; /* Menos espacio en las orillas para ganar espacio útil */
+    }
+
+    /* Ajustamos el encabezado para que el botón de volver no se apriete con el título */
+    .encabezado {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .btn-volver {
+        width: 100%; /* El botón ocupa todo el ancho, más fácil de tocar */
+        text-align: center;
+    }
+
+    .card {
+        padding: 1.5rem; /* Reducimos un poco el padding interno de la tarjeta */
+    }
+
+    /* Magia para los inputs: rompemos las columnas */
+    .fila-doble {
+        grid-template-columns: 1fr; /* Cambia de 2 columnas a 1 */
+        gap: 0.8rem;
+    }
+
+    .fila-triple {
+        grid-template-columns: 1fr; /* Cambia de 3 columnas a 1 */
+        gap: 0.8rem;
+    }
+
+    /* Ajustamos los botones de Guardar y Cancelar */
+    .botones {
+        flex-direction: column-reverse; /* Ponemos el botón principal (Guardar) arriba del secundario (Cancelar) */
+        width: 100%;
+        margin-top: 1.5rem;
+    }
+
+    .btn-cancelar, .btn-guardar {
+        width: 100%; /* Ocupan todo el ancho */
+        padding: 0.8rem; /* Un poco más altos para que sea fácil tocarlos con el dedo */
+    }
+}
 </style>

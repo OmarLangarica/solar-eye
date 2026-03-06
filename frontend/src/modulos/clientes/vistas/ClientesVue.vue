@@ -70,163 +70,212 @@
     </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useClientes } from '../controladores/useClientes';
-import { useAuthStore } from '../../../stores/authStore';
-import { useAuth } from '../../auth/controladores/useAuth';
-import type { Cliente } from '../interfaces/clientes-interface';
+<script setup lang="ts">    
+    import { ref, computed, onMounted } from 'vue';
+    import { useRouter } from 'vue-router';
+    import { useClientes } from '../controladores/useClientes';
+    import { useAuthStore } from '../../../stores/authStore';
+    import { useAuth } from '../../auth/controladores/useAuth';
+    import type { Cliente } from '../interfaces/clientes-interface';
 
-const router = useRouter();
-const authStore = useAuthStore();
-const { cerrarSesion } = useAuth();
-const { clientes, cargando, error, mensaje, traeClientes, borrarCliente } = useClientes();
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const { cerrarSesion } = useAuth();
+    const { clientes, cargando, error, mensaje, traeClientes, borrarCliente } = useClientes();
 
-const busqueda = ref('');
-const modalEliminarVisible = ref(false);
-const clienteAEliminar = ref<Cliente | null>(null);
+    const busqueda = ref('');
+    const modalEliminarVisible = ref(false);
+    const clienteAEliminar = ref<Cliente | null>(null);
 
-const clientesFiltrados = computed(() => {
-    if (!busqueda.value) return clientes.value;
-    const b = busqueda.value.toLowerCase();
-    return clientes.value.filter(c =>
-        `${c.nombre} ${c.apellido}`.toLowerCase().includes(b) ||
-        c.email?.toLowerCase().includes(b) ||
-        c.ciudad?.toLowerCase().includes(b)
-    );
-});
+    const clientesFiltrados = computed(() => {
+        if (!busqueda.value) return clientes.value;
+        const b = busqueda.value.toLowerCase();
+        return clientes.value.filter(c =>
+            `${c.nombre} ${c.apellido}`.toLowerCase().includes(b) ||
+            c.email?.toLowerCase().includes(b) ||
+            c.ciudad?.toLowerCase().includes(b)
+        );
+    });
 
-const confirmarEliminar = (cliente: Cliente) => {
-    console.log('confirmarEliminar llamado', cliente);
-    clienteAEliminar.value = cliente;
-    modalEliminarVisible.value = true;
-    console.log('modalEliminarVisible:', modalEliminarVisible.value);
-};
+    const confirmarEliminar = (cliente: Cliente) => {
+        console.log('confirmarEliminar llamado', cliente);
+        clienteAEliminar.value = cliente;
+        modalEliminarVisible.value = true;
+        console.log('modalEliminarVisible:', modalEliminarVisible.value);
+    };
 
-const ejecutarEliminar = async () => {
-    console.log('ejecutarEliminar llamado', clienteAEliminar.value);
-    if (clienteAEliminar.value) {
-        await borrarCliente(clienteAEliminar.value.id);
-        console.log('después de borrar, error:', error.value);
-        modalEliminarVisible.value = false;
-        clienteAEliminar.value = null;
-    }
-};
+    const ejecutarEliminar = async () => {
+        console.log('ejecutarEliminar llamado', clienteAEliminar.value);
+        if (clienteAEliminar.value) {
+            await borrarCliente(clienteAEliminar.value.id);
+            console.log('después de borrar, error:', error.value);
+            modalEliminarVisible.value = false;
+            clienteAEliminar.value = null;
+        }
+    };
 
-onMounted(() => traeClientes());
+    onMounted(() => traeClientes());
 </script>
 
 <style scoped>
-.clientes-container {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
+    .clientes-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .encabezado {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .encabezado h1 { font-size: 1.8rem; color: #333; margin: 0; }
+    .encabezado p { color: #666; font-size: 0.9rem; margin: 0.25rem 0 0; }
+
+    .acciones-header { display: flex; gap: 1rem; }
+
+    .btn-agregar {
+        padding: 0.6rem 1.2rem;
+        background-color: #FF7043;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+    .btn-agregar:hover { background-color: #F4511E; }
+
+    .btn-cerrar-sesion {
+        padding: 0.6rem 1.2rem;
+        background-color: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .btn-cerrar-sesion:hover { background-color: #e0e0e0; }
+
+    .mensaje { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
+    .mensaje.exito { background: #f0fdf4; color: #16a34a; }
+    .mensaje.error-msg { background: #fef2f2; color: #ef4444; }
+
+    .buscador { margin-bottom: 1.5rem; }
+    .buscador input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        outline: none;
+    }
+    .buscador input:focus { border-color: #FF7043; }
+
+    .tabla-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead { background-color: #f5f5f5; }
+    th { padding: 1rem; text-align: left; font-size: 0.85rem; color: #666; font-weight: 600; }
+    td { padding: 1rem; border-top: 1px solid #f0f0f0; font-size: 0.95rem; color: #333; }
+    tr:hover td { background-color: #fafafa; }
+
+    .acciones { display: flex; gap: 0.5rem; }
+
+    .centrado{
+        margin-left: 70px;
+    }
+
+    .btn-editar {
+        padding: 0.4rem 0.8rem;
+        background-color: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+    .btn-editar:hover { background-color: #d97706; }
+
+    .btn-simulaciones {
+        padding: 0.4rem 0.8rem;
+        background-color: #06b6d4;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+    .btn-simulaciones:hover { background-color: #0891b2; }
+
+    .btn-eliminar {
+        padding: 0.4rem 0.8rem;
+        background-color: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+    .btn-eliminar:hover { background-color: #dc2626; }
+
+    .sin-datos { text-align: center; padding: 3rem; color: #999; }
+    /* --- DISEÑO RESPONSIVO PARA CLIENTES --- */
+
+/* Media Query para Tablets y Celulares (Pantallas menores a 768px) */
+@media (max-width: 768px) {
+    .clientes-container {
+        padding: 1rem; /* Reduce el espacio alrededor para aprovechar la pantalla */
+    }
+
+    /* Arregla el choque de botones en el encabezado */
+    .encabezado {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .acciones-header {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .btn-agregar, .btn-cerrar-sesion {
+        flex: 1;
+        padding: 0.5rem;
+        font-size: 0.85rem;
+        text-align: center;
+    }
+
+    /* Solución para la tabla: Scroll Horizontal */
+    .tabla-container {
+        overflow-x: auto; /* Activa el scroll horizontal */
+        -webkit-overflow-scrolling: touch; /* Deslizamiento suave en móviles */
+    }
+
+    table {
+        min-width: 800px; /* Evita que las columnas se aplasten */
+    }
+
+    /* Ajuste para los botones de acción en la tabla */
+    .acciones {
+        flex-direction: column; /* Apila los botones de editar, eliminar y simulaciones */
+        align-items: stretch;
+    }
+
+    .centrado {
+        margin-left: 0; /* Quita el margen fijo que tenías para que se centre bien */
+        text-align: center;
+        display: block; /* Asegura que el texto ocupe todo el ancho para centrarse */
+    }
 }
-
-.encabezado {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.encabezado h1 { font-size: 1.8rem; color: #333; margin: 0; }
-.encabezado p { color: #666; font-size: 0.9rem; margin: 0.25rem 0 0; }
-
-.acciones-header { display: flex; gap: 1rem; }
-
-.btn-agregar {
-    padding: 0.6rem 1.2rem;
-    background-color: #FF7043;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s;
-}
-.btn-agregar:hover { background-color: #F4511E; }
-
-.btn-cerrar-sesion {
-    padding: 0.6rem 1.2rem;
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.btn-cerrar-sesion:hover { background-color: #e0e0e0; }
-
-.mensaje { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
-.mensaje.exito { background: #f0fdf4; color: #16a34a; }
-.mensaje.error-msg { background: #fef2f2; color: #ef4444; }
-
-.buscador { margin-bottom: 1.5rem; }
-.buscador input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    outline: none;
-}
-.buscador input:focus { border-color: #FF7043; }
-
-.tabla-container {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    overflow: hidden;
-}
-
-table { width: 100%; border-collapse: collapse; }
-thead { background-color: #f5f5f5; }
-th { padding: 1rem; text-align: left; font-size: 0.85rem; color: #666; font-weight: 600; }
-td { padding: 1rem; border-top: 1px solid #f0f0f0; font-size: 0.95rem; color: #333; }
-tr:hover td { background-color: #fafafa; }
-
-.acciones { display: flex; gap: 0.5rem; }
-
-.centrado{
-    margin-left: 70px;
-}
-
-.btn-editar {
-    padding: 0.4rem 0.8rem;
-    background-color: #f59e0b;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-.btn-editar:hover { background-color: #d97706; }
-
-.btn-simulaciones {
-    padding: 0.4rem 0.8rem;
-    background-color: #06b6d4;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-.btn-simulaciones:hover { background-color: #0891b2; }
-
-.btn-eliminar {
-    padding: 0.4rem 0.8rem;
-    background-color: #ef4444;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-.btn-eliminar:hover { background-color: #dc2626; }
-
-.sin-datos { text-align: center; padding: 3rem; color: #999; }
 </style>
 
 <!-- Estilos globales para el modal (fuera de scoped porque usa Teleport) -->
@@ -279,4 +328,116 @@ tr:hover td { background-color: #fafafa; }
 }
 .btn-confirmar-eliminar:hover { background-color: #dc2626; }
 .btn-confirmar-eliminar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.tabla-container {
+    width: 100%;
+    overflow-x: auto !important; /* Permite el scroll horizontal si la tabla es muy ancha */
+    display: block;
+    -webkit-overflow-scrolling: touch; /* Suaviza el scroll en dispositivos táctiles */
+}
+
+table {
+    min-width: 700px; /* Evita que las columnas se aplasten demasiado antes de ser tarjetas */
+    width: 100%;
+}
+/* --- DISEÑO RESPONSIVO PARA CLIENTES --- */
+
+/* Media Query para Tablets y Celulares (Pantallas menores a 768px) */
+/* Reemplaza todo tu bloque @media anterior con este: */
+@media (max-width: 768px) {
+    .clientes-container { padding: 1rem; }
+    
+    .encabezado { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .acciones-header { width: 100%; justify-content: space-between; }
+    .btn-agregar, .btn-cerrar-sesion { flex: 1; padding: 0.5rem; text-align: center; }
+
+    /* --- TARJETAS FIJAS A PRUEBA DE FALLOS --- */
+    
+    .tabla-container {
+        box-shadow: none;
+        background: transparent;
+        overflow: visible !important; /* Dejamos que se vea absolutamente todo */
+    }
+
+    /* El box-sizing evita que el padding rompa el ancho de la pantalla */
+    table, tbody, tr, td {
+        display: block;
+        box-sizing: border-box; 
+    }
+
+    table {
+        width: 100% !important;
+        min-width: 0 !important; /* <--- ¡ESTA LÍNEA MATA LOS 800PX FANTASMAS! */
+    }
+    thead { display: none; }
+
+    tr {
+        display: grid;
+        grid-template-columns: 1fr 110px; /* 110px exactos e inamovibles para los botones */
+        grid-template-rows: repeat(5, auto);
+        gap: 5px;
+        background: white;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    td {
+        border: none;
+        padding: 0;
+        font-size: 0.9rem;
+        word-break: break-word; /* Si el texto es larguísimo, lo baja de renglón */
+    }
+
+    /* Coordenadas exactas para los datos (Columna 1) */
+    td:nth-child(1) { grid-column: 1; grid-row: 1; }
+    td:nth-child(2) { grid-column: 1; grid-row: 2; }
+    td:nth-child(3) { grid-column: 1; grid-row: 3; }
+    td:nth-child(4) { grid-column: 1; grid-row: 4; }
+    td:nth-child(5) { grid-column: 1; grid-row: 5; }
+
+    td:nth-child(1)::before { content: "Nombre: "; font-weight: 700; color: #666; }
+    td:nth-child(2)::before { content: "Email: "; font-weight: 700; color: #666; }
+    td:nth-child(3)::before { content: "Teléfono: "; font-weight: 700; color: #666; }
+    td:nth-child(4)::before { content: "Ciudad: "; font-weight: 700; color: #666; }
+    td:nth-child(5)::before { content: "Estado: "; font-weight: 700; color: #666; }
+
+    /* Coordenadas exactas para los botones (Columna 2) */
+    td.acciones {
+        grid-column: 2;
+        grid-row: 1 / 6; /* Abarca la altura de los 5 datos */
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.5rem;
+        border-left: 1px solid #eee;
+        padding-left: 10px;
+    }
+
+    /* Ajustamos los botones al espacio de 110px */
+    .acciones button { 
+        width: 100%; 
+        font-size: 0.8rem; 
+        padding: 0.5rem 0; 
+        margin: 0;
+    }
+    
+    .centrado { display: none; } 
+}
+/* Diseño Responsivo para el Modal */
+@media (max-width: 480px) {
+    .modal-eliminar {
+        padding: 1.5rem;
+        width: 95%;
+    }
+
+    .modal-botones {
+        flex-direction: column; /* Apila los botones de confirmación */
+    }
+
+    .btn-cancelar, .btn-confirmar-eliminar {
+        width: 100%;
+    }
+}
 </style>
