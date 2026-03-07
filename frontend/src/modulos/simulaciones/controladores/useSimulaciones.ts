@@ -100,6 +100,13 @@ export const useSimulaciones = () => {
     const guardarResultados = async (datos: ResultadosCalculo) => {
         try {
             const respuesta = await simulacionesApi.post('/resultados', datos);
+
+            // Marca como completada usando el nuevo endpoint
+            await simulacionesApi.patch('/estado', {
+                id: datos.simulacion_id,
+                estado: 'completada'
+            });
+
             return respuesta.data;
         } catch (err) {
             error.value = 'No se pudieron guardar los resultados';
@@ -226,6 +233,22 @@ export const useSimulaciones = () => {
         }
     };
 
+    const detectaPasoActual = async (simulacion_id: number): Promise<number> => {
+        const techo = await obtieneDatosTecho(simulacion_id);
+        if (!techo || techo.error) return 2; // No tiene techo → paso 2
+
+        const geo = await obtieneDatosGeograficos(simulacion_id);
+        if (!geo || geo.error) return 2; // No tiene geo → paso 2
+
+        const consumo = await obtieneConsumoElectrico(simulacion_id);
+        if (!consumo || consumo.error) return 3; // No tiene consumo → paso 3
+
+        const resultados = await obtieneResultados(simulacion_id);
+        if (!resultados || resultados.error) return 4; // No tiene resultados → paso 4
+
+        return 4; // Completa → resultados
+    };
+
     return {
         simulaciones,
         simulacionActual,
@@ -244,6 +267,7 @@ export const useSimulaciones = () => {
         obtieneDatosTecho,
         obtieneDatosGeograficos,
         obtieneConsumoElectrico,
-        obtieneResultados
+        obtieneResultados,
+        detectaPasoActual
     };
 };

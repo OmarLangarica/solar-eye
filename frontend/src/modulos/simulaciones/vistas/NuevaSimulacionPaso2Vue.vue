@@ -6,7 +6,17 @@
                 <h1>Nueva Simulación</h1>
                 <p>Cliente: <strong>{{ route.query.nombre }}</strong></p>
             </div>
-            <button class="btn-volver" @click="router.back()">← Volver</button>
+            <div class="botones">
+                <button class="btn-volver" @click="router.push({ 
+                    path: `/simulaciones/nueva/${cliente_id}/${simulacion_id}`, 
+                    query: { nombre: route.query.nombre } 
+                })">← Volver</button>
+
+                <button class="btn-volver" @click="router.push({ 
+                    path: `/simulaciones/${cliente_id}`, 
+                    query: { nombre: route.query.nombre } 
+                })">↩ Volver a simulaciones</button>
+            </div>
         </div>
 
         <!-- Indicador de pasos -->
@@ -159,11 +169,12 @@ import { useSimulaciones } from '../controladores/useSimulaciones';
 import type { DatosTecho, DatosGeograficos } from '../interfaces/simulaciones-interface';
 import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
 import 'leaflet-control-geocoder';
+import simulacionesApi from '../api/simulacionesApi';
 
 
 const router = useRouter();
 const route = useRoute();
-const { cargando, error, guardarDatosTecho, consultarNasa, guardarDatosGeograficos } = useSimulaciones();
+const { cargando, error, guardarDatosTecho, consultarNasa, guardarDatosGeograficos, obtieneConsumoElectrico,obtieneDatosGeograficos,obtieneDatosTecho } = useSimulaciones();
 
 const cliente_id = Number(route.params.cliente_id);
 const simulacion_id = Number(route.params.simulacion_id);
@@ -342,14 +353,38 @@ onUnmounted(() => {
 const guardarYAvanzar = async () => {
     if (!datosGeo.value) return;
 
-    await guardarDatosTecho({ ...datosTecho });
-    await guardarDatosGeograficos({ ...datosGeo.value, simulacion_id });
+    try {
+        const techoExistente = await obtieneDatosTecho(simulacion_id);
+        const geoExistente = await obtieneDatosGeograficos(simulacion_id);
 
-    if (!error.value) {
+        if (techoExistente && !techoExistente.error && techoExistente.id) {
+            await simulacionesApi.put('/techo', { 
+                ...datosTecho, 
+                id: Number(techoExistente.id)
+            });
+        } else {
+            await guardarDatosTecho({ ...datosTecho });
+        }
+
+        if (geoExistente && !geoExistente.error && geoExistente.id) {
+            await simulacionesApi.put('/geograficos', { 
+                ...datosGeo.value, 
+                simulacion_id,
+                id: Number(geoExistente.id)
+            });
+        } else {
+            await guardarDatosGeograficos({ ...datosGeo.value, simulacion_id });
+        }
+
+        // Navega independientemente del error.value del composable
         router.push({
             path: `/simulaciones/nueva/${cliente_id}/paso3/${simulacion_id}`,
             query: { nombre: route.query.nombre }
         });
+
+    } catch (err) {
+        console.error('Error al guardar:', err);
+        error.value = 'Error al guardar los datos';
     }
 };
 </script>

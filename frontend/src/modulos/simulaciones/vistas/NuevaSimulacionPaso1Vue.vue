@@ -81,11 +81,13 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useForm, useField } from 'vee-validate';
 import { paso1Schema } from '../schemas/simulacionesSchema';
 import { useSimulaciones } from '../controladores/useSimulaciones';
 import { useAuthStore } from '../../../stores/authStore';
+import simulacionesApi from '../api/simulacionesApi';
 
 const router = useRouter();
 const route = useRoute();
@@ -93,23 +95,55 @@ const authStore = useAuthStore();
 const { cargando, error, agregarSimulacion } = useSimulaciones();
 
 const cliente_id = Number(route.params.cliente_id);
+const simulacion_id = route.params.simulacion_id ? Number(route.params.simulacion_id) : null;
 
-const { handleSubmit } = useForm({ validationSchema: paso1Schema });
+const { handleSubmit, setValues } = useForm({ validationSchema: paso1Schema });
 const { value: nombreValue, errorMessage: nombreError } = useField<string>('nombre_proyecto');
 const { value: descripcionValue } = useField<string>('descripcion');
 
+// Si ya existe la simulación carga los datos
+onMounted(async () => {
+    if (simulacion_id) {
+        try {
+            const respuesta = await simulacionesApi.get(`/${simulacion_id}`);
+            const data = Array.isArray(respuesta.data) ? respuesta.data[0] : respuesta.data;
+            if (data) {
+                setValues({
+                    nombre_proyecto: data.nombre_proyecto ?? '',
+                    descripcion: data.descripcion ?? ''
+                });
+            }
+        } catch (err) {
+            console.error('Error cargando simulación:', err);
+        }
+    }
+});
+
 const onSubmit = handleSubmit(async (values) => {
-    const simulacion_id = await agregarSimulacion({
-        cliente_id,
-        usuario_id: authStore.usuario!.id,
-        nombre_proyecto: values.nombre_proyecto,
-        descripcion: values.descripcion ?? null,
-        estado: 'borrador'
-    });
+    let id = simulacion_id;
 
     if (simulacion_id) {
+        // Ya existe → actualiza
+        await simulacionesApi.put('/', {
+            id: simulacion_id,
+            nombre_proyecto: values.nombre_proyecto,
+            descripcion: values.descripcion ?? null,
+            estado: 'borrador'
+        });
+    } else {
+        // No existe → crea nueva
+        id = await agregarSimulacion({
+            cliente_id,
+            usuario_id: authStore.usuario!.id,
+            nombre_proyecto: values.nombre_proyecto,
+            descripcion: values.descripcion ?? null,
+            estado: 'borrador'
+        });
+    }
+
+    if (id) {
         router.push({
-            path: `/simulaciones/nueva/${cliente_id}/paso2/${simulacion_id}`,
+            path: `/simulaciones/nueva/${cliente_id}/paso2/${id}`,
             query: { nombre: route.query.nombre }
         });
     }

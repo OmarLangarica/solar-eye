@@ -209,4 +209,25 @@ router.post('/resultados', async (req: Request, res: Response) => {
     }
 });
 
+// PATCH http://localhost:3001/api/simulaciones/estado
+router.patch('/estado', async (req: Request, res: Response) => {
+    try {
+        const { id, estado } = req.body;
+        const resultado = await simulacionesServices.actualizaEstadoSimulacion(id, estado);
+        res.status(200).send(resultado);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
+// PUT geograficos
+router.put('/geograficos', async (req: Request, res: Response) => {
+    try {
+        const resultado = await simulacionesServices.modificaDatosGeograficos(req.body);
+        res.status(200).send(resultado);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno' });
+    }
+});
+
 export default router;

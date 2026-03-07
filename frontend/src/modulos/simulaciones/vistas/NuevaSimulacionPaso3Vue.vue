@@ -6,7 +6,17 @@
                 <h1>Nueva Simulación</h1>
                 <p>Cliente: <strong>{{ route.query.nombre }}</strong></p>
             </div>
-            <button class="btn-volver" @click="router.back()">← Volver</button>
+            <div class="botones">
+                <button class="btn-volver" @click="router.push({ 
+                    path: `/simulaciones/nueva/${cliente_id}/paso2/${simulacion_id}`, 
+                    query: { nombre: route.query.nombre } 
+                })">← Volver</button>
+
+                <button class="btn-volver" @click="router.push({ 
+                    path: `/simulaciones/${cliente_id}`, 
+                    query: { nombre: route.query.nombre } 
+                })">↩ Volver a simulaciones</button>
+            </div>
         </div>
 
         <!-- Indicador de pasos -->
@@ -178,10 +188,11 @@ import { useRouter, useRoute } from 'vue-router';
 import { useForm, useField } from 'vee-validate';
 import { paso3Schema } from '../schemas/simulacionesSchema';
 import { useSimulaciones } from '../controladores/useSimulaciones';
+import simulacionesApi from '../api/simulacionesApi';
 
 const router = useRouter();
 const route = useRoute();
-const { cargando, error, guardarConsumoElectrico, guardarResultados, calcularResultados } = useSimulaciones();
+const { cargando, error, guardarConsumoElectrico, guardarResultados, calcularResultados,obtieneConsumoElectrico } = useSimulaciones();
 
 const cliente_id = Number(route.params.cliente_id);
 const simulacion_id = Number(route.params.simulacion_id);
@@ -202,10 +213,6 @@ const tarifaKwh = computed(() => {
 });
 
 const onSubmit = handleSubmit(async (values) => {
-    console.log('values:', values);
-    console.log('simulacion_id:', simulacion_id);
-    console.log('error antes:', error.value);
-
     const consumoAnual = values.consumo_mensual_kwh * 12;
     const tarifa = tarifaKwh.value;
 
@@ -220,12 +227,20 @@ const onSubmit = handleSubmit(async (values) => {
         periodo_facturacion: values.periodo_facturacion
     };
 
-    console.log('consumo a guardar:', consumo);
-    await guardarConsumoElectrico(consumo);
-    console.log('error después:', error.value);
+    const consumoExistente = await obtieneConsumoElectrico(simulacion_id);
+
+    if (consumoExistente && !consumoExistente.error && consumoExistente.id) {
+        // Ya existe → PUT
+        await simulacionesApi.put('/consumo', { 
+            ...consumo, 
+            id: Number(consumoExistente.id) 
+        });
+    } else {
+        // No existe → POST
+        await guardarConsumoElectrico(consumo);
+    }
 
     if (!error.value) {
-        console.log('redirigiendo a resultados...');
         router.push({
             path: `/simulaciones/resultados/${simulacion_id}`,
             query: { nombre: route.query.nombre, cliente_id }
