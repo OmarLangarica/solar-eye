@@ -6,7 +6,17 @@
                 <h1>Nueva Simulación</h1>
                 <p>Cliente: <strong>{{ route.query.nombre }}</strong></p>
             </div>
-            <button class="btn-volver" @click="router.back()">← Volver</button>
+            <div class="botones">
+                <button class="btn-volver" @click="router.push({ 
+                    path: `/simulaciones/nueva/${cliente_id}/${simulacion_id}`, 
+                    query: { nombre: route.query.nombre } 
+                })">← Volver</button>
+
+                <button class="btn-volver" @click="router.push({ 
+                    path: `/simulaciones/${cliente_id}`, 
+                    query: { nombre: route.query.nombre } 
+                })">↩ Volver a simulaciones</button>
+            </div>
         </div>
 
         <!-- Indicador de pasos -->
@@ -58,8 +68,13 @@
                     <div v-if="datosTecho.area_m2 > 0" class="datos-grid">
                         <div class="dato">
                             <span class="dato-label">Área total</span>
-                            <span class="dato-valor">{{ datosTecho.area_m2.toFixed(2) }} m²</span>
+                            <span class="dato-valor" :class="{ 'error-text': datosTecho.area_m2 > AREA_MAXIMA_M2 }">
+                                {{ datosTecho.area_m2.toFixed(2) }} m²
+                            </span>
                         </div>
+                        <p v-if="datosTecho.area_m2 > AREA_MAXIMA_M2" class="error-msg-area">
+                            ⚠️ El área es demasiado grande (Máx. {{ AREA_MAXIMA_M2 }} m²). Por favor, ajusta el trazo.
+                        </p>
                         <div class="dato">
                             <span class="dato-label">Área útil</span>
                             <span class="dato-valor">{{ datosTecho.area_util_m2?.toFixed(2) }} m²</span>
@@ -159,11 +174,14 @@ import { useSimulaciones } from '../controladores/useSimulaciones';
 import type { DatosTecho, DatosGeograficos } from '../interfaces/simulaciones-interface';
 import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
 import 'leaflet-control-geocoder';
+import simulacionesApi from '../api/simulacionesApi';
 
 
 const router = useRouter();
 const route = useRoute();
-const { cargando, error, guardarDatosTecho, consultarNasa, guardarDatosGeograficos } = useSimulaciones();
+const { cargando, error, guardarDatosTecho, consultarNasa, guardarDatosGeograficos, obtieneConsumoElectrico,obtieneDatosGeograficos,obtieneDatosTecho } = useSimulaciones();
+
+const AREA_MAXIMA_M2 = 1000; 
 
 const cliente_id = Number(route.params.cliente_id);
 const simulacion_id = Number(route.params.simulacion_id);
@@ -227,7 +245,11 @@ const calcularPerimetroM = (coordenadas: [number, number][]): number => {
     return parseFloat(perimetro.toFixed(2));
 };
 
-const puedeAvanzar = computed(() => datosTecho.area_m2 > 0 && datosGeo.value !== null);
+const puedeAvanzar = computed(() => 
+    datosTecho.area_m2 > 0 && 
+    datosTecho.area_m2 <= AREA_MAXIMA_M2 &&
+    datosGeo.value !== null
+);
 
 onMounted(() => {
     // Inicializa el mapa centrado en México
@@ -284,7 +306,7 @@ onMounted(() => {
                     color: '#FF7043',
                     fillOpacity: 0.3
                 },
-                maxPoints: 4 
+                maxPoints: 4,
             },
             polyline: false,
             circle: false,
@@ -342,14 +364,38 @@ onUnmounted(() => {
 const guardarYAvanzar = async () => {
     if (!datosGeo.value) return;
 
-    await guardarDatosTecho({ ...datosTecho });
-    await guardarDatosGeograficos({ ...datosGeo.value, simulacion_id });
+    try {
+        const techoExistente = await obtieneDatosTecho(simulacion_id);
+        const geoExistente = await obtieneDatosGeograficos(simulacion_id);
 
-    if (!error.value) {
+        if (techoExistente && !techoExistente.error && techoExistente.id) {
+            await simulacionesApi.put('/techo', { 
+                ...datosTecho, 
+                id: Number(techoExistente.id)
+            });
+        } else {
+            await guardarDatosTecho({ ...datosTecho });
+        }
+
+        if (geoExistente && !geoExistente.error && geoExistente.id) {
+            await simulacionesApi.put('/geograficos', { 
+                ...datosGeo.value, 
+                simulacion_id,
+                id: Number(geoExistente.id)
+            });
+        } else {
+            await guardarDatosGeograficos({ ...datosGeo.value, simulacion_id });
+        }
+
+        // Navega independientemente del error.value del composable
         router.push({
             path: `/simulaciones/nueva/${cliente_id}/paso3/${simulacion_id}`,
             query: { nombre: route.query.nombre }
         });
+
+    } catch (err) {
+        console.error('Error al guardar:', err);
+        error.value = 'Error al guardar los datos';
     }
 };
 </script>
@@ -563,6 +609,25 @@ const guardarYAvanzar = async () => {
     font-size: 0.9rem;
 }
 
+.error-text {
+    color: #ef4444 !important;
+}
+
+.error-msg-area {
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    background: #fef2f2;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #fee2e2;
+}
+
+.card-datos.error-border {
+    border-color: #ef4444;
+}
+
 :deep(.leaflet-control-geocoder) {
     border: none !important;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
@@ -604,6 +669,8 @@ const guardarYAvanzar = async () => {
     outline: none;
     background-color: #fff;
 }
+
+
 
 @media (max-width: 900px) {
     .contenedor {

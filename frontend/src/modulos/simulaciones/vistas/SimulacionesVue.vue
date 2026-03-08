@@ -34,7 +34,19 @@
                             <span class="badge" :class="sim.estado">{{ sim.estado }}</span>
                         </td>
                         <td class="acciones">
-                            <button class="btn-ver" @click="verResultados(sim.id)">Ver resultados</button>
+                            <button
+                                v-if="sim.estado === 'completada'"
+                                class="btn-ver"
+                                @click="verResultados(sim.id)"
+                            >Ver resultados</button>
+                            <button
+                                v-if="sim.estado === 'borrador'"
+                                class="btn-continuar"
+                                @click="continuarSimulacion(sim.id)"
+                                :disabled="cargandoContinuar === sim.id"
+                            >
+                                {{ cargandoContinuar === sim.id ? '...' : 'Continuar' }}
+                            </button>
                             <button class="btn-eliminar" @click="confirmarEliminar(sim)">Eliminar</button>
                         </td>
                     </tr>
@@ -69,11 +81,12 @@ import type { Simulacion } from '../interfaces/simulaciones-interface';
 
 const router = useRouter();
 const route = useRoute();
-const { simulaciones, cargando, error, mensaje, traeSimulacionesPorCliente, borrarSimulacion } = useSimulaciones();
+const { simulaciones, cargando, error, mensaje, traeSimulacionesPorCliente, borrarSimulacion, detectaPasoActual } = useSimulaciones();
 
 const cliente_id = Number(route.params.cliente_id);
 const modalEliminarVisible = ref(false);
 const simAEliminar = ref<Simulacion | null>(null);
+const cargandoContinuar = ref<number | null>(null);
 
 const nuevaSimulacion = () => {
     router.push({
@@ -85,7 +98,10 @@ const nuevaSimulacion = () => {
 const verResultados = (simulacion_id: number) => {
     router.push({
         path: `/simulaciones/resultados/${simulacion_id}`,
-        query: { nombre: route.query.nombre }
+        query: {
+            nombre: route.query.nombre,
+            cliente_id
+        }
     });
 };
 
@@ -100,6 +116,36 @@ const ejecutarEliminar = async () => {
         modalEliminarVisible.value = false;
         simAEliminar.value = null;
         await traeSimulacionesPorCliente(cliente_id);
+    }
+};
+
+const continuarSimulacion = async (simulacion_id: number) => {
+    cargandoContinuar.value = simulacion_id;
+    const paso = await detectaPasoActual(simulacion_id);
+    cargandoContinuar.value = null;
+
+    if (paso === 2) {
+        router.push({
+            path: `/simulaciones/nueva/${cliente_id}/paso2/${simulacion_id}`,
+            query: { nombre: route.query.nombre }
+        });
+        return;
+    }
+
+    if (paso === 3) {
+        router.push({
+            path: `/simulaciones/nueva/${cliente_id}/paso3/${simulacion_id}`,
+            query: { nombre: route.query.nombre }
+        });
+        return;
+    }
+
+    if (paso === 4) {
+        router.push({
+            path: `/simulaciones/resultados/${simulacion_id}`,
+            query: { nombre: route.query.nombre, cliente_id }
+        });
+        return;
     }
 };
 
@@ -184,6 +230,19 @@ tr:hover td { background-color: #fafafa; }
 }
 .btn-ver:hover { background-color: #2563eb; }
 
+.btn-continuar {
+    padding: 0.4rem 0.8rem;
+    background-color: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+}
+.btn-continuar:hover { background-color: #16a34a; }
+.btn-continuar:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .btn-eliminar {
     padding: 0.4rem 0.8rem;
     background-color: #ef4444;
@@ -196,6 +255,65 @@ tr:hover td { background-color: #fafafa; }
 .btn-eliminar:hover { background-color: #dc2626; }
 
 .sin-datos { text-align: center; padding: 3rem; color: #999; }
+@media (max-width: 768px) {
+    .contenedor { padding: 1rem; }
+
+    .encabezado { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .acciones-header { width: 100%; justify-content: space-between; }
+    .btn-agregar, .btn-volver { flex: 1; padding: 0.5rem; text-align: center; }
+
+    .tabla-container {
+        box-shadow: none;
+        background: transparent;
+        overflow: visible !important;
+    }
+
+    table, tbody, tr, td { display: block; box-sizing: border-box; }
+    table { width: 100% !important; min-width: 0 !important; }
+    thead { display: none; }
+
+    tr {
+        display: grid;
+        grid-template-columns: 1fr 110px;
+        grid-template-rows: repeat(3, auto);
+        gap: 5px;
+        background: white;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    td { border: none; padding: 0; font-size: 0.9rem; word-break: break-word; }
+
+    td:nth-child(1) { grid-column: 1; grid-row: 1; }
+    td:nth-child(2) { grid-column: 1; grid-row: 2; }
+    td:nth-child(3) { grid-column: 1; grid-row: 3; }
+
+    td:nth-child(1)::before { content: "Proyecto: "; font-weight: 700; color: #666; }
+    td:nth-child(2)::before { content: "Descripción: "; font-weight: 700; color: #666; }
+
+    td.acciones {
+        grid-column: 2;
+        grid-row: 1 / 4;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.5rem;
+        border-left: 1px solid #eee;
+        padding-left: 10px;
+    }
+
+    .btn-ver { font-size: 0.75rem; padding: 0.4rem 0.3rem; }
+
+    .acciones button { width: 100%; font-size: 0.8rem; padding: 0.5rem 0; margin: 0; }
+}
+
+@media (max-width: 480px) {
+    .modal-eliminar { padding: 1.5rem; width: 95%; }
+    .modal-botones { flex-direction: column; }
+    .btn-cancelar, .btn-confirmar-eliminar { width: 100%; }
+}
 </style>
 
 <style>
@@ -226,4 +344,5 @@ tr:hover td { background-color: #fafafa; }
 .btn-confirmar-eliminar { padding: 0.6rem 1.2rem; background-color: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
 .btn-confirmar-eliminar:hover { background-color: #dc2626; }
 .btn-confirmar-eliminar:disabled { opacity: 0.6; cursor: not-allowed; }
+
 </style>

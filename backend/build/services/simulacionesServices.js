@@ -1,5 +1,7 @@
 import conexion from '../db/conexion.js';
-import { simulacionSchema, simulacionActualizarSchema, datosTechoSchema, datosTechoActualizarSchema, datosGeograficosSchema, consumoElectricoSchema, consumoElectricoActualizarSchema, configuracionSistemaSchema, configuracionSistemaActualizarSchema, resultadosCalculoSchema } from '../schema/simulacionesSchema.js';
+import { simulacionSchema, 
+//simulacionActualizarSchema,
+datosTechoSchema, datosTechoActualizarSchema, datosGeograficosSchema, consumoElectricoSchema, consumoElectricoActualizarSchema, configuracionSistemaSchema, configuracionSistemaActualizarSchema, resultadosCalculoSchema } from '../schema/simulacionesSchema.js';
 //Simulaciones
 export const obtieneSimulaciones = async () => {
     try {
@@ -43,9 +45,6 @@ export const agregarSimulacion = async (nueva) => {
 };
 export const modificarSimulacion = async (modificada) => {
     try {
-        const validacion = simulacionActualizarSchema.safeParse(modificada);
-        if (!validacion.success)
-            return { error: validacion.error };
         const [results] = await conexion.query('UPDATE simulaciones SET nombre_proyecto = ?, descripcion = ?, estado = ? WHERE id = ?', [modificada.nombre_proyecto, modificada.descripcion, modificada.estado, modificada.id]);
         return results;
     }
@@ -60,6 +59,15 @@ export const borrarSimulacion = async (id) => {
     }
     catch (err) {
         return { error: 'No se pudo borrar la simulación' };
+    }
+};
+export const actualizaEstadoSimulacion = async (id, estado) => {
+    try {
+        const [results] = await conexion.query('UPDATE simulaciones SET estado = ? WHERE id = ?', [estado, id]);
+        return results;
+    }
+    catch (err) {
+        return { error: 'No se pudo actualizar el estado de la simulación' };
     }
 };
 //Datos Techo
@@ -134,6 +142,24 @@ export const obtieneDatosGeograficos = async (simulacion_id) => {
     }
     catch (err) {
         return { error: 'No se pudieron obtener los datos geográficos' };
+    }
+};
+export const modificaDatosGeograficos = async (modificado) => {
+    try {
+        const [results] = await conexion.query(`UPDATE datos_geograficos SET 
+            irradiacion_anual_kwh_m2 = ?, irradiacion_diaria_promedio = ?, horas_sol_pico_diarias = ?,
+            temperatura_promedio_anual = ?, temperatura_max_verano = ?, temperatura_min_invierno = ?,
+            velocidad_viento_promedio = ?, altitud_msnm = ?, zona_climatica = ?, 
+            fuente_datos = ?, fecha_consulta = ? WHERE id = ?`, [modificado.irradiacion_anual_kwh_m2, modificado.irradiacion_diaria_promedio,
+            modificado.horas_sol_pico_diarias, modificado.temperatura_promedio_anual,
+            modificado.temperatura_max_verano, modificado.temperatura_min_invierno,
+            modificado.velocidad_viento_promedio, modificado.altitud_msnm,
+            modificado.zona_climatica, modificado.fuente_datos, modificado.fecha_consulta,
+            modificado.id]);
+        return results;
+    }
+    catch (err) {
+        return { error: 'No se pudieron modificar los datos geográficos' };
     }
 };
 //Consumo Eléctrico

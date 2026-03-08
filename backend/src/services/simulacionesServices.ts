@@ -1,6 +1,7 @@
 import conexion from '../db/conexion.js';
 import type {
-    Simulacion, SimulacionNueva,
+    //Simulacion,
+     SimulacionNueva,
     DatosTecho, DatosTechoNuevo,
     DatosGeograficosNuevo,
     ConsumoElectrico, ConsumoElectricoNuevo,
@@ -8,7 +9,8 @@ import type {
     ResultadosCalculoNuevo
 } from '../types/typesSimulaciones.js';
 import {
-    simulacionSchema, simulacionActualizarSchema,
+    simulacionSchema, 
+    //simulacionActualizarSchema,
     datosTechoSchema, datosTechoActualizarSchema,
     datosGeograficosSchema,
     consumoElectricoSchema, consumoElectricoActualizarSchema,
@@ -67,11 +69,8 @@ export const agregarSimulacion = async (nueva: SimulacionNueva) => {
     }
 };
 
-export const modificarSimulacion = async (modificada: Simulacion) => {
+export const modificarSimulacion = async (modificada: any) => {
     try {
-        const validacion = simulacionActualizarSchema.safeParse(modificada);
-        if (!validacion.success) return { error: validacion.error };
-
         const [results] = await conexion.query(
             'UPDATE simulaciones SET nombre_proyecto = ?, descripcion = ?, estado = ? WHERE id = ?',
             [modificada.nombre_proyecto, modificada.descripcion, modificada.estado, modificada.id]
@@ -91,6 +90,18 @@ export const borrarSimulacion = async (id: number) => {
         return results;
     } catch (err) {
         return { error: 'No se pudo borrar la simulación' };
+    }
+};
+
+export const actualizaEstadoSimulacion = async (id: number, estado: string) => {
+    try {
+        const [results] = await conexion.query(
+            'UPDATE simulaciones SET estado = ? WHERE id = ?',
+            [estado, id]
+        );
+        return results;
+    } catch (err) {
+        return { error: 'No se pudo actualizar el estado de la simulación' };
     }
 };
 
@@ -182,6 +193,27 @@ export const obtieneDatosGeograficos = async (simulacion_id: number) => {
         return results;
     } catch (err) {
         return { error: 'No se pudieron obtener los datos geográficos' };
+    }
+};
+
+export const modificaDatosGeograficos = async (modificado: any) => {
+    try {
+        const [results] = await conexion.query(
+            `UPDATE datos_geograficos SET 
+            irradiacion_anual_kwh_m2 = ?, irradiacion_diaria_promedio = ?, horas_sol_pico_diarias = ?,
+            temperatura_promedio_anual = ?, temperatura_max_verano = ?, temperatura_min_invierno = ?,
+            velocidad_viento_promedio = ?, altitud_msnm = ?, zona_climatica = ?, 
+            fuente_datos = ?, fecha_consulta = ? WHERE id = ?`,
+            [modificado.irradiacion_anual_kwh_m2, modificado.irradiacion_diaria_promedio,
+             modificado.horas_sol_pico_diarias, modificado.temperatura_promedio_anual,
+             modificado.temperatura_max_verano, modificado.temperatura_min_invierno,
+             modificado.velocidad_viento_promedio, modificado.altitud_msnm,
+             modificado.zona_climatica, modificado.fuente_datos, modificado.fecha_consulta,
+             modificado.id]
+        );
+        return results;
+    } catch (err) {
+        return { error: 'No se pudieron modificar los datos geográficos' };
     }
 };
 

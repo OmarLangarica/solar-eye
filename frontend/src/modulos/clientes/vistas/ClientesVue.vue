@@ -227,58 +227,6 @@ tr:hover td { background-color: #fafafa; }
 .btn-eliminar:hover { background-color: #dc2626; }
 
 .sin-datos { text-align: center; padding: 3rem; color: #999; }
-</style>
-
-<!-- Estilos globales para el modal (fuera de scoped porque usa Teleport) -->
-<style>
-.overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-
-.modal-eliminar {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    position: relative;
-    z-index: 10000;
-}
-
-.modal-eliminar h2 { margin: 0 0 1rem; color: #333; font-size: 1.3rem; }
-.modal-eliminar p { color: #666; margin-bottom: 1.5rem; line-height: 1.5; }
-
-.modal-botones { display: flex; justify-content: flex-end; gap: 0.75rem; }
-
-.btn-cancelar {
-    padding: 0.6rem 1.2rem;
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.btn-cancelar:hover { background-color: #e0e0e0; }
-
-.btn-confirmar-eliminar {
-    padding: 0.6rem 1.2rem;
-    background-color: #ef4444;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.btn-confirmar-eliminar:hover { background-color: #dc2626; }
-.btn-confirmar-eliminar:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @media (max-width: 768px) {
     .clientes-container { padding: 1rem; }
@@ -375,4 +323,58 @@ tr:hover td { background-color: #fafafa; }
         width: 100%;
     }
 }
+</style>
+
+<!-- Estilos globales para el modal (fuera de scoped porque usa Teleport) -->
+<style>
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-eliminar {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 10000;
+}
+
+.modal-eliminar h2 { margin: 0 0 1rem; color: #333; font-size: 1.3rem; }
+.modal-eliminar p { color: #666; margin-bottom: 1.5rem; line-height: 1.5; }
+
+.modal-botones { display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+.btn-cancelar {
+    padding: 0.6rem 1.2rem;
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-cancelar:hover { background-color: #e0e0e0; }
+
+.btn-confirmar-eliminar {
+    padding: 0.6rem 1.2rem;
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-confirmar-eliminar:hover { background-color: #dc2626; }
+.btn-confirmar-eliminar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+
 </style>

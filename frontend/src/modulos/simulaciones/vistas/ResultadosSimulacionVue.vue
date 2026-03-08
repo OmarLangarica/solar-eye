@@ -193,6 +193,15 @@
                                 <span>{{ techo?.area_m2 }} m²</span>
                             </div>
                             <div class="fila-dato">
+                                <span>Paneles a instalar</span>
+                                <span class="">{{ resultados.numero_paneles }} módulos (410W)</span>
+                            </div>
+                            
+                            <div class="fila-dato">
+                                <span>Área del techo</span>
+                                <span>{{ techo?.area_m2 }} m²</span>
+                            </div>
+                            <div class="fila-dato">
                                 <span>Área útil</span>
                                 <span>{{ techo?.area_util_m2 }} m²</span>
                             </div>
@@ -333,8 +342,6 @@ onMounted(async () => {
     await guardarResultados(calculados);
     resultados.value = calculados;
 });
-
-// --- FUNCIONES NUEVAS PARA EXPORTAR ---
 
 const imprimirReporte = () => {
     window.print();

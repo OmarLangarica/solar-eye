@@ -100,6 +100,13 @@ export const useSimulaciones = () => {
     const guardarResultados = async (datos: ResultadosCalculo) => {
         try {
             const respuesta = await simulacionesApi.post('/resultados', datos);
+
+            // Marca como completada usando el nuevo endpoint
+            await simulacionesApi.patch('/estado', {
+                id: datos.simulacion_id,
+                estado: 'completada'
+            });
+
             return respuesta.data;
         } catch (err) {
             error.value = 'No se pudieron guardar los resultados';
@@ -124,13 +131,32 @@ export const useSimulaciones = () => {
         const hsp = geo.horas_sol_pico_diarias;
         const areaUtil = techo.area_util_m2 ?? techo.area_m2 * 0.85;
 
+
+        
         // Paneles que caben en el techo (panel estándar 1.96 m²)
         const cantidadPaneles = Math.floor(areaUtil / 1.96);
         const potenciaSistemaKwp = (cantidadPaneles * 410) / 1000;
 
         // Producción año 1 sin degradación
-        const produccionAnio1 = potenciaSistemaKwp * hsp * 365 * EFICIENCIA_INVERSOR * techo.factor_sombra;
+        // 1. CALCULAR POTENCIA NECESARIA (Basado en consumo real)
+        // Fórmula: Consumo Diario / (HSP * Eficiencia)
+        const consumoDiarioKwh = consumo.consumo_anual_kwh / 365;
+        const potenciaNecesariaKwp = consumoDiarioKwh / (hsp * EFICIENCIA_INVERSOR * techo.factor_sombra);
 
+        // 2. CALCULAR CAPACIDAD MÁXIMA DEL TECHO
+        const maxPanelesTecho = Math.floor(areaUtil / 1.96);
+        const maxKwpTecho = (maxPanelesTecho * 410) / 1000;
+
+        
+        // 3. SELECCIONAR EL MENOR (No podemos instalar más de lo que cabe, ni más de lo que se necesita)
+        // Agregamos un pequeño margen del 5% para cubrir degradación futura
+        const potenciaFinalKwp = Math.min(potenciaNecesariaKwp * 1.05, maxKwpTecho);
+        
+        // 4. RE-CALCULAR PRODUCCIÓN CON LA POTENCIA REALISTA
+        const produccionAnio1 = potenciaFinalKwp * hsp * 365 * EFICIENCIA_INVERSOR * techo.factor_sombra;
+
+        const numeroPanelesInstalar = Math.ceil((potenciaFinalKwp * 1000) / 410);
+        
         // Producción promedio considerando degradación acumulada en 25 años
         const produccionAnual = produccionAnio1 * (1 - (DEGRADACION * (VIDA_UTIL - 1) / 2));
         const produccionMensual = produccionAnual / 12;
@@ -143,7 +169,7 @@ export const useSimulaciones = () => {
         const kwAhorrados = Math.min(produccionAnual, consumo.consumo_anual_kwh);
         const ahorroAnual = kwAhorrados * consumo.tarifa_kwh_mxn;
         const ahorroMensual = ahorroAnual / 12;
-        const costoInstalacion = potenciaSistemaKwp * 1000 * COSTO_POR_WP;
+        const costoInstalacion = potenciaFinalKwp * 1000 * COSTO_POR_WP; 
         const payback = costoInstalacion / ahorroAnual;
 
         // Ahorro en vida útil con incremento tarifario
@@ -167,6 +193,7 @@ export const useSimulaciones = () => {
 
         return {
             simulacion_id,
+            numero_paneles: numeroPanelesInstalar,
             produccion_anual_kwh: parseFloat(produccionAnual.toFixed(2)),
             produccion_mensual_promedio_kwh: parseFloat(produccionMensual.toFixed(2)),
             porcentaje_cobertura: parseFloat(porcentajeCobertura.toFixed(2)),
@@ -226,6 +253,22 @@ export const useSimulaciones = () => {
         }
     };
 
+    const detectaPasoActual = async (simulacion_id: number): Promise<number> => {
+        const techo = await obtieneDatosTecho(simulacion_id);
+        if (!techo || techo.error) return 2; // No tiene techo → paso 2
+
+        const geo = await obtieneDatosGeograficos(simulacion_id);
+        if (!geo || geo.error) return 2; // No tiene geo → paso 2
+
+        const consumo = await obtieneConsumoElectrico(simulacion_id);
+        if (!consumo || consumo.error) return 3; // No tiene consumo → paso 3
+
+        const resultados = await obtieneResultados(simulacion_id);
+        if (!resultados || resultados.error) return 4; // No tiene resultados → paso 4
+
+        return 4; // Completa → resultados
+    };
+
     return {
         simulaciones,
         simulacionActual,
@@ -244,6 +287,7 @@ export const useSimulaciones = () => {
         obtieneDatosTecho,
         obtieneDatosGeograficos,
         obtieneConsumoElectrico,
-        obtieneResultados
+        obtieneResultados,
+        detectaPasoActual
     };
 };

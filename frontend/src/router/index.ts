@@ -46,7 +46,7 @@ const router = createRouter({
             component: EditarClienteVue
         },
         {
-            path: '/simulaciones/nueva/:cliente_id',
+            path: '/simulaciones/nueva/:cliente_id/:simulacion_id?',
             name: 'nueva-simulacion-paso1',
             component: NuevaSimulacionPaso1Vue
         },
