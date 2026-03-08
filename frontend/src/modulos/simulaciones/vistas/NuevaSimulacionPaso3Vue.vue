@@ -49,8 +49,37 @@
                 <h2>Paso 3 — Consumo eléctrico</h2>
                 <p class="subtitulo">Ingresa los datos del recibo de luz del cliente.</p>
 
+                
                 <form @submit="onSubmit" class="formulario">
+                    <div class="grupo">
+                        <label>Foto del recibo <span class="opcional">(opcional para consulta)</span></label>
+                        <div 
+                            class="dropzone" 
+                            :class="{ 'dropzone-active': dragging }"
+                            @dragover.prevent="dragging = true"
+                            @dragleave.prevent="dragging = false"
+                            @drop.prevent="onDrop"
+                            @click="fileInput?.click()"
+                        >
+                        <input 
+                            type="file" 
+                            ref="fileInput" 
+                            class="hidden-input" 
+                            accept="image/*" 
+                            @change="onFileSelect"
+                        />
+        <div v-if="!imagenPreview" class="dropzone-info">
+            <span class="icono-upload">📄</span>
+            <p>Arrastra el recibo aquí o <strong>haz clic para buscar</strong></p>
+            <span class="formato-info">JPG, PNG o PDF (Máx. 5MB)</span>
+        </div>
 
+        <div v-else class="preview-container">
+            <img :src="imagenPreview" class="preview-img" />
+            <button type="button" class="btn-quitar" @click.stop="quitarImagen">✕</button>
+        </div>
+    </div>
+</div>
                     <div class="fila-doble">
                         <div class="grupo">
                             <label>Consumo mensual (kWh) *</label>
@@ -183,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useForm, useField } from 'vee-validate';
 import { paso3Schema } from '../schemas/simulacionesSchema';
@@ -203,6 +232,12 @@ const { value: costoValue, errorMessage: costoError } = useField<number>('costo_
 const { value: tarifaValue, errorMessage: tarifaError } = useField<string>('tipo_tarifa');
 const { value: periodoValue, errorMessage: periodoError } = useField<string>('periodo_facturacion');
 const { value: reciboValue } = useField<string>('numero_recibo');
+
+const dragging = ref(false);
+const imagenPreview = ref<string | null>(null);
+const archivoRecibo = ref<File | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
+
 
 // Calcula la tarifa por kWh automáticamente
 const tarifaKwh = computed(() => {
@@ -247,6 +282,42 @@ const onSubmit = handleSubmit(async (values) => {
         });
     }
 });
+
+const onDrop = (e: DragEvent) => {
+    dragging.value = false;
+    const files = e.dataTransfer?.files;
+    // Agregamos la validación de que files[0] existe
+    if (files && files.length > 0 && files[0]) {
+        procesarArchivo(files[0]);
+    }
+};
+
+const onFileSelect = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    // Lo mismo aquí, aseguramos que target.files[0] no sea undefined
+    if (target.files && target.files.length > 0 && target.files[0]) {
+        procesarArchivo(target.files[0]);
+    }
+};
+
+const procesarArchivo = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+        alert('Por favor, sube una imagen válida');
+        return;
+    }
+    archivoRecibo.value = file;
+    // Crear URL para la vista previa
+    imagenPreview.value = URL.createObjectURL(file);
+};
+
+const quitarImagen = () => {
+    if (imagenPreview.value) {
+        URL.revokeObjectURL(imagenPreview.value);
+    }
+    imagenPreview.value = null;
+    archivoRecibo.value = null;
+    if (fileInput.value) fileInput.value.value = '';
+};
 </script>
 
 <style scoped>
@@ -547,5 +618,71 @@ const onSubmit = handleSubmit(async (values) => {
     .paso-linea {
         margin-bottom: 0.7rem;
     }
+}
+
+.dropzone {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafafa;
+    position: relative;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropzone:hover, .dropzone-active {
+    border-color: #FF7043;
+    background: #fff5f2;
+}
+
+.hidden-input { display: none; }
+
+.dropzone-info p {
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    color: #444;
+}
+
+.formato-info {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.icono-upload { font-size: 2rem; }
+
+.preview-container {
+    position: relative;
+    width: 100%;
+    max-height: 200px;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.preview-img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.btn-quitar {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 </style>

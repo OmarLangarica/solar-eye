@@ -131,12 +131,28 @@ export const useSimulaciones = () => {
         const hsp = geo.horas_sol_pico_diarias;
         const areaUtil = techo.area_util_m2 ?? techo.area_m2 * 0.85;
 
+
+        
         // Paneles que caben en el techo (panel estándar 1.96 m²)
         const cantidadPaneles = Math.floor(areaUtil / 1.96);
         const potenciaSistemaKwp = (cantidadPaneles * 410) / 1000;
 
         // Producción año 1 sin degradación
-        const produccionAnio1 = potenciaSistemaKwp * hsp * 365 * EFICIENCIA_INVERSOR * techo.factor_sombra;
+        // 1. CALCULAR POTENCIA NECESARIA (Basado en consumo real)
+        // Fórmula: Consumo Diario / (HSP * Eficiencia)
+        const consumoDiarioKwh = consumo.consumo_anual_kwh / 365;
+        const potenciaNecesariaKwp = consumoDiarioKwh / (hsp * EFICIENCIA_INVERSOR * techo.factor_sombra);
+
+        // 2. CALCULAR CAPACIDAD MÁXIMA DEL TECHO
+        const maxPanelesTecho = Math.floor(areaUtil / 1.96);
+        const maxKwpTecho = (maxPanelesTecho * 410) / 1000;
+
+        // 3. SELECCIONAR EL MENOR (No podemos instalar más de lo que cabe, ni más de lo que se necesita)
+        // Agregamos un pequeño margen del 5% para cubrir degradación futura
+        const potenciaFinalKwp = Math.min(potenciaNecesariaKwp * 1.05, maxKwpTecho);
+        
+        // 4. RE-CALCULAR PRODUCCIÓN CON LA POTENCIA REALISTA
+        const produccionAnio1 = potenciaFinalKwp * hsp * 365 * EFICIENCIA_INVERSOR * techo.factor_sombra;
 
         // Producción promedio considerando degradación acumulada en 25 años
         const produccionAnual = produccionAnio1 * (1 - (DEGRADACION * (VIDA_UTIL - 1) / 2));
