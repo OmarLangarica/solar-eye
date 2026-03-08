@@ -169,7 +169,7 @@ export const useSimulaciones = () => {
         const kwAhorrados = Math.min(produccionAnual, consumo.consumo_anual_kwh);
         const ahorroAnual = kwAhorrados * consumo.tarifa_kwh_mxn;
         const ahorroMensual = ahorroAnual / 12;
-        const costoInstalacion = potenciaSistemaKwp * 1000 * COSTO_POR_WP;
+        const costoInstalacion = potenciaFinalKwp * 1000 * COSTO_POR_WP; 
         const payback = costoInstalacion / ahorroAnual;
 
         // Ahorro en vida útil con incremento tarifario
