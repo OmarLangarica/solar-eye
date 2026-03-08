@@ -147,6 +147,7 @@ export const useSimulaciones = () => {
         const maxPanelesTecho = Math.floor(areaUtil / 1.96);
         const maxKwpTecho = (maxPanelesTecho * 410) / 1000;
 
+        
         // 3. SELECCIONAR EL MENOR (No podemos instalar más de lo que cabe, ni más de lo que se necesita)
         // Agregamos un pequeño margen del 5% para cubrir degradación futura
         const potenciaFinalKwp = Math.min(potenciaNecesariaKwp * 1.05, maxKwpTecho);
@@ -154,6 +155,8 @@ export const useSimulaciones = () => {
         // 4. RE-CALCULAR PRODUCCIÓN CON LA POTENCIA REALISTA
         const produccionAnio1 = potenciaFinalKwp * hsp * 365 * EFICIENCIA_INVERSOR * techo.factor_sombra;
 
+        const numeroPanelesInstalar = Math.ceil((potenciaFinalKwp * 1000) / 410);
+        
         // Producción promedio considerando degradación acumulada en 25 años
         const produccionAnual = produccionAnio1 * (1 - (DEGRADACION * (VIDA_UTIL - 1) / 2));
         const produccionMensual = produccionAnual / 12;
@@ -190,6 +193,7 @@ export const useSimulaciones = () => {
 
         return {
             simulacion_id,
+            numero_paneles: numeroPanelesInstalar,
             produccion_anual_kwh: parseFloat(produccionAnual.toFixed(2)),
             produccion_mensual_promedio_kwh: parseFloat(produccionMensual.toFixed(2)),
             porcentaje_cobertura: parseFloat(porcentajeCobertura.toFixed(2)),

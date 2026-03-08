@@ -55,6 +55,7 @@ export interface ConsumoElectrico {
 export interface ResultadosCalculo {
     id?: number;
     simulacion_id: number;
+    numero_paneles: number;
     produccion_anual_kwh: number;
     produccion_mensual_promedio_kwh: number;
     porcentaje_cobertura: number;
