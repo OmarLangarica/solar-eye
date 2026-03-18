@@ -61,7 +61,49 @@
 
             <!-- Panel derecho: datos -->
             <div class="panel-datos">
-
+                <!-- Buscador de ubicación -->
+                <div class="card-datos">
+                    <h3>Buscar ubicación</h3>
+                    <div class="formulario">
+                        <div class="grupo">
+                            <label>Estado</label>
+                            <input v-model="busqueda.estado" type="text" placeholder="Ej: Sinaloa" />
+                        </div>
+                        <div class="grupo">
+                            <label>Ciudad / Municipio</label>
+                            <input v-model="busqueda.ciudad" type="text" placeholder="Ej: Culiacán" />
+                        </div>
+                        <div class="grupo">
+                            <label>Colonia</label>
+                            <input v-model="busqueda.colonia" type="text" placeholder="Ej: Las Quintas" />
+                        </div>
+                        <div class="grupo">
+                            <label>Calle y número</label>
+                            <input 
+                                v-model="busqueda.calle" 
+                                type="text" 
+                                placeholder="Ej: Blvd. Insurgentes 123"
+                                @keyup.enter="buscarUbicacion"
+                            />
+                        </div>
+                        <button 
+                            class="btn-buscar" 
+                            @click="buscarUbicacion"
+                            :disabled="cargandoBusqueda"
+                        >
+                            {{ cargandoBusqueda ? 'Buscando...' : ' Buscar en el mapa' }}
+                        </button>
+                        <span class="error-msg" v-if="errorBusqueda">{{ errorBusqueda }}</span>
+                        <button 
+                            class="btn-ubicacion" 
+                            @click="usarUbicacionActual"
+                            :disabled="cargandoUbicacion"
+                        >
+                            {{ cargandoUbicacion ? 'Detectando...' : 'Usar mi ubicación actual' }}
+                        </button>
+                        <span class="error-msg" v-if="errorUbicacion">{{ errorUbicacion }}</span>
+                    </div>
+                </div>
                 <!-- Datos calculados del techo -->
                 <div class="card-datos" :class="{ 'card-activa': datosTecho.area_m2 > 0 }">
                     <h3>Datos del techo</h3>
@@ -73,7 +115,7 @@
                             </span>
                         </div>
                         <p v-if="datosTecho.area_m2 > AREA_MAXIMA_M2" class="error-msg-area">
-                            ⚠️ El área es demasiado grande (Máx. {{ AREA_MAXIMA_M2 }} m²). Por favor, ajusta el trazo.
+                            El área es demasiado grande (Máx. {{ AREA_MAXIMA_M2 }} m²). Por favor, ajusta el trazo.
                         </p>
                         <div class="dato">
                             <span class="dato-label">Área útil</span>
@@ -172,16 +214,13 @@ import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
 import { useSimulaciones } from '../controladores/useSimulaciones';
 import type { DatosTecho, DatosGeograficos } from '../interfaces/simulaciones-interface';
-import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
-import 'leaflet-control-geocoder';
 import simulacionesApi from '../api/simulacionesApi';
-
 
 const router = useRouter();
 const route = useRoute();
-const { cargando, error, guardarDatosTecho, consultarNasa, guardarDatosGeograficos, obtieneConsumoElectrico,obtieneDatosGeograficos,obtieneDatosTecho } = useSimulaciones();
+const { cargando, error, guardarDatosTecho, consultarNasa, guardarDatosGeograficos, obtieneDatosGeograficos, obtieneDatosTecho } = useSimulaciones();
 
-const AREA_MAXIMA_M2 = 1000; 
+const AREA_MAXIMA_M2 = 1000;
 
 const cliente_id = Number(route.params.cliente_id);
 const simulacion_id = Number(route.params.simulacion_id);
@@ -189,6 +228,57 @@ const simulacion_id = Number(route.params.simulacion_id);
 const mapaRef = ref<HTMLElement | null>(null);
 const cargandoNasa = ref(false);
 const datosGeo = ref<DatosGeograficos | null>(null);
+
+// ─── Buscador ──────────────────────────────────────────────────
+const busqueda = reactive({
+    estado: '',
+    ciudad: '',
+    colonia: '',
+    calle: ''
+});
+const cargandoBusqueda = ref(false);
+const errorBusqueda = ref('');
+
+const buscarUbicacion = async () => {
+    const partes = [
+        busqueda.calle,
+        busqueda.colonia,
+        busqueda.ciudad,
+        busqueda.estado,
+        'México'
+    ].filter(p => p.trim() !== '');
+
+    if (partes.length < 2) {
+        errorBusqueda.value = 'Ingresa al menos ciudad y estado';
+        return;
+    }
+
+    try {
+        cargandoBusqueda.value = true;
+        errorBusqueda.value = '';
+
+        const query = encodeURIComponent(partes.join(', '));
+        const respuesta = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1&countrycodes=mx`,
+            { headers: { 'Accept-Language': 'es' } }
+        );
+        const datos = await respuesta.json();
+
+        if (!datos.length) {
+            errorBusqueda.value = 'No se encontró la ubicación, intenta con menos campos';
+            return;
+        }
+
+        const lat = parseFloat(datos[0].lat);
+        const lng = parseFloat(datos[0].lon);
+        mapa?.setView([lat, lng], 18);
+
+    } catch (err) {
+        errorBusqueda.value = 'Error al buscar la ubicación';
+    } finally {
+        cargandoBusqueda.value = false;
+    }
+};
 
 const datosTecho = reactive<DatosTecho>({
     simulacion_id,
@@ -207,7 +297,6 @@ const datosTecho = reactive<DatosTecho>({
 let mapa: L.Map | null = null;
 let capaEdicion: L.FeatureGroup | null = null;
 
-// Calcula área en m² de un polígono usando la fórmula de Gauss
 const calcularAreaM2 = (coordenadas: [number, number][]): number => {
     const R = 6371000;
     const toRad = (deg: number) => deg * Math.PI / 180;
@@ -216,28 +305,20 @@ const calcularAreaM2 = (coordenadas: [number, number][]): number => {
     for (let i = 0; i < n; i++) {
         const actual = coordenadas[i];
         const siguiente = coordenadas[(i + 1) % n];
-
-        if (!actual || !siguiente) continue; // ← resuelve el undefined
-
-        const lat1 = actual[0];
-        const lng1 = actual[1];
-        const lat2 = siguiente[0];
-        const lng2 = siguiente[1];
-
+        if (!actual || !siguiente) continue;
+        const lat1 = actual[0], lng1 = actual[1];
+        const lat2 = siguiente[0], lng2 = siguiente[1];
         area += toRad(lng2 - lng1) * (2 + Math.sin(toRad(lat1)) + Math.sin(toRad(lat2)));
     }
     return Math.abs(area * R * R / 2);
 };
 
-// Calcula perímetro en metros
 const calcularPerimetroM = (coordenadas: [number, number][]): number => {
     let perimetro = 0;
     for (let i = 0; i < coordenadas.length; i++) {
         const actual = coordenadas[i];
         const siguiente = coordenadas[(i + 1) % coordenadas.length];
-
-        if (!actual || !siguiente) continue; // ← esto resuelve el undefined
-
+        if (!actual || !siguiente) continue;
         const p1 = L.latLng(actual[0], actual[1]);
         const p2 = L.latLng(siguiente[0], siguiente[1]);
         perimetro += p1.distanceTo(p2);
@@ -245,57 +326,38 @@ const calcularPerimetroM = (coordenadas: [number, number][]): number => {
     return parseFloat(perimetro.toFixed(2));
 };
 
-const puedeAvanzar = computed(() => 
-    datosTecho.area_m2 > 0 && 
+const puedeAvanzar = computed(() =>
+    datosTecho.area_m2 > 0 &&
     datosTecho.area_m2 <= AREA_MAXIMA_M2 &&
     datosGeo.value !== null
 );
 
 onMounted(() => {
-    // Inicializa el mapa centrado en México
     mapa = L.map(mapaRef.value!, {
         center: [23.6345, -102.5528],
         zoom: 5,
+        doubleClickZoom: false
     });
 
-    const buscador = (L.Control as any).geocoder({
-        defaultMarkGeocode: false, 
-        placeholder: 'Buscar dirección...',
-        errorMessage: 'No se encontró la ubicación.'
-    })
-    .on('markgeocode', function(e: any) {
-        const bbox = e.geocode.bbox;
-        const poly = L.polygon([
-            [bbox.getSouthEast().lat, bbox.getSouthEast().lng],
-            [bbox.getNorthEast().lat, bbox.getNorthEast().lng],
-            [bbox.getNorthWest().lat, bbox.getNorthWest().lng],
-            [bbox.getSouthWest().lat, bbox.getSouthWest().lng]
-        ]);
-        
-        // Ajustar el mapa a la ubicación encontrada con un zoom cercano
-        mapa?.fitBounds(poly.getBounds(), { maxZoom: 22 });
-    })
-    .addTo(mapa);
+    if (!mapa) return;
 
-    // Capa de satélite
+    // Capas
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles © Esri',
         maxNativeZoom: 18,
         maxZoom: 22
     }).addTo(mapa);
 
-    // Capa de etiquetas encima del satélite
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
         attribution: '',
         maxNativeZoom: 18,
         maxZoom: 22
     }).addTo(mapa);
 
-    // Capa editable para el dibujo
     capaEdicion = new L.FeatureGroup();
     mapa.addLayer(capaEdicion);
 
-    // Controles de dibujo — solo polígono
+    // Controles de dibujo
     const controles = new (L as any).Control.Draw({
         edit: { featureGroup: capaEdicion },
         draw: {
@@ -317,7 +379,7 @@ onMounted(() => {
     });
     mapa.addControl(controles);
 
-    // Evento cuando se termina de dibujar
+    // Evento dibujo completado
     mapa.on((L as any).Draw.Event.CREATED, async (e: any) => {
         capaEdicion!.clearLayers();
         capaEdicion!.addLayer(e.layer);
@@ -338,14 +400,13 @@ onMounted(() => {
         datosTecho.longitud = parseFloat(centroide.lng.toFixed(7));
         datosTecho.area_util_m2 = parseFloat((area * 0.85).toFixed(2));
 
-        // Consulta NASA automáticamente
         cargandoNasa.value = true;
         const geo = await consultarNasa(datosTecho.latitud, datosTecho.longitud);
         if (geo) datosGeo.value = geo;
         cargandoNasa.value = false;
     });
 
-    // Evento cuando se elimina el dibujo
+    // Evento borrado
     mapa.on((L as any).Draw.Event.DELETED, () => {
         datosTecho.geojson = '';
         datosTecho.area_m2 = 0;
@@ -356,10 +417,73 @@ onMounted(() => {
         datosGeo.value = null;
     });
 });
+const calcularConfiguracionAutomatica = (geo: DatosGeograficos, lat: number) => {
+    // ─── Ángulo de inclinación óptimo ────────────────────────
+    // Fórmula estándar: ángulo ≈ latitud × 0.76 + 3.1
+    const latAbs = Math.abs(lat);
+    const anguloOptimo = Math.round(latAbs * 0.76 + 3.1);
+    datosTecho.angulo_inclinacion_deg = Math.min(Math.max(anguloOptimo, 10), 35);
+
+    // ─── Factor de sombra ────────────────────────────────────
+    // Basado en irradiación real vs esperada para la zona
+    let factorSombra = 0.95; // valor base sin sombra
+
+    // Si la irradiación diaria es baja para las HSP disponibles, hay sombra
+    const irradiacionEsperada = (geo.horas_sol_pico_diarias ?? 5) * 365;
+    const irradiacionReal = geo.irradiacion_anual_kwh_m2 ?? 1800;
+    const ratio = irradiacionReal / irradiacionEsperada;
+
+    if (ratio >= 0.95) factorSombra = 0.98;
+    else if (ratio >= 0.90) factorSombra = 0.95;
+    else if (ratio >= 0.85) factorSombra = 0.90;
+    else if (ratio >= 0.80) factorSombra = 0.85;
+    else factorSombra = 0.80;
+
+    datosTecho.factor_sombra = factorSombra;
+};
 
 onUnmounted(() => {
     mapa?.remove();
 });
+
+const cargandoUbicacion = ref(false);
+const errorUbicacion = ref('');
+
+const usarUbicacionActual = () => {
+    if (!navigator.geolocation) {
+        errorUbicacion.value = 'Tu dispositivo no soporta geolocalización';
+        return;
+    }
+
+    cargandoUbicacion.value = true;
+    errorUbicacion.value = '';
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            mapa?.setView([lat, lng], 18);
+            cargandoUbicacion.value = false;
+        },
+        (err) => {
+            cargandoUbicacion.value = false;
+            switch (err.code) {
+                case err.PERMISSION_DENIED:
+                    errorUbicacion.value = 'Permiso de ubicación denegado';
+                    break;
+                case err.POSITION_UNAVAILABLE:
+                    errorUbicacion.value = 'Ubicación no disponible';
+                    break;
+                case err.TIMEOUT:
+                    errorUbicacion.value = 'Tiempo de espera agotado';
+                    break;
+                default:
+                    errorUbicacion.value = 'Error al obtener ubicación';
+            }
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+};
 
 const guardarYAvanzar = async () => {
     if (!datosGeo.value) return;
@@ -369,8 +493,8 @@ const guardarYAvanzar = async () => {
         const geoExistente = await obtieneDatosGeograficos(simulacion_id);
 
         if (techoExistente && !techoExistente.error && techoExistente.id) {
-            await simulacionesApi.put('/techo', { 
-                ...datosTecho, 
+            await simulacionesApi.put('/techo', {
+                ...datosTecho,
                 id: Number(techoExistente.id)
             });
         } else {
@@ -378,8 +502,8 @@ const guardarYAvanzar = async () => {
         }
 
         if (geoExistente && !geoExistente.error && geoExistente.id) {
-            await simulacionesApi.put('/geograficos', { 
-                ...datosGeo.value, 
+            await simulacionesApi.put('/geograficos', {
+                ...datosGeo.value,
                 simulacion_id,
                 id: Number(geoExistente.id)
             });
@@ -387,7 +511,6 @@ const guardarYAvanzar = async () => {
             await guardarDatosGeograficos({ ...datosGeo.value, simulacion_id });
         }
 
-        // Navega independientemente del error.value del composable
         router.push({
             path: `/simulaciones/nueva/${cliente_id}/paso3/${simulacion_id}`,
             query: { nombre: route.query.nombre }
@@ -424,6 +547,36 @@ const guardarYAvanzar = async () => {
 }
 .btn-volver:hover { background-color: #e0e0e0; }
 
+.btn-buscar {
+    padding: 0.7rem;
+    background-color: #FF7043;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+.btn-buscar:hover { background-color: #F4511E; }
+.btn-buscar:disabled { opacity: 0.6; cursor: not-allowed; }
+.error-msg { font-size: 0.8rem; color: #ef4444; }
+
+.btn-ubicacion {
+    padding: 0.7rem;
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+.btn-ubicacion:hover { background-color: #e0e0e0; }
+.btn-ubicacion:disabled { opacity: 0.6; cursor: not-allowed; }
 /* Pasos */
 .pasos {
     display: flex;
