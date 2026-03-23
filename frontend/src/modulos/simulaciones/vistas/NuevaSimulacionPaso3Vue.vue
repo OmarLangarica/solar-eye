@@ -79,6 +79,7 @@
             <button type="button" class="btn-quitar" @click.stop="quitarImagen">✕</button>
         </div>
     </div>
+
 </div>
                     <div class="fila-doble">
                         <div class="grupo">
@@ -305,6 +306,7 @@ const procesarArchivo = (file: File) => {
         alert('Por favor, sube una imagen válida');
         return;
     }
+
     archivoRecibo.value = file;
     // Crear URL para la vista previa
     imagenPreview.value = URL.createObjectURL(file);

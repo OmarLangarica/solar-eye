@@ -1,0 +1,254 @@
+:root {
+	--se-bg: #f8fafc;
+	--se-panel: #ffffff;
+	--se-panel-soft: #f3f4f6;
+	--se-text: #111827;
+	--se-text-soft: #6b7280;
+	--se-border: #e5e7eb;
+	--se-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+html.theme-dark {
+	--se-bg: #0b1220;
+	--se-panel: #151f2f;
+	--se-panel-soft: #1d2a3f;
+	--se-text: #e5e7eb;
+	--se-text-soft: #9ca3af;
+	--se-border: #24324a;
+	--se-shadow: 0 8px 24px rgba(2, 6, 23, 0.5);
+}
+
+body {
+	background: var(--se-bg) !important;
+	color: var(--se-text) !important;
+	transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+html.theme-dark .theme-toggle {
+	background: #101827;
+	color: #e5e7eb;
+	border-color: #334155;
+}
+
+html.theme-dark .app-header {
+	background: rgba(10, 16, 29, 0.92) !important;
+	border-bottom-color: #23324b !important;
+}
+
+html.theme-dark .app-brand {
+	color: #fb923c !important;
+}
+
+html.theme-dark .contenedor,
+html.theme-dark .clientes-container,
+html.theme-dark .dashboard-container,
+html.theme-dark .landing-container,
+html.theme-dark .navbar,
+html.theme-dark .details,
+html.theme-dark .features,
+html.theme-dark .tabla-container,
+html.theme-dark .card,
+html.theme-dark .panel,
+html.theme-dark .card-ayuda,
+html.theme-dark .pasos,
+html.theme-dark .tarjeta,
+html.theme-dark .modal-eliminar,
+html.theme-dark .dropzone,
+html.theme-dark .feature-card,
+html.theme-dark tr,
+html.theme-dark .estado-carga,
+html.theme-dark .kpi-card {
+	background: var(--se-panel) !important;
+	color: var(--se-text) !important;
+	border-color: var(--se-border) !important;
+	box-shadow: var(--se-shadow) !important;
+}
+
+html.theme-dark thead {
+	background: var(--se-panel-soft) !important;
+}
+
+html.theme-dark th,
+html.theme-dark td,
+html.theme-dark .encabezado h1,
+html.theme-dark .encabezado p,
+html.theme-dark .subtitulo,
+html.theme-dark .card-subtitulo,
+html.theme-dark .kpi-detalle,
+html.theme-dark .sin-datos,
+html.theme-dark .dropzone-info p,
+html.theme-dark .formato-info,
+html.theme-dark .fila-dato,
+html.theme-dark .promedio-item,
+html.theme-dark .paso span,
+html.theme-dark .logo,
+html.theme-dark .menu a,
+html.theme-dark .detail-text p,
+html.theme-dark .feature-card p,
+html.theme-dark label,
+html.theme-dark .grupo label,
+html.theme-dark .panel h3,
+html.theme-dark .kpi-card h2,
+html.theme-dark .subtexto,
+html.theme-dark .nombre-cliente {
+	color: var(--se-text) !important;
+}
+
+html.theme-dark .encabezado p,
+html.theme-dark .subtitulo,
+html.theme-dark .card-subtitulo,
+html.theme-dark .kpi-detalle,
+html.theme-dark .sin-datos,
+html.theme-dark .formato-info,
+html.theme-dark .detail-text p,
+html.theme-dark .feature-card p,
+html.theme-dark .subtexto,
+html.theme-dark .paso span {
+	color: var(--se-text-soft) !important;
+}
+
+html.theme-dark input,
+html.theme-dark textarea,
+html.theme-dark select,
+html.theme-dark .buscador input,
+html.theme-dark .grupo input,
+html.theme-dark .grupo textarea,
+html.theme-dark .grupo select {
+	background: #0f172a !important;
+	color: var(--se-text) !important;
+	border-color: #334155 !important;
+}
+
+html.theme-dark .btn-volver,
+html.theme-dark .btn-cancelar,
+html.theme-dark .btn-cerrar-sesion,
+html.theme-dark .btn-secundario {
+	background: #1f2937 !important;
+	color: #e5e7eb !important;
+	border-color: #334155 !important;
+}
+
+html.theme-dark .overlay {
+	background: rgba(2, 6, 23, 0.75) !important;
+}
+
+/* Clientes y simulaciones: hover legible en tablas */
+html.theme-dark .tabla-container tbody tr:hover td {
+	background: #24344e !important;
+	color: #f8fafc !important;
+}
+
+/* Tarjetas de tabla en movil */
+html.theme-dark .clientes-container td::before,
+html.theme-dark .contenedor td::before {
+	color: #94a3b8 !important;
+}
+
+/* Login */
+html.theme-dark .login-card {
+	background: #121d2d !important;
+	border: 1px solid #27364f !important;
+}
+
+html.theme-dark .pestanas {
+	border-bottom-color: #2a3c58 !important;
+}
+
+html.theme-dark .pestana {
+	background: #162235 !important;
+	color: #cbd5e1 !important;
+}
+
+html.theme-dark .pestana:hover {
+	background: #213149 !important;
+}
+
+/* Inicio */
+html.theme-dark .navbar {
+	background: rgba(13, 21, 34, 0.95) !important;
+	border-bottom: 1px solid #263852 !important;
+}
+
+html.theme-dark .btn-login {
+	color: #fdba74 !important;
+}
+
+html.theme-dark .hero {
+	position: relative;
+	isolation: isolate;
+	color: #f8fafc !important;
+	box-shadow: none !important;
+}
+
+html.theme-dark .hero::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: rgba(2, 6, 23, 0.38);
+	z-index: 0;
+}
+
+html.theme-dark .hero > * {
+	position: relative;
+	z-index: 1;
+}
+
+html.theme-dark .feature-card,
+html.theme-dark .detail-image img {
+	border: 1px solid #2a3d59 !important;
+}
+
+/* Resultados */
+html.theme-dark .tarjeta-label,
+html.theme-dark .barra-label,
+html.theme-dark .impacto-label {
+	color: #93a4bb !important;
+}
+
+html.theme-dark .valor-positivo {
+	color: #4ade80 !important;
+}
+
+html.theme-dark .valor-destacado {
+	color: #fb923c !important;
+}
+
+html.theme-dark .valor-advertencia {
+	color: #fbbf24 !important;
+}
+
+/* Badges de estado en simulaciones */
+html.theme-dark .badge.borrador {
+	background: #5b4306 !important;
+	color: #fde68a !important;
+}
+
+html.theme-dark .badge.completada {
+	background: #14532d !important;
+	color: #bbf7d0 !important;
+}
+
+html.theme-dark .badge.cotizada {
+	background: #1e3a8a !important;
+	color: #bfdbfe !important;
+}
+
+html.theme-dark .impacto-item {
+	background: #102a1d !important;
+	border: 1px solid #245139 !important;
+}
+
+html.theme-dark .impacto-valor {
+	color: #86efac !important;
+}
+
+html.theme-dark .barra-fondo,
+html.theme-dark .barra-track,
+html.theme-dark .paso-linea,
+html.theme-dark .fila-dato,
+html.theme-dark td,
+html.theme-dark th,
+html.theme-dark .promedio-item,
+html.theme-dark .card-top-clientes li {
+	border-color: var(--se-border) !important;
+}
