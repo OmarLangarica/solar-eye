@@ -7,11 +7,13 @@
                 <p>Bienvenido, {{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</p>
             </div>
             <div class="acciones-header">
+                <button class="btn-dashboard" @click="router.push('/dashboard')">Ver dashboard</button>
                 <button class="btn-agregar" @click="router.push('/clientes/agregar')">+ Nuevo cliente</button>
                 <button class="btn-cerrar-sesion" @click="cerrarSesion">Cerrar sesión</button>
             </div>
         </div>
 
+        
         <div class="mensaje exito" v-if="mensaje">{{ mensaje }}</div>
         <div class="mensaje error-msg" v-if="error">{{ error }}</div>
 
@@ -136,6 +138,18 @@ onMounted(() => traeClientes());
 
 .acciones-header { display: flex; gap: 1rem; }
 
+.btn-dashboard {
+    padding: 0.6rem 1.2rem;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+.btn-dashboard:hover { background-color: #1d4ed8; }
+
 .btn-agregar {
     padding: 0.6rem 1.2rem;
     background-color: #FF7043;
@@ -233,7 +247,7 @@ tr:hover td { background-color: #fafafa; }
     
     .encabezado { flex-direction: column; align-items: flex-start; gap: 1rem; }
     .acciones-header { width: 100%; justify-content: space-between; }
-    .btn-agregar, .btn-cerrar-sesion { flex: 1; padding: 0.5rem; text-align: center; }
+    .btn-dashboard, .btn-agregar, .btn-cerrar-sesion { flex: 1; padding: 0.5rem; text-align: center; }
 
     /* --- TARJETAS FIJAS A PRUEBA DE FALLOS --- */
     

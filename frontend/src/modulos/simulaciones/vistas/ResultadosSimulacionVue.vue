@@ -79,6 +79,30 @@
                 </div>
             </div>
 
+            <div class="graficas-grid" v-if="resultados && consumo">
+                <div class="card card-grafica">
+                    <h3><i class="bi bi-bar-chart-line"></i> Comparativa de consumo vs generación</h3>
+                    <p class="card-subtitulo">Consumo mensual del cliente frente a la producción mensual estimada del sistema.</p>
+                    <div class="canvas-wrap">
+                        <canvas ref="comparativaCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="card card-grafica">
+                    <h3><i class="bi bi-graph-up-arrow"></i> Proyección de ahorro acumulado a 25 años</h3>
+                    <p class="card-subtitulo">Se compara el costo acumulado de seguir con CFE contra la inversión solar fija.</p>
+                    <div class="payback-banner" v-if="textoPaybackEstimado">
+                        Retorno estimado en {{ textoPaybackEstimado }} años.
+                    </div>
+                    <div class="payback-banner sin-retorno" v-else>
+                        Con los datos actuales, el retorno no cruza la inversión en 25 años.
+                    </div>
+                    <div class="canvas-wrap">
+                        <canvas ref="proyeccionCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid-resultados">
 
                 <div class="columna">
@@ -98,9 +122,9 @@
                                 <span>Ahorro anual estimado</span>
                                 <span class="valor-positivo">$ {{ resultados.ahorro_anual_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }} MXN</span>
                             </div>
-                            <div class="fila-dato destacada">
+                            <div class="fila-dato destacada fila-ahorro-25">
                                 <span>Ahorro en 25 años</span>
-                                <span class="valor-positivo grande">$ {{ resultados.ahorro_vida_util_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }} MXN</span>
+                                <span class="valor-positivo grande valor-ahorro-25">$ {{ resultados.ahorro_vida_util_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }} MXN</span>
                             </div>
                             <div class="fila-dato">
                                 <span>Retorno de inversión</span>
@@ -233,17 +257,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick, watch, onBeforeUnmount, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 // Importaciones nuevas para el PDF
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { Chart, registerables } from 'chart.js';
 
 import { useSimulaciones } from '../controladores/useSimulaciones';
 import type { ResultadosCalculo, DatosTecho, DatosGeograficos, ConsumoElectrico } from '../interfaces/simulaciones-interface';
 
 const router = useRouter();
 const route = useRoute();
+Chart.register(...registerables);
 const {
     cargando, error,
     obtieneDatosTecho,
@@ -260,8 +286,308 @@ const resultados = ref<ResultadosCalculo | null>(null);
 const techo = ref<DatosTecho | null>(null);
 const geo = ref<DatosGeograficos | null>(null);
 const consumo = ref<ConsumoElectrico | null>(null);
+const comparativaCanvas = ref<HTMLCanvasElement | null>(null);
+const proyeccionCanvas = ref<HTMLCanvasElement | null>(null);
+const comparativaChart = ref<Chart<'bar'> | null>(null);
+const proyeccionChart = ref<Chart<'line'> | null>(null);
+
+const TOTAL_ANIOS_PROYECCION = 25;
+
+const redondeaMoneda = (valor: number) => Number(valor.toFixed(2));
+
+const obtienePaletaGrafica = () => {
+    const oscuro = document.documentElement.classList.contains('theme-dark');
+    if (oscuro) {
+        return {
+            texto: '#f8fafc',
+            textoSuave: '#cbd5e1',
+            rejilla: 'rgba(148, 163, 184, 0.22)'
+        };
+    }
+
+    return {
+        texto: '#374151',
+        textoSuave: '#6b7280',
+        rejilla: 'rgba(148, 163, 184, 0.28)'
+    };
+};
+
+const normalizaResultados = (data: Partial<ResultadosCalculo>): ResultadosCalculo => {
+    const ahorroAnual = Number(data.ahorro_anual_mxn || 0);
+    const costoInstalacion = Number(data.costo_total_instalacion_mxn || 0);
+    const retornoConsistente = ahorroAnual > 0 ? costoInstalacion / ahorroAnual : 0;
+
+    return {
+        simulacion_id,
+        numero_paneles: Number(data.numero_paneles || 0),
+        produccion_anual_kwh: Number(data.produccion_anual_kwh || 0),
+        produccion_mensual_promedio_kwh: Number(data.produccion_mensual_promedio_kwh || 0),
+        porcentaje_cobertura: Number(data.porcentaje_cobertura || 0),
+        excedente_kwh: Number(data.excedente_kwh || 0),
+        ahorro_mensual_mxn: redondeaMoneda(ahorroAnual / 12),
+        ahorro_anual_mxn: ahorroAnual,
+        ahorro_vida_util_mxn: Number(data.ahorro_vida_util_mxn || 0),
+        costo_total_instalacion_mxn: costoInstalacion,
+        retorno_inversion_anios: redondeaMoneda(retornoConsistente),
+        co2_evitado_anual_kg: Number(data.co2_evitado_anual_kg || 0),
+        co2_evitado_vida_util_kg: Number(data.co2_evitado_vida_util_kg || 0),
+        arboles_equivalentes: Number(data.arboles_equivalentes || 0),
+        precio_kwh_proyectado_anio5: Number(data.precio_kwh_proyectado_anio5 || 0),
+        precio_kwh_proyectado_anio10: Number(data.precio_kwh_proyectado_anio10 || 0),
+        tasa_incremento_tarifa_pct: Number(data.tasa_incremento_tarifa_pct || 0)
+    };
+};
+
+const calcularProyeccion = () => {
+    if (!resultados.value) return null;
+
+    const ahorroVidaUtil = Number(resultados.value.ahorro_vida_util_mxn || 0);
+    const tasaIncremento = Number(resultados.value.tasa_incremento_tarifa_pct || 0) / 100;
+    const inversion = Number(resultados.value.costo_total_instalacion_mxn || 0);
+
+    let costoAcumuladoSinSolar = 0;
+    let anioPayback: number | null = null;
+
+    const etiquetas: string[] = [];
+    const serieSinSolar: number[] = [];
+    const serieConSolar: number[] = [];
+
+    if (ahorroVidaUtil <= 0) {
+        for (let anio = 1; anio <= TOTAL_ANIOS_PROYECCION; anio++) {
+            etiquetas.push(`Año ${anio}`);
+            serieSinSolar.push(0);
+            serieConSolar.push(redondeaMoneda(inversion));
+        }
+
+        return {
+            etiquetas,
+            serieSinSolar,
+            serieConSolar,
+            anioPayback
+        };
+    }
+
+    const pesosAnuales = Array.from({ length: TOTAL_ANIOS_PROYECCION }, (_, indice) => Math.pow(1 + tasaIncremento, indice));
+    const sumaPesos = pesosAnuales.reduce((acc, valor) => acc + valor, 0);
+    const ahorroBaseEscalado = ahorroVidaUtil / sumaPesos;
+
+    let acumuladoPrevio = 0;
+
+    for (let anio = 1; anio <= TOTAL_ANIOS_PROYECCION; anio++) {
+        const pesoAnual = pesosAnuales[anio - 1] ?? 0;
+        const gastoAnualSinSolar = ahorroBaseEscalado * pesoAnual;
+        costoAcumuladoSinSolar += gastoAnualSinSolar;
+
+        if (anioPayback === null && costoAcumuladoSinSolar >= inversion && gastoAnualSinSolar > 0) {
+            const fraccion = (inversion - acumuladoPrevio) / gastoAnualSinSolar;
+            anioPayback = (anio - 1) + Math.max(0, Math.min(fraccion, 1));
+        }
+
+        etiquetas.push(`Año ${anio}`);
+        serieSinSolar.push(redondeaMoneda(costoAcumuladoSinSolar));
+        serieConSolar.push(redondeaMoneda(inversion));
+        acumuladoPrevio = costoAcumuladoSinSolar;
+    }
+
+    return {
+        etiquetas,
+        serieSinSolar,
+        serieConSolar,
+        anioPayback
+    };
+};
+
+const anioPaybackEstimado = computed(() => {
+    const proyeccion = calcularProyeccion();
+    return proyeccion?.anioPayback ?? null;
+});
+
+const textoPaybackEstimado = computed(() => {
+    if (!anioPaybackEstimado.value) return null;
+    return anioPaybackEstimado.value.toFixed(1);
+});
+
+const limpiarGraficas = () => {
+    comparativaChart.value?.destroy();
+    comparativaChart.value = null;
+
+    proyeccionChart.value?.destroy();
+    proyeccionChart.value = null;
+};
+
+const renderGraficaComparativa = () => {
+    if (!comparativaCanvas.value || !resultados.value || !consumo.value) return;
+
+    const paleta = obtienePaletaGrafica();
+
+    comparativaChart.value?.destroy();
+
+    comparativaChart.value = new Chart(comparativaCanvas.value, {
+        type: 'bar',
+        data: {
+            labels: ['Mensual'],
+            datasets: [
+                {
+                    label: 'Consumo (kWh)',
+                    data: [Number(consumo.value.consumo_mensual_kwh || 0)],
+                    backgroundColor: '#ef4444',
+                    borderRadius: 8,
+                    maxBarThickness: 58
+                },
+                {
+                    label: 'Generación solar (kWh)',
+                    data: [Number(resultados.value.produccion_mensual_promedio_kwh || 0)],
+                    backgroundColor: '#22c55e',
+                    borderRadius: 8,
+                    maxBarThickness: 58
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: paleta.texto
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.dataset.label}: ${Number(context.raw).toLocaleString('es-MX')} kWh`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: paleta.textoSuave
+                    },
+                    grid: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: paleta.rejilla
+                    },
+                    ticks: {
+                        color: paleta.textoSuave,
+                        callback: (valor) => `${Number(valor).toLocaleString('es-MX')} kWh`
+                    }
+                }
+            }
+        }
+    });
+};
+
+const renderGraficaProyeccion = () => {
+    if (!proyeccionCanvas.value || !resultados.value) return;
+
+    const paleta = obtienePaletaGrafica();
+
+    const proyeccion = calcularProyeccion();
+    if (!proyeccion) return;
+
+    proyeccionChart.value?.destroy();
+
+    const puntosPayback = proyeccion.etiquetas.map((_, indice) => {
+        if (!proyeccion.anioPayback) return null;
+        const indicePayback = Math.max(1, Math.min(TOTAL_ANIOS_PROYECCION, Math.round(proyeccion.anioPayback)));
+        if (indice + 1 === indicePayback) {
+            return proyeccion.serieSinSolar[indice] ?? null;
+        }
+        return null;
+    });
+
+    proyeccionChart.value = new Chart(proyeccionCanvas.value, {
+        type: 'line',
+        data: {
+            labels: proyeccion.etiquetas,
+            datasets: [
+                {
+                    label: 'Costo acumulado sin solar (CFE)',
+                    data: proyeccion.serieSinSolar,
+                    borderColor: '#f97316',
+                    backgroundColor: 'rgba(249, 115, 22, 0.16)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0
+                },
+                {
+                    label: 'Costo acumulado con solar',
+                    data: proyeccion.serieConSolar,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                    fill: true,
+                    tension: 0,
+                    pointRadius: 0,
+                    borderDash: [8, 6]
+                },
+                {
+                    label: proyeccion.anioPayback ? `Payback estimado (${proyeccion.anioPayback.toFixed(1)} años)` : 'Payback estimado',
+                    data: puntosPayback,
+                    borderColor: '#16a34a',
+                    backgroundColor: '#16a34a',
+                    pointRadius: 6,
+                    pointHoverRadius: 7,
+                    showLine: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: paleta.texto
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.dataset.label}: $${Number(context.raw).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`
+                    }
+                },
+                subtitle: {
+                    display: !!proyeccion.anioPayback,
+                    color: paleta.textoSuave,
+                    text: proyeccion.anioPayback
+                        ? `Punto de retorno estimado: ${proyeccion.anioPayback.toFixed(1)} años`
+                        : 'Con los datos actuales no se alcanza retorno en 25 años'
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: paleta.rejilla
+                    },
+                    ticks: {
+                        color: paleta.textoSuave,
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 8
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: paleta.rejilla
+                    },
+                    ticks: {
+                        color: paleta.textoSuave,
+                        callback: (valor) => `$${Number(valor).toLocaleString('es-MX')}`
+                    }
+                }
+            }
+        }
+    });
+};
 
 onMounted(async () => {
+    window.addEventListener('solar-eye-theme-changed', onThemeChanged);
+
     let resultadosExistentes = await obtieneResultados(simulacion_id);
 
     // AQUÍ ESTÁ EL CAMBIO: Convertimos todo a números si ya existen en la base de datos
@@ -270,24 +596,7 @@ onMounted(async () => {
         // Por si tu backend manda un arreglo en vez de un objeto directo
         const data = Array.isArray(resultadosExistentes) ? resultadosExistentes[0] : resultadosExistentes;
 
-        resultados.value = {
-            ...data,
-            produccion_anual_kwh: Number(data.produccion_anual_kwh || 0),
-            ahorro_mensual_mxn: Number(data.ahorro_mensual_mxn || 0),
-            porcentaje_cobertura: Number(data.porcentaje_cobertura || 0),
-            retorno_inversion_anios: Number(data.retorno_inversion_anios || 0),
-            costo_total_instalacion_mxn: Number(data.costo_total_instalacion_mxn || 0),
-            ahorro_anual_mxn: Number(data.ahorro_anual_mxn || 0),
-            ahorro_vida_util_mxn: Number(data.ahorro_vida_util_mxn || 0),
-            precio_kwh_proyectado_anio5: Number(data.precio_kwh_proyectado_anio5 || 0),
-            precio_kwh_proyectado_anio10: Number(data.precio_kwh_proyectado_anio10 || 0),
-            produccion_mensual_promedio_kwh: Number(data.produccion_mensual_promedio_kwh || 0),
-            excedente_kwh: Number(data.excedente_kwh || 0),
-            co2_evitado_anual_kg: Number(data.co2_evitado_anual_kg || 0),
-            co2_evitado_vida_util_kg: Number(data.co2_evitado_vida_util_kg || 0),
-            arboles_equivalentes: Number(data.arboles_equivalentes || 0),
-            tasa_incremento_tarifa_pct: Number(data.tasa_incremento_tarifa_pct || 0)
-        };
+        resultados.value = normalizaResultados(data);
 
         techo.value = await obtieneDatosTecho(simulacion_id);
         geo.value = await obtieneDatosGeograficos(simulacion_id);
@@ -340,8 +649,25 @@ onMounted(async () => {
     const calculados = calcularResultados(consumoParseado, techoParseado, geoParseado, simulacion_id);
     console.log('calculados:', calculados);
     await guardarResultados(calculados);
-    resultados.value = calculados;
+    resultados.value = normalizaResultados(calculados);
 });
+
+watch([resultados, consumo], async () => {
+    await nextTick();
+    renderGraficaComparativa();
+    renderGraficaProyeccion();
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('solar-eye-theme-changed', onThemeChanged);
+    limpiarGraficas();
+});
+
+const onThemeChanged = async () => {
+    await nextTick();
+    renderGraficaComparativa();
+    renderGraficaProyeccion();
+};
 
 const imprimirReporte = () => {
     window.print();
@@ -530,6 +856,38 @@ const descargarPDF = async () => {
 .tarjeta-label { font-size: 0.75rem; color: #999; }
 .tarjeta-valor { font-size: 1.1rem; font-weight: 700; color: #333; }
 
+.graficas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-grafica {
+    min-height: 380px;
+}
+
+.canvas-wrap {
+    position: relative;
+    height: 290px;
+    margin-top: 0.8rem;
+}
+
+.payback-banner {
+    margin-top: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 6px;
+    background: #ecfdf5;
+    color: #166534;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.payback-banner.sin-retorno {
+    background: #fff7ed;
+    color: #9a3412;
+}
+
 /* Grid resultados */
 .grid-resultados {
     display: grid;
@@ -620,6 +978,71 @@ const descargarPDF = async () => {
 
 .sin-datos { text-align: center; padding: 4rem; color: #999; }
 
+/* Contraste fino para modo oscuro en esta vista */
+:global(html.theme-dark) .contenedor .card,
+:global(html.theme-dark) .contenedor .tarjeta,
+:global(html.theme-dark) .contenedor .pasos,
+:global(html.theme-dark) .contenedor .tabla-container {
+    background: #152236 !important;
+    border-color: #2c3f5c !important;
+}
+
+:global(html.theme-dark) .contenedor .tarjeta-label,
+:global(html.theme-dark) .contenedor .card-subtitulo,
+:global(html.theme-dark) .contenedor .fila-dato,
+:global(html.theme-dark) .contenedor .barra-label,
+:global(html.theme-dark) .contenedor .sin-datos {
+    color: #ffffff !important;
+}
+
+:global(html.theme-dark) .contenedor .tarjeta-valor,
+:global(html.theme-dark) .contenedor .card h3,
+:global(html.theme-dark) .contenedor .fila-dato span,
+:global(html.theme-dark) .contenedor .encabezado h1,
+:global(html.theme-dark) .contenedor .encabezado p,
+:global(html.theme-dark) .contenedor .paso span {
+    color: #ffffff !important;
+}
+
+:global(html.theme-dark) .contenedor .fila-dato.destacada {
+    background: #12324f !important;
+    border: 1px solid #2f6aa3 !important;
+}
+
+:global(html.theme-dark) .contenedor .fila-dato.destacada span {
+    color: #ffffff !important;
+}
+
+:global(html.theme-dark) .contenedor .valor-positivo.grande {
+    color: #7dd3fc !important;
+}
+
+:global(html.theme-dark) .contenedor .fila-ahorro-25 {
+    background: #0f3b57 !important;
+    border: 1px solid #2f7baa !important;
+}
+
+:global(html.theme-dark) .contenedor .fila-ahorro-25 span {
+    color: #ffffff !important;
+}
+
+:global(html.theme-dark) .contenedor .fila-ahorro-25 .valor-ahorro-25 {
+    color: #67e8f9 !important;
+    font-weight: 700;
+}
+
+:global(html.theme-dark) .contenedor .valor-positivo {
+    color: #86efac !important;
+}
+
+:global(html.theme-dark) .contenedor .valor-destacado {
+    color: #fdba74 !important;
+}
+
+:global(html.theme-dark) .contenedor .valor-advertencia {
+    color: #fcd34d !important;
+}
+
 /* REGLAS MÁGICAS PARA IMPRESIÓN */
 @media print {
     /* Ocultar botones, encabezados y barras de navegación al imprimir */
@@ -702,9 +1125,21 @@ const descargarPDF = async () => {
     grid-template-columns: 1fr;
 }
 
+.graficas-grid {
+    grid-template-columns: 1fr;
+}
+
 /* TARJETAS */
 .card{
     padding: 1.2rem;
+}
+
+.card-grafica {
+    min-height: 340px;
+}
+
+.canvas-wrap {
+    height: 250px;
 }
 
 /* TABLAS */

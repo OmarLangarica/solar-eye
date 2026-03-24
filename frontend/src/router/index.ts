@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import InicioVue from '../modulos/principal/vistas/InicioVue.vue';
+import DashboardVue from '../modulos/principal/vistas/DashboardVue.vue';
 import LoginVue from '../modulos/auth/vistas/LoginVue.vue';
 import ClientesVue from '../modulos/clientes/vistas/ClientesVue.vue';
 import AgregarClienteVue from '../modulos/clientes/vistas/AgregarClienteVue.vue';
@@ -34,6 +35,11 @@ const router = createRouter({
             path: '/clientes',
             name: 'clientes',
             component: ClientesVue
+        },
+        {
+            path: '/dashboard',
+            name: 'dashboard',
+            component: DashboardVue
         },
         {
             path: '/clientes/agregar',
