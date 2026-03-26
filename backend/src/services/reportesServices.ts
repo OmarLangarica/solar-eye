@@ -75,4 +75,21 @@ export const borraReporte = async (id: number) => {
     } catch (err) {
         return { error: 'No se pudo borrar el reporte' };
     }
+
+    
 };
+
+
+export const generarDatosReporte = async (simulacionId: string) => {
+  // Imprimimos el ID para usar la variable y que TypeScript no marque error
+  console.log(`Buscando datos para la simulación con ID: ${simulacionId}`);
+
+  // Aquí en el futuro harás la consulta a tu base de datos
+  return {
+    titulo: "Reporte de Simulación Solar",
+    fecha: new Date(),
+    // Le pasamos un arreglo vacío temporalmente para quitar el error 
+    resultados: [] 
+  };
+};
+
