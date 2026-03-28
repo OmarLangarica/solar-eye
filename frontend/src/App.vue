@@ -1,16 +1,9 @@
 <script setup lang="ts">
-<<<<<<< HEAD
-import MenuVue from './modulos/principal/vistas/MenuVue.vue';
-import {RouterView} from 'vue-router'
-import chatIA from './modulos/IA/components/chatIA.vue';
-</script>
-
-<template>
-  <RouterView />
-  <chatIA />
-=======
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterView } from 'vue-router';
+// Importamos los componentes de tu versión anterior
+import MenuVue from './modulos/principal/vistas/MenuVue.vue';
+import chatIA from './modulos/IA/components/chatIA.vue';
 
 type ThemeMode = 'light' | 'dark';
 
@@ -60,27 +53,30 @@ watch(theme, (modo) => {
   <main class="app-main">
     <RouterView />
   </main>
->>>>>>> eb5e7144ade89b27f7530449bfbf26c02b1bbe3d
+
+  <div class="contenedor-flotante">
+    <chatIA />
+  </div>
 </template>
 
 <style>
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f8fafc;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8fafc;
 }
-<<<<<<< HEAD
+
 .contenedor-flotante {
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 9999;
-=======
+}
 
 .app-header {
   position: sticky;
@@ -124,36 +120,14 @@ body {
   transform: translateY(-1px);
 }
 
-.theme-icon {
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.theme-text {
-  font-size: 0.85rem;
-}
+.theme-icon { font-size: 1rem; line-height: 1; }
+.theme-text { font-size: 0.85rem; }
 
 @media (max-width: 640px) {
-  .app-header {
-    height: 52px;
-    padding: 0 0.75rem;
-  }
-
-  .app-main {
-    min-height: calc(100vh - 52px);
-  }
-
-  .app-brand {
-    font-size: 0.9rem;
-  }
-
-  .theme-toggle {
-    padding: 0.35rem 0.65rem;
-  }
-
-  .theme-text {
-    font-size: 0.78rem;
-  }
->>>>>>> eb5e7144ade89b27f7530449bfbf26c02b1bbe3d
+  .app-header { height: 52px; padding: 0 0.75rem; }
+  .app-main { min-height: calc(100vh - 52px); }
+  .app-brand { font-size: 0.9rem; }
+  .theme-toggle { padding: 0.35rem 0.65rem; }
+  .theme-text { font-size: 0.78rem; }
 }
 </style>

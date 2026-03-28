@@ -30,7 +30,11 @@
       </div>
     </Transition>
 
-    <button class="boton-abrir" @click="abierto = !abierto">
+    <button
+      v-if="estaAutenticado"
+      class="boton-abrir"
+      @click="abierto = !abierto"
+    >
       <span v-if="!abierto">💬</span>
       <span v-else>❌</span>
     </button>
@@ -38,13 +42,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, computed } from 'vue';
 import axios from 'axios';
+import { useAuthStore } from '../../../stores/authStore';
 
+const authStore = useAuthStore();
 const abierto = ref(false);
 const historial = ref([
   { role: 'ia', content: '¡Hola! Soy el experto en paneles de SolarEye. ¿En qué te ayudo hoy?' }
 ]);
+
+const estaAutenticado = computed(() => authStore.estaAutenticado());
 const nuevoMsg = ref('');
 const cargando = ref(false);
 const chatBox = ref<HTMLElement | null>(null);
@@ -100,19 +108,31 @@ const enviar = async () => {
   transition: transform 0.2s;
 }
 
+html.theme-dark .boton-abrir {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
 .boton-abrir:hover { transform: scale(1.1); }
+
+.boton-abrir.deshabilitado {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #999;
+}
 
 .ventana-chat {
   width: 320px;
   height: 450px;
-  background: white;
+  background: var(--se-panel);
   border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  box-shadow: var(--se-shadow);
   margin-bottom: 15px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid #ddd;
+  border: 1px solid var(--se-border);
+  color: var(--se-text);
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 .header-chat {
@@ -128,7 +148,7 @@ const enviar = async () => {
   flex: 1;
   padding: 15px;
   overflow-y: auto;
-  background: #fdfdfd;
+  background: var(--se-panel-soft);
 }
 
 .msg { margin-bottom: 15px; display: flex; flex-direction: column; }
@@ -145,8 +165,15 @@ const enviar = async () => {
 .user .burbuja { background: #ffe0b2; color: #5d4037; border-bottom-right-radius: 2px; }
 .ia .burbuja { background: #f5f5f5; color: #333; border-bottom-left-radius: 2px; }
 
+html.theme-dark .ia .burbuja { background: #2a3a53; color: #e5e7eb; }
+html.theme-dark .user .burbuja { background: #3f5c81; color: #fff; }
+
 .input-chat { display: flex; padding: 10px; border-top: 1px solid #eee; }
-.input-chat input { flex: 1; border: 1px solid #ddd; padding: 8px; border-radius: 20px; outline: none; }
+html.theme-dark .input-chat { border-top-color: #334155; }
+
+.input-chat input { flex: 1; border: 1px solid #ddd; padding: 8px; border-radius: 20px; outline: none; background: var(--se-panel); color: var(--se-text); }
+html.theme-dark .input-chat input { border-color: #334155; }
+
 .input-chat button { background: none; border: none; font-size: 20px; cursor: pointer; }
 
 .fade-enter-active, .fade-leave-active { transition: all 0.3s ease; }
