@@ -7,10 +7,13 @@ import simulacionesRutas from './routes/simulacionesRutas.js';
 import reportesRutas from './routes/reportesRutas.js';
 import nasaRutas from './routes/nasaRutas.js';
 
-const app = express();
-app.use(express.json());
-app.use(cors());
+import IaRutas from './routes/IaRutas.js'; 
 
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use('/api/ia', IaRutas);
 const PUERTO = 3001;
 
 app.use('/api/usuarios', usuariosRutas);

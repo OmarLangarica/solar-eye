@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterView } from 'vue-router';
+import chatIA from './modulos/IA/components/chatIA.vue';
 
 type ThemeMode = 'light' | 'dark';
 
@@ -50,18 +51,29 @@ watch(theme, (modo) => {
   <main class="app-main">
     <RouterView />
   </main>
+
+  <div class="contenedor-flotante">
+    <chatIA />
+  </div>
 </template>
 
 <style>
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f8fafc;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8fafc;
+}
+
+.contenedor-flotante {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
 }
 
 .app-header {
@@ -106,35 +118,14 @@ body {
   transform: translateY(-1px);
 }
 
-.theme-icon {
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.theme-text {
-  font-size: 0.85rem;
-}
+.theme-icon { font-size: 1rem; line-height: 1; }
+.theme-text { font-size: 0.85rem; }
 
 @media (max-width: 640px) {
-  .app-header {
-    height: 52px;
-    padding: 0 0.75rem;
-  }
-
-  .app-main {
-    min-height: calc(100vh - 52px);
-  }
-
-  .app-brand {
-    font-size: 0.9rem;
-  }
-
-  .theme-toggle {
-    padding: 0.35rem 0.65rem;
-  }
-
-  .theme-text {
-    font-size: 0.78rem;
-  }
+  .app-header { height: 52px; padding: 0 0.75rem; }
+  .app-main { min-height: calc(100vh - 52px); }
+  .app-brand { font-size: 0.9rem; }
+  .theme-toggle { padding: 0.35rem 0.65rem; }
+  .theme-text { font-size: 0.78rem; }
 }
 </style>
