@@ -3,8 +3,7 @@
     <Transition name="fade">
       <div v-if="abierto" class="ventana-chat">
         <div class="header-chat">
-          <span>Asistente SolarEye ☀️</span>
-          <button @click="abierto = false" class="btn-cerrar">✖</button>
+          <span>Asistente SolarEye</span>
         </div>
 
         <div class="cuerpo-chat" ref="chatBox">
@@ -25,7 +24,7 @@
             @keyup.enter="enviar" 
             placeholder="Pregúntame algo..." 
           />
-          <button @click="enviar" :disabled="cargando">✈️</button>
+          <button @click="enviar" :disabled="cargando"></button>
         </div>
       </div>
     </Transition>
@@ -35,8 +34,8 @@
       class="boton-abrir"
       @click="abierto = !abierto"
     >
-      <span v-if="!abierto">💬</span>
-      <span v-else>❌</span>
+      <span v-if="!abierto"><i class="bi bi-robot"></i></span>
+      <span v-else>X</span>
     </button>
   </div>
 </template>
@@ -114,11 +113,7 @@ html.theme-dark .boton-abrir {
 
 .boton-abrir:hover { transform: scale(1.1); }
 
-.boton-abrir.deshabilitado {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #999;
-}
+
 
 .ventana-chat {
   width: 320px;

@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterView } from 'vue-router';
-// Importamos los componentes de tu versión anterior
-import MenuVue from './modulos/principal/vistas/MenuVue.vue';
 import chatIA from './modulos/IA/components/chatIA.vue';
 
 type ThemeMode = 'light' | 'dark';
