@@ -7,7 +7,7 @@
                 <p>Bienvenido, {{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</p>
             </div>
             <div class="acciones-header">
-                <button class="btn-dashboard" @click="router.push('/dashboard')">Ver dashboard</button>
+                <button class="btn-dashboard" @click="router.push('/dashboard')">Analisis</button>
                 <button class="btn-agregar" @click="router.push('/clientes/agregar')">+ Nuevo cliente</button>
                 <button class="btn-cerrar-sesion" @click="cerrarSesion">Cerrar sesión</button>
             </div>

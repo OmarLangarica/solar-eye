@@ -2,7 +2,7 @@
   <div class="landing-container">
     <nav class="navbar">
       <div class="logo">Solar Eye</div>
-      <router-link to="/login" class="btn-login">Acceso Clientes</router-link>
+      <router-link to="/login" class="btn-login"><i class="bi bi-person-workspace"> Personal</i></router-link>
     </nav>
 
     <header class="hero">

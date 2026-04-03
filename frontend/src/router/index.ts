@@ -82,8 +82,13 @@ const router = createRouter({
 // Guard de navegación — protege todas las rutas privadas
 router.beforeEach((to) => {
     const authStore = useAuthStore();
+    const autenticado = authStore.estaAutenticado();
 
-    if (!to.meta.publica && !authStore.estaAutenticado()) {
+    if (autenticado && (to.name === 'login' || to.name === 'inicio')) {
+        return { name: 'dashboard' };
+    }
+
+    if (!to.meta.publica && !autenticado) {
         return { name: 'login' };
     }
 });

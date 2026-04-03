@@ -35,18 +35,16 @@ watch(theme, (modo) => {
 </script>
 
 <template>
-  <header class="app-header">
-    <div class="app-brand">Solar Eye</div>
-    <button
-      class="theme-toggle"
-      type="button"
-      @click="alternarTema"
-      :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
-    >
-      <span class="theme-icon" aria-hidden="true">{{ isDark ? '☀' : '🌙' }}</span>
-      <span class="theme-text">{{ isDark ? 'Claro' : 'Oscuro' }}</span>
-    </button>
-  </header>
+  <button
+    class="theme-toggle-flotante"
+    type="button"
+    @click="alternarTema"
+    :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+    :title="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+  >
+    <i v-if="isDark" class="bi bi-brightness-high theme-icon-flotante" aria-hidden="true"></i>
+    <i v-else class="bi bi-moon theme-icon-flotante" aria-hidden="true"></i>
+  </button>
 
   <main class="app-main">
     <RouterView />
@@ -76,56 +74,73 @@ body {
   z-index: 9999;
 }
 
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 10001;
-  height: 58px;
-  padding: 0 1rem;
+.app-main {
+  min-height: 100vh;
+}
+
+.theme-toggle-flotante {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 10000;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid #e5e7eb;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
   backdrop-filter: blur(8px);
 }
 
-.app-brand {
-  font-weight: 800;
-  font-size: 0.98rem;
-  color: #f97316;
+.theme-toggle-flotante:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+  background: rgba(255, 255, 255, 1);
 }
 
-.app-main {
-  min-height: calc(100vh - 58px);
+.theme-toggle-flotante:active {
+  transform: scale(0.95);
 }
 
-.theme-toggle {
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #111827;
-  border-radius: 999px;
-  padding: 0.4rem 0.8rem;
-  font-weight: 700;
-  display: inline-flex;
+.theme-icon-flotante {
+  font-size: 1.2rem;
+  line-height: 1;
+  display: flex;
   align-items: center;
-  gap: 0.45rem;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
-  cursor: pointer;
+  justify-content: center;
+  color: inherit;
 }
 
-.theme-toggle:hover {
-  transform: translateY(-1px);
+/* Tema oscuro */
+:root.theme-dark .theme-icon-flotante {
+  color: #ffffff;
+}
+:root.theme-dark .theme-toggle-flotante {
+  background: rgba(30, 30, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.theme-icon { font-size: 1rem; line-height: 1; }
-.theme-text { font-size: 0.85rem; }
+:root.theme-dark .theme-toggle-flotante:hover {
+  background: rgba(50, 50, 50, 0.95);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
 
 @media (max-width: 640px) {
-  .app-header { height: 52px; padding: 0 0.75rem; }
-  .app-main { min-height: calc(100vh - 52px); }
-  .app-brand { font-size: 0.9rem; }
-  .theme-toggle { padding: 0.35rem 0.65rem; }
-  .theme-text { font-size: 0.78rem; }
+  .theme-toggle-flotante {
+    width: 40px;
+    height: 40px;
+    bottom: 12px;
+    left: 12px;
+  }
+
+  .theme-icon-flotante {
+    font-size: 1rem;
+  }
 }
 </style>

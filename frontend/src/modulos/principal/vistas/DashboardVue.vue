@@ -2,7 +2,7 @@
     <div class="dashboard-container">
         <div class="encabezado">
             <div>
-                <h1>Dashboard</h1>
+                <h1>Solar Eye</h1>
                 <p>Resumen general de clientes y simulaciones</p>
             </div>
             <div class="acciones-header">

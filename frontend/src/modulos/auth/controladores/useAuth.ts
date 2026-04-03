@@ -48,8 +48,8 @@ export const useAuth = () => {
                 activo: usuario.activo
             });
 
-            // La redirección se puede manejar aquí o en el componente
-            router.push('/clientes');
+            // Tras autenticarse, el primer destino es el dashboard
+            router.push('/dashboard');
             return true;
 
         } catch (err) {
