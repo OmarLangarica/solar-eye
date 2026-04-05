@@ -117,10 +117,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useForm, useField } from 'vee-validate';
 import { loginSchema, registroSchema } from '../schemas/authSchema';
 import { useAuth } from '../controladores/useAuth';
+import { useAuthStore } from '../../../stores/authStore';
 
+const router = useRouter();
+const authStore = useAuthStore();
 const { error, cargando, login, registrar, limpiarError } = useAuth();
 
 const modoActual = ref<'signin' | 'signup'>('signin');
@@ -133,6 +137,14 @@ const { value: passwordValue, errorMessage: passwordError } = useField<string>('
 
 const onSubmitLogin = handleLogin(async (values) => {
     await login({ email: values.email, password: values.password });
+    
+    if (!error.value) {
+        if (authStore.usuario?.rol === 'admin') {
+            router.push('/admin/dashboard');
+        } else {
+            router.push('/dashboard');
+        }
+    }
 });
 
 const cambiarModo = (nuevoModo: 'signin' | 'signup') => {
@@ -167,6 +179,8 @@ const onSubmitRegistro = handleRegistro(async (values) => {
         }, 2000);
     }
 });
+
+
 </script>
 
 <style scoped>

@@ -11,6 +11,11 @@ import NuevaSimulacionPaso1Vue from '../modulos/simulaciones/vistas/NuevaSimulac
 import NuevaSimulacionPaso2Vue from '@/modulos/simulaciones/vistas/NuevaSimulacionPaso2Vue.vue';
 import NuevaSimulacionPaso3Vue from '@/modulos/simulaciones/vistas/NuevaSimulacionPaso3Vue.vue';
 import ResultadosSimulacionVue from '@/modulos/simulaciones/vistas/ResultadosSimulacionVue.vue';
+import AdminDashboardVue from '@/modulos/admin/vistas/AdminDashboardVue.vue';
+import AdminUsuariosVue from '@/modulos/admin/vistas/AdminUsuariosVue.vue';
+import AdminClientesVue from '@/modulos/admin/vistas/AdminClientesVue.vue';
+import AdminAgregarUsuarioVue from '@/modulos/admin/vistas/AdminAgregarUsuarioVue.vue';
+import AdminEditarUsuarioVue from '@/modulos/admin/vistas/AdminEditarUsuarioVue.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -27,10 +32,8 @@ const router = createRouter({
             component: LoginVue,
             meta: { publica: true }
         },
-       /* {
-            path: '/',
-            redirect: '/clientes'
-        },*/
+
+        //Rutas trabajador
         {
             path: '/clientes',
             name: 'clientes',
@@ -67,29 +70,70 @@ const router = createRouter({
             component: NuevaSimulacionPaso3Vue
         },
         {
-            path: '/simulaciones/resultados/:simulacion_id', 
+            path: '/simulaciones/resultados/:simulacion_id',
             name: 'resultados-simulacion',
             component: ResultadosSimulacionVue
         },
         {
-            path: '/simulaciones/:cliente_id', 
+            path: '/simulaciones/:cliente_id',
             name: 'simulaciones',
             component: SimulacionesVue
+        },
+
+        //Rutas admin
+        {
+            path: '/admin/dashboard',
+            name: 'admin-dashboard',
+            component: AdminDashboardVue,
+            meta: { soloAdmin: true }
+        },
+        {
+            path: '/admin/usuarios',
+            name: 'admin-usuarios',
+            component: AdminUsuariosVue,
+            meta: { soloAdmin: true }
+        },
+        {
+            path: '/admin/clientes',
+            name: 'admin-clientes',
+            component: AdminClientesVue,
+            meta: { soloAdmin: true }
+        },
+        {
+            path: '/admin/usuarios/agregar',
+            name: 'admin-agregar-usuario',
+            component: AdminAgregarUsuarioVue,
+            meta: { soloAdmin: true }
+        },
+        {
+            path: '/admin/usuarios/editar/:id',
+            name: 'admin-editar-usuario',
+            component: AdminEditarUsuarioVue,
+            meta: { soloAdmin: true }
         },
     ]
 });
 
-// Guard de navegación — protege todas las rutas privadas
+// Guard de navegación
 router.beforeEach((to) => {
     const authStore = useAuthStore();
     const autenticado = authStore.estaAutenticado();
+    const rol = authStore.usuario?.rol;
 
+    // Si está autenticado y va al login o inicio → redirige según rol
     if (autenticado && (to.name === 'login' || to.name === 'inicio')) {
-        return { name: 'dashboard' };
+        if (rol === 'admin') return { name: 'admin-dashboard' };
+        return { name: 'clientes' };
     }
 
+    // Si no está autenticado y la ruta es privada → login
     if (!to.meta.publica && !autenticado) {
         return { name: 'login' };
+    }
+
+    // Si no es admin e intenta entrar a ruta de admin → redirige a clientes
+    if (to.meta.soloAdmin && rol !== 'admin') {
+        return { name: 'clientes' };
     }
 });
 

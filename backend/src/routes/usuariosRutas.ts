@@ -10,6 +10,46 @@ router.get('/', async (_req: Request, res: Response) => {
     res.send(usuarios);
 });
 
+// GET estadísticas globales (solo admin)
+router.get('/estadisticas/globales', async (_req: Request, res: Response) => {
+    try {
+        const stats = await usuariosServices.obtieneEstadisticasGlobales();
+        res.status(200).send(stats);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
+// GET clientes globales (solo admin)
+router.get('/clientes/globales', async (_req: Request, res: Response) => {
+    try {
+        const clientes = await usuariosServices.obtieneClientesGlobales();
+        res.status(200).send(clientes);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
+router.get('/simulaciones-por-cliente/:cliente_id', async (req: Request, res: Response) => {
+    try {
+        const resultado = await usuariosServices.obtieneSimulacionesPorCliente(Number(req.params.cliente_id));
+        res.status(200).send(resultado);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno' });
+    }
+});
+
+// POST http://localhost:3001/api/usuarios/login
+router.post('/login', async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+        const usuario = await usuariosServices.encuentraUsuarioPorEmail(email);
+        res.status(200).send(usuario);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
 // GET http://localhost:3001/api/usuarios/1
 router.get('/:id', async (req: Request, res: Response) => {
     try {
@@ -57,15 +97,6 @@ router.delete('/', async (req: Request, res: Response) => {
     }
 });
 
-// POST http://localhost:3001/api/usuarios/login
-router.post('/login', async (req: Request, res: Response) => {
-    try {
-        const { email } = req.body;
-        const usuario = await usuariosServices.encuentraUsuarioPorEmail(email);
-        res.status(200).send(usuario);
-    } catch (err) {
-        res.status(500).json({ mensaje: 'Error interno del servidor' });
-    }
-});
 
 export default router;
+

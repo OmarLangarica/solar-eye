@@ -7,7 +7,12 @@
             </div>
             <div class="acciones-header">
                 <button class="btn-principal" @click="router.push('/clientes')">Gestionar clientes</button>
-                <button class="btn-secundario" @click="router.push('/clientes/agregar')">+ Nuevo cliente</button>
+                <button 
+                    v-if="authStore.usuario?.rol === 'admin'"
+                    class="btn-volver" 
+                    @click="router.push('/clientes')"
+                >← Volver</button>
+                <button class="btn-cerrar-sesion" @click="cerrarSesion">Cerrar sesión</button>
             </div>
         </div>
 
@@ -114,6 +119,7 @@ import simulacionesApi from '../../simulaciones/api/simulacionesApi';
 import { useAuthStore } from '../../../stores/authStore';
 import type { Cliente } from '../../clientes/interfaces/clientes-interface';
 import type { Simulacion } from '../../simulaciones/interfaces/simulaciones-interface';
+import { useAuth } from '../../auth/controladores/useAuth';
 
 type EstadoSimulacion = Simulacion['estado'];
 
@@ -126,6 +132,7 @@ interface ClienteConTotal {
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { cerrarSesion } = useAuth();
 
 const cargando = ref(false);
 const error = ref<string | null>(null);
@@ -294,6 +301,28 @@ onMounted(() => {
 .btn-secundario:hover {
     background: #f9fafb;
 }
+
+.btn-cerrar-sesion {
+    padding: 0.6rem 1.2rem;
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-cerrar-sesion:hover { background-color: #e0e0e0; }
+
+.btn-volver {
+    padding: 0.6rem 1.2rem;
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-volver:hover { background-color: #e0e0e0; }
 
 .mensaje.error-msg {
     border-radius: 8px;

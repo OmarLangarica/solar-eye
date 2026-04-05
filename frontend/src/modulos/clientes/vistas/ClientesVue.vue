@@ -9,6 +9,11 @@
             <div class="acciones-header">
                 <button class="btn-dashboard" @click="router.push('/dashboard')">Analisis</button>
                 <button class="btn-agregar" @click="router.push('/clientes/agregar')">+ Nuevo cliente</button>
+                <button 
+                    v-if="authStore.usuario?.rol === 'admin'"
+                    class="btn-volver" 
+                    @click="router.push('/admin/dashboard')"
+                >← Volver</button>
                 <button class="btn-cerrar-sesion" @click="cerrarSesion">Cerrar sesión</button>
             </div>
         </div>
@@ -240,6 +245,17 @@ tr:hover td { background-color: #fafafa; }
 }
 .btn-eliminar:hover { background-color: #dc2626; }
 
+.btn-volver {
+    padding: 0.6rem 1.2rem;
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-volver:hover { background-color: #e0e0e0; }
+
 .sin-datos { text-align: center; padding: 3rem; color: #999; }
 
 @media (max-width: 768px) {
@@ -249,6 +265,7 @@ tr:hover td { background-color: #fafafa; }
     .acciones-header { width: 100%; justify-content: space-between; }
     .btn-dashboard, .btn-agregar, .btn-cerrar-sesion { flex: 1; padding: 0.5rem; text-align: center; }
 
+    
     /* --- TARJETAS FIJAS A PRUEBA DE FALLOS --- */
     
     .tabla-container {
