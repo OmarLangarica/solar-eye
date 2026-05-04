@@ -2,7 +2,10 @@
     <div class="contenedor">
         <div class="encabezado">
             <h1>Nuevo Cliente</h1>
-            <button class="btn-volver" @click="router.push('/clientes')">← Volver</button>
+            <div class="acciones-header">
+                <button class="btn-volver" @click="cambiarEmpresa">Cambiar de empresa</button>
+                <button class="btn-volver" @click="router.push('/clientes')">← Volver</button>
+            </div>
         </div>
 
         <div class="card">
@@ -100,8 +103,16 @@ const { value: estadoValue } = useField<string>('estado');
 const { value: cpValue } = useField<string>('codigo_postal');
 const { value: notasValue } = useField<string>('notas');
 
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
+
 const onSubmit = handleSubmit(async (values) => {
+    const empresa_id = authStore.usuario?.empresa_id;
+    if (!empresa_id) return;
+
     await agregarCliente({
+        empresa_id,
         usuario_id: authStore.usuario!.id,
         nombre: values.nombre,
         apellido: values.apellido,
@@ -133,6 +144,12 @@ const onSubmit = handleSubmit(async (values) => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
+}
+
+.acciones-header {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .encabezado h1 {

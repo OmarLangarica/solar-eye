@@ -6,6 +6,7 @@
                 <p>Todos los clientes registrados en el sistema</p>
             </div>
             <div class="acciones-header">
+                <button class="btn-secundario" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button class="btn-exportar" @click="exportarExcel"> Exportar Excel</button>
                 <button class="btn-secundario" @click="router.push('/admin/dashboard')">← Volver</button>
             </div>
@@ -41,6 +42,7 @@
                         <th>ESTADO</th>
                         <th>TRABAJADOR</th>
                         <th>SIMULACIONES</th>
+                        <th>ACCIONES</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -57,6 +59,14 @@
                         <td class="centrado">
                             <span class="badge-sims">{{ c.total_simulaciones ?? 0 }}</span>
                         </td>
+                        <td>
+                            <button
+                                class="btn-consultar-sims"
+                                @click="router.push({ path: `/simulaciones/${c.id}`, query: { nombre: `${c.nombre} ${c.apellido}`, readonly: '1' } })"
+                            >
+                                Ver simulaciones
+                            </button>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -71,8 +81,10 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import * as XLSX from 'xlsx-js-style';
 import adminApi from '../api/adminApi';
+import { useAuthStore } from '../../../stores/authStore';
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 const clientes = ref<any[]>([]);
 const trabajadores = ref<any[]>([]);
@@ -80,6 +92,10 @@ const cargando = ref(false);
 const error = ref('');
 const busqueda = ref('');
 const filtroTrabajador = ref('');
+
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
 
 const clientesFiltrados = computed(() => {
     let lista = clientes.value;
@@ -101,18 +117,28 @@ const clientesFiltrados = computed(() => {
 });
 
 const traeClientes = async () => {
+    const empresaId = authStore.usuario?.empresa_id;
+    if (!empresaId) {
+        error.value = 'No hay empresa activa seleccionada';
+        clientes.value = [];
+        trabajadores.value = [];
+        return;
+    }
+
     try {
         cargando.value = true;
         error.value = '';
 
         const [respClientes, respUsuarios] = await Promise.all([
             adminApi.get('/clientes/globales'),
-            adminApi.get('/')
+            adminApi.get(`/empresa/${empresaId}/usuarios`)
         ]);
+
+        const clientesEmpresa = (respClientes.data as any[]).filter((c: any) => c.empresa_id === empresaId);
 
         // Obtiene conteo de simulaciones por cliente
         const clientesConConteo = await Promise.all(
-            respClientes.data.map(async (c: any) => {
+            clientesEmpresa.map(async (c: any) => {
                 try {
                     const resp = await adminApi.get(`/simulaciones-por-cliente/${c.id}`);
                     return { ...c, total_simulaciones: resp.data.total ?? 0 };
@@ -123,7 +149,7 @@ const traeClientes = async () => {
         );
 
         clientes.value = clientesConConteo;
-        trabajadores.value = respUsuarios.data.filter((u: any) => u.rol === 'trabajador' || u.rol === 'admin');
+        trabajadores.value = respUsuarios.data.filter((u: any) => u.rol_empresa === 'trabajador' || u.rol_empresa === 'admin');
 
     } catch (err) {
         error.value = 'No se pudieron cargar los clientes';
@@ -360,6 +386,18 @@ tr:hover td { background-color: #fafafa; }
     font-size: 0.85rem;
     font-weight: 700;
 }
+
+.btn-consultar-sims {
+    padding: 0.4rem 0.8rem;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.btn-consultar-sims:hover { background-color: #1d4ed8; }
 
 .centrado { text-align: center; }
 .sin-datos { text-align: center; padding: 3rem; color: #999; }

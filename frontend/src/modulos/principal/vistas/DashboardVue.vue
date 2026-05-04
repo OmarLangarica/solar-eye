@@ -6,9 +6,10 @@
                 <p>Resumen general de clientes y simulaciones</p>
             </div>
             <div class="acciones-header">
+                <button class="btn-secundario" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button class="btn-principal" @click="router.push('/clientes')">Gestionar clientes</button>
                 <button 
-                    v-if="authStore.usuario?.rol === 'admin'"
+                    v-if="authStore.usuario?.rol_empresa === 'admin'"
                     class="btn-volver" 
                     @click="router.push('/clientes')"
                 >← Volver</button>
@@ -156,6 +157,10 @@ const topClientes = computed(() => {
         .slice(0, 5);
 });
 
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
+
 const porcentaje = (estado: EstadoSimulacion) => {
     if (resumen.value.totalSimulaciones === 0) return 0;
 
@@ -170,6 +175,7 @@ const porcentaje = (estado: EstadoSimulacion) => {
 
 const traeDashboard = async () => {
     const usuario_id = authStore.usuario?.id;
+    const empresa_id = authStore.usuario?.empresa_id;
     if (!usuario_id) {
         error.value = 'No se encontro el usuario autenticado.';
         return;
@@ -180,7 +186,9 @@ const traeDashboard = async () => {
         error.value = null;
 
         const respuestaClientes = await clientesApi.get<Cliente[]>(`/usuario/${usuario_id}`);
-        const clientes = respuestaClientes.data;
+        const clientes = empresa_id
+            ? respuestaClientes.data.filter((cliente) => cliente.empresa_id === empresa_id)
+            : respuestaClientes.data;
 
         if (clientes.length === 0) {
             resumen.value = {

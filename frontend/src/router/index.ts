@@ -16,6 +16,12 @@ import AdminUsuariosVue from '@/modulos/admin/vistas/AdminUsuariosVue.vue';
 import AdminClientesVue from '@/modulos/admin/vistas/AdminClientesVue.vue';
 import AdminAgregarUsuarioVue from '@/modulos/admin/vistas/AdminAgregarUsuarioVue.vue';
 import AdminEditarUsuarioVue from '@/modulos/admin/vistas/AdminEditarUsuarioVue.vue';
+import SuperAdminAgregarEmpresaVue from '@/modulos/superadmin/vistas/SuperAdminAgregarEmpresaVue.vue';
+import SuperAdminEmpresasVue from '@/modulos/superadmin/vistas/SuperAdminEmpresasVue.vue';
+import SuperAdminEditarEmpresaVue from '@/modulos/superadmin/vistas/SuperAdminEditarEmpresaVue.vue';
+import SeleccionarEmpresaVue from '@/modulos/auth/vistas/SeleccionarEmpresaVue.vue';
+import CrearEmpresaVue from '@/modulos/auth/vistas/CrearEmpresaVue.vue';
+import UnirseEmpresaVue from '@/modulos/auth/vistas/UnirseEmpresaVue.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -111,30 +117,71 @@ const router = createRouter({
             component: AdminEditarUsuarioVue,
             meta: { soloAdmin: true }
         },
+        {
+        path: '/superadmin/empresas',
+        name: 'superadmin-empresas',
+        component: SuperAdminEmpresasVue,
+        meta: { soloSuperadmin: true }
+    },
+    {
+        path: '/superadmin/empresas/agregar',
+        name: 'superadmin-agregar-empresa',
+        component: SuperAdminAgregarEmpresaVue,
+        meta: { soloSuperadmin: true }
+    },
+    {
+        path: '/superadmin/empresas/editar/:id',
+        name: 'superadmin-editar-empresa',
+        component: SuperAdminEditarEmpresaVue,
+        meta: { soloSuperadmin: true }
+    },
+    {
+    path: '/seleccionar-empresa',
+    name: 'seleccionar-empresa',
+    component: SeleccionarEmpresaVue,
+    meta: { publica: false }
+    },
+    {
+        path: '/crear-empresa',
+        name: 'crear-empresa',
+        component: CrearEmpresaVue,
+        meta: { publica: false }
+    },
+    {
+        path: '/unirse-empresa',
+        name: 'unirse-empresa',
+        component: UnirseEmpresaVue,
+        meta: { publica: false }
+    },
     ]
 });
 
-// Guard de navegación
+// Guard actualizado:
 router.beforeEach((to) => {
     const authStore = useAuthStore();
     const autenticado = authStore.estaAutenticado();
     const rol = authStore.usuario?.rol;
+    const tieneEmpresa = authStore.tieneEmpresa();
 
-    // Si está autenticado y va al login o inicio → redirige según rol
+    // Si está autenticado y va al login o inicio
     if (autenticado && (to.name === 'login' || to.name === 'inicio')) {
-        if (rol === 'admin') return { name: 'admin-dashboard' };
+        if (rol === 'superadmin') return { name: 'superadmin-empresas' };
+        if (!tieneEmpresa) return { name: 'seleccionar-empresa' };
+        if (authStore.esAdmin()) return { name: 'admin-dashboard' };
         return { name: 'clientes' };
     }
 
-    // Si no está autenticado y la ruta es privada → login
-    if (!to.meta.publica && !autenticado) {
-        return { name: 'login' };
+    // Si no está autenticado
+    if (!to.meta.publica && !autenticado) return { name: 'login' };
+
+    // Si está autenticado pero no tiene empresa y no está en rutas de selección
+    if (autenticado && !tieneEmpresa && rol !== 'superadmin' &&
+        !['seleccionar-empresa', 'crear-empresa', 'unirse-empresa'].includes(to.name as string)) {
+        return { name: 'seleccionar-empresa' };
     }
 
-    // Si no es admin e intenta entrar a ruta de admin → redirige a clientes
-    if (to.meta.soloAdmin && rol !== 'admin') {
-        return { name: 'clientes' };
-    }
+    if (to.meta.soloSuperadmin && rol !== 'superadmin') return { name: 'clientes' };
+    if (to.meta.soloAdmin && !authStore.esAdmin() && rol !== 'superadmin') return { name: 'clientes' };
 });
 
 export default router;

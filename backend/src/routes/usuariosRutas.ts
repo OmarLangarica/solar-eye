@@ -4,13 +4,18 @@ import * as usuariosServices from '../services/usuariosServices.js';
 
 const router = express.Router();
 
-// GET http://localhost:3001/api/usuarios
-router.get('/', async (_req: Request, res: Response) => {
-    const usuarios = await usuariosServices.obtieneUsuarios();
-    res.send(usuarios);
+// ─── Rutas específicas ANTES de /:id ──────────────────────────
+
+router.post('/login', async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+        const usuario = await usuariosServices.encuentraUsuarioPorEmail(email);
+        res.status(200).send(usuario);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
 });
 
-// GET estadísticas globales (solo admin)
 router.get('/estadisticas/globales', async (_req: Request, res: Response) => {
     try {
         const stats = await usuariosServices.obtieneEstadisticasGlobales();
@@ -20,7 +25,6 @@ router.get('/estadisticas/globales', async (_req: Request, res: Response) => {
     }
 });
 
-// GET clientes globales (solo admin)
 router.get('/clientes/globales', async (_req: Request, res: Response) => {
     try {
         const clientes = await usuariosServices.obtieneClientesGlobales();
@@ -39,18 +43,60 @@ router.get('/simulaciones-por-cliente/:cliente_id', async (req: Request, res: Re
     }
 });
 
-// POST http://localhost:3001/api/usuarios/login
-router.post('/login', async (req: Request, res: Response) => {
+router.get('/empresas/:usuario_id', async (req: Request, res: Response) => {
     try {
-        const { email } = req.body;
-        const usuario = await usuariosServices.encuentraUsuarioPorEmail(email);
-        res.status(200).send(usuario);
+        const empresas = await usuariosServices.obtieneEmpresasDeUsuario(Number(req.params.usuario_id));
+        res.status(200).send(empresas);
     } catch (err) {
         res.status(500).json({ mensaje: 'Error interno del servidor' });
     }
 });
 
-// GET http://localhost:3001/api/usuarios/1
+router.get('/empresa/:empresa_id/usuarios', async (req: Request, res: Response) => {
+    try {
+        const usuarios = await usuariosServices.obtieneUsuariosPorEmpresa(Number(req.params.empresa_id));
+        res.status(200).send(usuarios);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
+router.get('/empresa/:empresa_id/estadisticas', async (req: Request, res: Response) => {
+    try {
+        const stats = await usuariosServices.obtieneEstadisticasEmpresa(Number(req.params.empresa_id));
+        res.status(200).send(stats);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
+router.post('/unirse-empresa', async (req: Request, res: Response) => {
+    try {
+        const { usuario_id, empresa_id, rol } = req.body;
+        const resultado = await usuariosServices.unirseAEmpresa(usuario_id, empresa_id, rol);
+        res.status(200).send(resultado);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
+router.patch('/estado', async (req: Request, res: Response) => {
+    try {
+        const { id, estado } = req.body;
+        const resultado = await usuariosServices.actualizaEstadoSimulacion(id, estado);
+        res.status(200).send(resultado);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
+// ─── CRUD básico ──────────────────────────────────────────────
+
+router.get('/', async (_req: Request, res: Response) => {
+    const usuarios = await usuariosServices.obtieneUsuarios();
+    res.send(usuarios);
+});
+
 router.get('/:id', async (req: Request, res: Response) => {
     try {
         const usuario = await usuariosServices.encuentraUsuario(Number(req.params.id));
@@ -60,25 +106,29 @@ router.get('/:id', async (req: Request, res: Response) => {
     }
 });
 
-// POST http://localhost:3001/api/usuarios
 router.post('/', async (req: Request, res: Response) => {
     try {
         const { nombre, apellido, email, password_hash, telefono, rol, activo } = req.body;
         const nuevo = await usuariosServices.agregarUsuario({
             nombre, apellido, email, password_hash, telefono, rol, activo
         });
+
+        if (nuevo && typeof nuevo === 'object' && 'error' in nuevo) {
+            res.status(400).json(nuevo);
+            return;
+        }
+
         res.status(201).send(nuevo);
     } catch (err) {
         res.status(500).json({ mensaje: 'No se pudo agregar el usuario' });
     }
 });
 
-// PUT http://localhost:3001/api/usuarios
 router.put('/', async (req: Request, res: Response) => {
     try {
-        const { id, nombre, apellido, email, telefono, rol, activo } = req.body;
+        const { id, nombre, apellido, email, telefono, activo } = req.body;
         const modificado = await usuariosServices.modificarUsuario({
-            id, nombre, apellido, email, telefono, rol, activo
+            id, nombre, apellido, email, telefono, activo
         });
         res.status(200).send(modificado);
     } catch (err) {
@@ -86,7 +136,6 @@ router.put('/', async (req: Request, res: Response) => {
     }
 });
 
-// DELETE http://localhost:3001/api/usuarios
 router.delete('/', async (req: Request, res: Response) => {
     try {
         const { id } = req.body;
@@ -97,6 +146,4 @@ router.delete('/', async (req: Request, res: Response) => {
     }
 });
 
-
 export default router;
-

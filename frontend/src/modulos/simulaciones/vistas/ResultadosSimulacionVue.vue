@@ -13,7 +13,7 @@
                 <button class="btn-primario" @click="descargarPDF" v-if="resultados">
                     <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
                 </button>
-                <button class="btn-volver" @click="router.push({ path: `/simulaciones/${route.query.cliente_id}`, query: { nombre: route.query.nombre } })">
+                <button class="btn-volver" @click="volver">
                     ← Volver a simulaciones
                 </button>
             </div>
@@ -406,6 +406,16 @@ const textoPaybackEstimado = computed(() => {
     if (!anioPaybackEstimado.value) return null;
     return anioPaybackEstimado.value.toFixed(1);
 });
+
+const volver = () => {
+    const returnTo = route.query.returnTo;
+    if (typeof returnTo === 'string' && returnTo.trim()) {
+        router.push(returnTo);
+        return;
+    }
+
+    router.push({ path: `/simulaciones/${route.query.cliente_id}`, query: { nombre: route.query.nombre } });
+};
 
 const limpiarGraficas = () => {
     comparativaChart.value?.destroy();

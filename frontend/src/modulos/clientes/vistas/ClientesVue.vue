@@ -7,10 +7,11 @@
                 <p>Bienvenido, {{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</p>
             </div>
             <div class="acciones-header">
+                <button class="btn-dashboard" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button class="btn-dashboard" @click="router.push('/dashboard')">Analisis</button>
                 <button class="btn-agregar" @click="router.push('/clientes/agregar')">+ Nuevo cliente</button>
                 <button 
-                    v-if="authStore.usuario?.rol === 'admin'"
+                    v-if="authStore.usuario?.rol_empresa === 'admin'"
                     class="btn-volver" 
                     @click="router.push('/admin/dashboard')"
                 >← Volver</button>
@@ -103,6 +104,10 @@ const clientesFiltrados = computed(() => {
         c.ciudad?.toLowerCase().includes(b)
     );
 });
+
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
 
 const confirmarEliminar = (cliente: Cliente) => {
     console.log('confirmarEliminar llamado', cliente);

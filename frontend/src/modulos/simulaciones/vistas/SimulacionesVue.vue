@@ -6,8 +6,9 @@
                 <p>Cliente: <strong>{{ route.query.nombre }}</strong></p>
             </div>
             <div class="acciones-header">
-                <button class="btn-agregar" @click="nuevaSimulacion">+ Nueva simulación</button>
-                <button class="btn-volver" @click="router.push('/clientes')">← Volver</button>
+                <button v-if="!soloConsulta" class="btn-secundario" @click="cambiarEmpresa">Cambiar de empresa</button>
+                <button v-if="!soloConsulta" class="btn-agregar" @click="nuevaSimulacion">+ Nueva simulación</button>
+                <button class="btn-volver" @click="volver">← Volver</button>
             </div>
         </div>
 
@@ -39,15 +40,17 @@
                                 class="btn-ver"
                                 @click="verResultados(sim.id)"
                             >Ver resultados</button>
-                            <button
-                                v-if="sim.estado === 'borrador'"
-                                class="btn-continuar"
-                                @click="continuarSimulacion(sim.id)"
-                                :disabled="cargandoContinuar === sim.id"
-                            >
-                                {{ cargandoContinuar === sim.id ? '...' : 'Continuar' }}
-                            </button>
-                            <button class="btn-eliminar" @click="confirmarEliminar(sim)">Eliminar</button>
+                            <template v-if="!soloConsulta">
+                                <button
+                                    v-if="sim.estado === 'borrador'"
+                                    class="btn-continuar"
+                                    @click="continuarSimulacion(sim.id)"
+                                    :disabled="cargandoContinuar === sim.id"
+                                >
+                                    {{ cargandoContinuar === sim.id ? '...' : 'Continuar' }}
+                                </button>
+                                <button class="btn-eliminar" @click="confirmarEliminar(sim)">Eliminar</button>
+                            </template>
                         </td>
                     </tr>
                 </tbody>
@@ -78,15 +81,32 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useSimulaciones } from '../controladores/useSimulaciones';
 import type { Simulacion } from '../interfaces/simulaciones-interface';
+import clientesApi from '../../clientes/api/clientesApi';
+import { useAuthStore } from '../../../stores/authStore';
 
 const router = useRouter();
 const route = useRoute();
 const { simulaciones, cargando, error, mensaje, traeSimulacionesPorCliente, borrarSimulacion, detectaPasoActual } = useSimulaciones();
+const authStore = useAuthStore();
 
 const cliente_id = Number(route.params.cliente_id);
+const soloConsulta = route.query.readonly === '1';
 const modalEliminarVisible = ref(false);
 const simAEliminar = ref<Simulacion | null>(null);
 const cargandoContinuar = ref<number | null>(null);
+
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
+
+const volver = () => {
+    if (soloConsulta) {
+        router.push('/admin/clientes');
+        return;
+    }
+
+    router.push('/clientes');
+};
 
 const nuevaSimulacion = () => {
     router.push({
@@ -96,11 +116,16 @@ const nuevaSimulacion = () => {
 };
 
 const verResultados = (simulacion_id: number) => {
+    const returnTo = soloConsulta
+        ? `/simulaciones/${cliente_id}?nombre=${encodeURIComponent(String(route.query.nombre ?? ''))}&readonly=1`
+        : `/simulaciones/${cliente_id}?nombre=${encodeURIComponent(String(route.query.nombre ?? ''))}`;
+
     router.push({
         path: `/simulaciones/resultados/${simulacion_id}`,
         query: {
             nombre: route.query.nombre,
-            cliente_id
+            cliente_id,
+            returnTo
         }
     });
 };
@@ -111,6 +136,8 @@ const confirmarEliminar = (sim: Simulacion) => {
 };
 
 const ejecutarEliminar = async () => {
+    if (soloConsulta) return;
+
     if (simAEliminar.value) {
         await borrarSimulacion(simAEliminar.value.id);
         modalEliminarVisible.value = false;
@@ -120,6 +147,8 @@ const ejecutarEliminar = async () => {
 };
 
 const continuarSimulacion = async (simulacion_id: number) => {
+    if (soloConsulta) return;
+
     cargandoContinuar.value = simulacion_id;
     const paso = await detectaPasoActual(simulacion_id);
     cargandoContinuar.value = null;
@@ -149,7 +178,32 @@ const continuarSimulacion = async (simulacion_id: number) => {
     }
 };
 
-onMounted(() => traeSimulacionesPorCliente(cliente_id));
+onMounted(async () => {
+    const empresaId = authStore.usuario?.empresa_id;
+
+    if (!empresaId) {
+        error.value = 'No hay empresa activa seleccionada';
+        router.push('/seleccionar-empresa');
+        return;
+    }
+
+    try {
+        const clienteResp = await clientesApi.get(`/${cliente_id}`);
+        const cliente = Array.isArray(clienteResp.data) ? clienteResp.data[0] : clienteResp.data;
+
+        if (!cliente || cliente.empresa_id !== empresaId) {
+            error.value = 'No tienes acceso a este cliente';
+            router.push('/clientes');
+            return;
+        }
+    } catch (e) {
+        error.value = 'No se pudo validar el cliente';
+        router.push('/clientes');
+        return;
+    }
+
+    await traeSimulacionesPorCliente(cliente_id);
+});
 </script>
 
 <style scoped>

@@ -15,7 +15,7 @@
                 </button>
             </div>
 
-            <form v-if="modoActual === 'signin'" @submit="onSubmitLogin" class="formulario">
+            <form v-if="modoActual === 'signin'" @submit.prevent="onSubmitLogin" class="formulario">
                 <h2>Inicio de sesión</h2>
 
                 <div class="grupo">
@@ -47,7 +47,7 @@
                 </button>
             </form>
 
-            <form v-else @submit="onSubmitRegistro" class="formulario">
+            <form v-else @submit.prevent="onSubmitRegistro" class="formulario">
                 <h2>Registro de usuario</h2>
 
                 <div class="fila-doble">
@@ -130,20 +130,21 @@ const { error, cargando, login, registrar, limpiarError } = useAuth();
 const modoActual = ref<'signin' | 'signup'>('signin');
 const exitoRegistro = ref(false);
 
-//Login
+// Login
 const { handleSubmit: handleLogin } = useForm({ validationSchema: loginSchema });
 const { value: emailValue, errorMessage: emailError } = useField<string>('email');
 const { value: passwordValue, errorMessage: passwordError } = useField<string>('password');
 
 const onSubmitLogin = handleLogin(async (values) => {
-    await login({ email: values.email, password: values.password });
-    
-    if (!error.value) {
-        if (authStore.usuario?.rol === 'admin') {
-            router.push('/admin/dashboard');
-        } else {
-            router.push('/dashboard');
+    const ok = await login({ email: values.email, password: values.password });
+    if (ok) {
+        const rol = authStore.usuario?.rol;
+        if (rol === 'superadmin') {
+            router.push('/superadmin/empresas');
+            return;
         }
+        // Usuario normal → verificar empresas
+        router.push('/seleccionar-empresa');
     }
 });
 
@@ -152,25 +153,24 @@ const cambiarModo = (nuevoModo: 'signin' | 'signup') => {
     limpiarError();
 };
 
-//Registro
-const { handleSubmit: handleRegistro, resetForm: resetRegistro } = useForm({ validationSchema: registroSchema });const { value: regNombre, errorMessage: regNombreError } = useField<string>('nombre');
+// Registro
+const { handleSubmit: handleRegistro, resetForm: resetRegistro } = useForm({ validationSchema: registroSchema });
+const { value: regNombre, errorMessage: regNombreError } = useField<string>('nombre');
 const { value: regApellido, errorMessage: regApellidoError } = useField<string>('apellido');
 const { value: regEmail, errorMessage: regEmailError } = useField<string>('email');
-const { value: regTelefono, errorMessage: regTelefonoError} = useField<string>('telefono');
+const { value: regTelefono, errorMessage: regTelefonoError } = useField<string>('telefono');
 const { value: regPassword, errorMessage: regPasswordError } = useField<string>('password');
 
 const onSubmitRegistro = handleRegistro(async (values) => {
-    await registrar({
+    const ok = await registrar({
         nombre: values.nombre,
         apellido: values.apellido,
         email: values.email,
         password_hash: values.password,
         telefono: values.telefono ?? null,
-        rol: 'trabajador',
-        activo: true
     });
 
-    if (!error.value) {
+    if (ok) {
         exitoRegistro.value = true;
         resetRegistro();
         setTimeout(() => {

@@ -2,7 +2,10 @@
     <div class="contenedor">
         <div class="encabezado">
             <h1>Editar Cliente</h1>
-            <button class="btn-volver" @click="router.push('/clientes')">← Volver</button>
+            <div class="acciones-header">
+                <button class="btn-volver" @click="cambiarEmpresa">Cambiar de empresa</button>
+                <button class="btn-volver" @click="router.push('/clientes')">← Volver</button>
+            </div>
         </div>
 
         <div class="card" v-if="clienteSeleccionado">
@@ -92,6 +95,10 @@ const router = useRouter();
 const route = useRoute();
 const { cargando, error, mensaje, clienteSeleccionado, traeClienteId, actualizarCliente } = useClientes();
 
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
+
 const { handleSubmit, setValues } = useForm({ validationSchema: clienteSchema });
 const { value: nombreValue, errorMessage: nombreError } = useField<string>('nombre');
 const { value: apellidoValue, errorMessage: apellidoError } = useField<string>('apellido');
@@ -155,6 +162,12 @@ const onSubmit = handleSubmit(async (values) => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
+}
+
+.acciones-header {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .encabezado h1 {

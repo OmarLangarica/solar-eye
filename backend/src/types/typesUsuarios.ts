@@ -3,11 +3,26 @@ export interface Usuario {
     nombre: string;
     apellido: string;
     email: string;
-    password_hash: string;
-    telefono: string | null;
-    rol: 'admin' | 'trabajador';
+    telefono?: string;
+    rol: 'superadmin' | 'usuario';
     activo: boolean;
 }
 
-export type UsuarioNuevo = Omit<Usuario, 'id'>;
-export type UsuarioActualizar = Omit<Usuario, 'password_hash'>;
+export interface UsuarioNuevo {
+    nombre: string;
+    apellido: string;
+    email: string;
+    password_hash: string;
+    telefono?: string | null;
+    rol: 'superadmin' | 'usuario';
+    activo: boolean;
+}
+
+export interface UsuarioActualizar {
+    id: number;
+    nombre: string;
+    apellido: string;
+    email: string;
+    telefono?: string | null;
+    activo: boolean;
+}

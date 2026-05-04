@@ -6,7 +6,7 @@ export const usuarioSchema = z.object({
     email: z.string().email(),
     password_hash: z.string().min(6),
     telefono: z.string().max(20).nullable().optional(),
-    rol: z.enum(['admin', 'trabajador']).default('trabajador'),
+    rol: z.enum(['superadmin', 'usuario']).default('usuario'),
     activo: z.boolean().default(true)
 });
 
@@ -16,6 +16,6 @@ export const usuarioActualizarSchema = z.object({
     apellido: z.string().min(2).max(100),
     email: z.string().email(),
     telefono: z.string().max(20).nullable().optional(),
-    rol: z.enum(['admin', 'trabajador']),
+    rol: z.enum(['superadmin', 'usuario']),
     activo: z.boolean()
 });
