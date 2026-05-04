@@ -10,16 +10,6 @@ router.get('/', async (_req: Request, res: Response) => {
     res.send(clientes);
 });
 
-// GET http://localhost:3001/api/clientes/1
-router.get('/:id', async (req: Request, res: Response) => {
-    try {
-        const cliente = await clientesServices.encuentraCliente(Number(req.params.id));
-        res.status(200).send(cliente);
-    } catch (err) {
-        res.status(500).json({ mensaje: 'Error interno del servidor' });
-    }
-});
-
 // GET http://localhost:3001/api/clientes/usuario/1  → clientes de un trabajador
 router.get('/usuario/:usuario_id', async (req: Request, res: Response) => {
     try {
@@ -30,12 +20,22 @@ router.get('/usuario/:usuario_id', async (req: Request, res: Response) => {
     }
 });
 
+// GET http://localhost:3001/api/clientes/1
+router.get('/:id', async (req: Request, res: Response) => {
+    try {
+        const cliente = await clientesServices.encuentraCliente(Number(req.params.id));
+        res.status(200).send(cliente);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
 // POST http://localhost:3001/api/clientes
 router.post('/', async (req: Request, res: Response) => {
     try {
-        const { usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas } = req.body;
+        const { empresa_id, usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas } = req.body;
         const nuevo = await clientesServices.agregarCliente({
-            usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas
+            empresa_id, usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas
         });
         res.status(201).send(nuevo);
     } catch (err) {
@@ -46,9 +46,9 @@ router.post('/', async (req: Request, res: Response) => {
 // PUT http://localhost:3001/api/clientes
 router.put('/', async (req: Request, res: Response) => {
     try {
-        const { id, usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas } = req.body;
+        const { id, empresa_id, usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas } = req.body;
         const modificado = await clientesServices.modificarCliente({
-            id, usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas
+            id, empresa_id, usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas
         });
         res.status(200).send(modificado);
     } catch (err) {

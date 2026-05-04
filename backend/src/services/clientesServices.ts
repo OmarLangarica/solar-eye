@@ -60,9 +60,9 @@ export const agregarCliente = async (nuevo: ClienteNuevo) => {
 
         const [results] = await conexion.query(
             `INSERT INTO clientes 
-            (usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas) 
-            VALUES (?,?,?,?,?,?,?,?,?,?)`,
-            [nuevo.usuario_id, nuevo.nombre, nuevo.apellido, nuevo.email, nuevo.telefono,
+            (empresa_id, usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+            [nuevo.empresa_id, nuevo.usuario_id, nuevo.nombre, nuevo.apellido, nuevo.email, nuevo.telefono,
              nuevo.direccion, nuevo.ciudad, nuevo.estado, nuevo.codigo_postal, nuevo.notas]
         );
         return results;
