@@ -2,76 +2,90 @@
     <div class="contenedor">
         <div class="encabezado">
             <div>
-                <h1>Gestión de usuarios</h1>
-                <p>Administra los trabajadores del sistema</p>
+                <h1>Solar Eye</h1>
+                <p>Panel de Super Administrador</p>
             </div>
             <div class="acciones-header">
-                <button class="btn-secundario" @click="cambiarEmpresa">Cambiar de empresa</button>
-                <button class="btn-principal" @click="router.push('/admin/usuarios/agregar')">+ Nuevo trabajador</button>
-                <button class="btn-secundario" @click="router.push('/admin/dashboard')">← Volver</button>
+                <button class="btn-agregar" @click="router.push('/superadmin/empresas/agregar')">+ Nueva empresa</button>
+                <button class="btn-cerrar-sesion" @click="cerrarSesionHandler">Cerrar sesión</button>
             </div>
         </div>
 
         <div class="mensaje exito" v-if="mensaje">{{ mensaje }}</div>
         <div class="mensaje error-msg" v-if="error">{{ error }}</div>
 
-        <div class="tabla-container">
-            <div v-if="cargando" class="sin-datos">Cargando usuarios...</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total empresas</h3>
+                <p class="stat-valor">{{ empresas.length }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Empresas activas</h3>
+                <p class="stat-valor">{{ empresas.filter(e => e.activo).length }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Plan básico</h3>
+                <p class="stat-valor">{{ empresas.filter(e => e.plan === 'basico').length }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Plan profesional</h3>
+                <p class="stat-valor">{{ empresas.filter(e => e.plan === 'profesional').length }}</p>
+            </div>
+        </div>
 
-            <table v-else-if="usuarios.length > 0">
+        <div class="tabla-container">
+            <div v-if="cargando" class="sin-datos">Cargando empresas...</div>
+
+            <table v-else-if="empresas.length > 0">
                 <thead>
                     <tr>
-                        <th>NOMBRE</th>
-                        <th>EMAIL</th>
-                        <th>TELÉFONO</th>
-                        <th>ROL</th>
+                        <th>EMPRESA</th>
+                        <th>PLAN</th>
                         <th>ESTADO</th>
+                        <th>CREADA</th>
                         <th>ACCIONES</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="u in usuarios" :key="u.id">
-                        <td>{{ u.nombre }} {{ u.apellido }}</td>
-                        <td>{{ u.email }}</td>
-                        <td>{{ u.telefono ?? '—' }}</td>
+                    <tr v-for="e in empresas" :key="e.id">
                         <td>
-                            <span class="badge" :class="u.rol_empresa">{{ u.rol_empresa }}</span>
+                            <div class="empresa-info">
+                                <div class="empresa-color" :style="{ backgroundColor: e.color_primario }"></div>
+                                <span>{{ e.nombre }}</span>
+                            </div>
                         </td>
                         <td>
-                            <span class="badge" :class="u.activo ? 'activo' : 'inactivo'">
-                                {{ u.activo ? 'Activo' : 'Inactivo' }}
+                            <span class="badge" :class="e.plan">{{ e.plan }}</span>
+                        </td>
+                        <td>
+                            <span class="badge" :class="e.activo ? 'activo' : 'inactivo'">
+                                {{ e.activo ? 'Activa' : 'Inactiva' }}
                             </span>
                         </td>
+                        <td>{{ formatearFecha(e.created_at) }}</td>
                         <td class="acciones">
-                            <button class="btn-editar" @click="router.push(`/admin/usuarios/editar/${u.id}`)">Editar</button>
+                            <button class="btn-editar" @click="router.push(`/superadmin/empresas/editar/${e.id}`)">Editar</button>
                             <button
                                 class="btn-toggle"
-                                :class="u.activo ? 'desactivar' : 'activar'"
-                                @click="toggleActivo(u)"
-                                :disabled="u.id === authStore.usuario?.id"
+                                :class="e.activo ? 'desactivar' : 'activar'"
+                                @click="toggleActivo(e)"
                             >
-                                {{ u.activo ? 'Desactivar' : 'Activar' }}
+                                {{ e.activo ? 'Desactivar' : 'Activar' }}
                             </button>
-                            <button
-                                class="btn-eliminar"
-                                @click="confirmarEliminar(u)"
-                                :disabled="u.id === authStore.usuario?.id"
-                            >
-                                Eliminar
-                            </button>
+                            <button class="btn-eliminar" @click="confirmarEliminar(e)">Eliminar</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
 
-            <div v-else class="sin-datos">No hay usuarios registrados.</div>
+            <div v-else class="sin-datos">No hay empresas registradas.</div>
         </div>
 
         <!-- Modal eliminar -->
         <div v-if="modalEliminarVisible" class="overlay" @click.self="modalEliminarVisible = false">
             <div class="modal-eliminar">
-                <h2>¿Eliminar usuario?</h2>
-                <p>¿Estás seguro de eliminar a <strong>{{ usuarioAEliminar?.nombre }} {{ usuarioAEliminar?.apellido }}</strong>? Esta acción no se puede deshacer.</p>
+                <h2>¿Eliminar empresa?</h2>
+                <p>¿Estás seguro de eliminar <strong>{{ empresaAEliminar?.nombre }}</strong>? Se eliminarán todos sus usuarios, clientes y simulaciones. Esta acción no se puede deshacer.</p>
                 <div class="modal-botones">
                     <button class="btn-cancelar" @click="modalEliminarVisible = false">Cancelar</button>
                     <button class="btn-confirmar-eliminar" @click="ejecutarEliminar" :disabled="cargandoEliminar">
@@ -80,94 +94,87 @@
                 </div>
             </div>
         </div>
-
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import adminApi from '../api/adminApi';
 import { useAuthStore } from '../../../stores/authStore';
+import empresasApi from '../api/empresasApi';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const empresaId = computed(() => authStore.usuario?.empresa_id ?? null);
 
-const usuarios = ref<any[]>([]);
+const empresas = ref<any[]>([]);
 const cargando = ref(false);
 const error = ref('');
 const mensaje = ref('');
-const cargandoEliminar = ref(false);
 const modalEliminarVisible = ref(false);
-const usuarioAEliminar = ref<any>(null);
-
-const cambiarEmpresa = () => {
-    router.push('/seleccionar-empresa');
-};
+const empresaAEliminar = ref<any>(null);
+const cargandoEliminar = ref(false);
 
 const mostrarMensaje = (msg: string) => {
     mensaje.value = msg;
     setTimeout(() => mensaje.value = '', 3000);
 };
 
-const traeUsuarios = async () => {
-    if (!empresaId.value) {
-        error.value = 'No hay empresa activa seleccionada';
-        usuarios.value = [];
-        return;
-    }
+const formatearFecha = (fecha: string) => {
+    if (!fecha) return '—';
+    return new Date(fecha).toLocaleDateString('es-MX', {
+        day: '2-digit', month: 'short', year: 'numeric'
+    });
+};
 
+const traeEmpresas = async () => {
     try {
         cargando.value = true;
-        const resp = await adminApi.get(`/empresa/${empresaId.value}/usuarios`);
-        usuarios.value = resp.data;
-    } catch (err) {
-        error.value = 'No se pudieron cargar los usuarios';
+        const resp = await empresasApi.get('/');
+        empresas.value = resp.data;
+    } catch {
+        error.value = 'No se pudieron cargar las empresas';
     } finally {
         cargando.value = false;
     }
 };
 
-const toggleActivo = async (u: any) => {
+const toggleActivo = async (e: any) => {
     try {
-        await adminApi.put('/', {
-            id: u.id,
-            nombre: u.nombre,
-            apellido: u.apellido,
-            email: u.email,
-            telefono: u.telefono,
-            activo: !u.activo
-        });
-        mostrarMensaje(`Usuario ${!u.activo ? 'activado' : 'desactivado'} correctamente`);
-        await traeUsuarios();
-    } catch (err) {
-        error.value = 'No se pudo cambiar el estado del usuario';
+        await empresasApi.put('/', { ...e, activo: !e.activo });
+        mostrarMensaje(`Empresa ${!e.activo ? 'activada' : 'desactivada'} correctamente`);
+        await traeEmpresas();
+    } catch {
+        error.value = 'No se pudo cambiar el estado de la empresa';
     }
 };
 
-const confirmarEliminar = (u: any) => {
-    usuarioAEliminar.value = u;
+const confirmarEliminar = (e: any) => {
+    empresaAEliminar.value = e;
     modalEliminarVisible.value = true;
 };
 
 const ejecutarEliminar = async () => {
-    if (!usuarioAEliminar.value) return;
+    if (!empresaAEliminar.value) return;
     try {
         cargandoEliminar.value = true;
-        await adminApi.delete('/', { data: { id: usuarioAEliminar.value.id } });
+        await empresasApi.delete('/', { data: { id: empresaAEliminar.value.id } });
         modalEliminarVisible.value = false;
-        usuarioAEliminar.value = null;
-        mostrarMensaje('Usuario eliminado correctamente');
-        await traeUsuarios();
-    } catch (err) {
-        error.value = 'No se pudo eliminar el usuario';
+        empresaAEliminar.value = null;
+        mostrarMensaje('Empresa eliminada correctamente');
+        await traeEmpresas();
+    } catch {
+        error.value = 'No se pudo eliminar la empresa';
     } finally {
         cargandoEliminar.value = false;
     }
 };
 
-onMounted(() => traeUsuarios());
+const cerrarSesionHandler = () => {
+    authStore.cerrarSesion();
+    router.push('/login');
+};
+
+onMounted(() => traeEmpresas());
 </script>
 
 <style scoped>
@@ -187,7 +194,7 @@ onMounted(() => traeUsuarios());
 
 .acciones-header { display: flex; gap: 1rem; flex-wrap: wrap; }
 
-.btn-principal {
+.btn-agregar {
     padding: 0.6rem 1.2rem;
     background-color: #FF7043;
     color: white;
@@ -196,9 +203,9 @@ onMounted(() => traeUsuarios());
     cursor: pointer;
     font-weight: 600;
 }
-.btn-principal:hover { background-color: #F4511E; }
+.btn-agregar:hover { background-color: #F4511E; }
 
-.btn-secundario {
+.btn-cerrar-sesion {
     padding: 0.6rem 1.2rem;
     background-color: #f5f5f5;
     color: #333;
@@ -207,11 +214,29 @@ onMounted(() => traeUsuarios());
     cursor: pointer;
     font-weight: 600;
 }
-.btn-secundario:hover { background-color: #e0e0e0; }
+.btn-cerrar-sesion:hover { background-color: #e0e0e0; }
 
 .mensaje { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
 .mensaje.exito { background: #f0fdf4; color: #16a34a; }
 .mensaje.error-msg { background: #fef2f2; color: #ef4444; }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-top: 4px solid #FF7043;
+}
+
+.stat-card h3 { margin: 0; color: #666; font-size: 0.85rem; font-weight: 600; }
+.stat-valor { margin: 0.5rem 0 0; font-size: 2rem; font-weight: 700; color: #333; }
 
 .tabla-container {
     background: white;
@@ -226,6 +251,9 @@ th { padding: 1rem; text-align: left; font-size: 0.85rem; color: #666; font-weig
 td { padding: 1rem; border-top: 1px solid #f0f0f0; font-size: 0.95rem; color: #333; }
 tr:hover td { background-color: #fafafa; }
 
+.empresa-info { display: flex; align-items: center; gap: 0.75rem; }
+.empresa-color { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+
 .badge {
     padding: 0.25rem 0.75rem;
     border-radius: 999px;
@@ -233,8 +261,9 @@ tr:hover td { background-color: #fafafa; }
     font-weight: 600;
     text-transform: capitalize;
 }
-.badge.admin { background: #ede9fe; color: #6d28d9; }
-.badge.trabajador { background: #dbeafe; color: #1e40af; }
+.badge.basico { background: #dbeafe; color: #1e40af; }
+.badge.profesional { background: #ede9fe; color: #6d28d9; }
+.badge.enterprise { background: #fef9c3; color: #854d0e; }
 .badge.activo { background: #dcfce7; color: #166534; }
 .badge.inactivo { background: #fee2e2; color: #991b1b; }
 
@@ -263,7 +292,6 @@ tr:hover td { background-color: #fafafa; }
 .btn-toggle.desactivar:hover { background-color: #d1d5db; }
 .btn-toggle.activar { background-color: #22c55e; color: white; }
 .btn-toggle.activar:hover { background-color: #16a34a; }
-.btn-toggle:disabled { opacity: 0.3; cursor: not-allowed; }
 
 .btn-eliminar {
     padding: 0.4rem 0.8rem;
@@ -275,11 +303,9 @@ tr:hover td { background-color: #fafafa; }
     font-size: 0.85rem;
 }
 .btn-eliminar:hover { background-color: #dc2626; }
-.btn-eliminar:disabled { opacity: 0.3; cursor: not-allowed; }
 
 .sin-datos { text-align: center; padding: 3rem; color: #999; }
 
-/* Modal */
 .overlay {
     position: fixed;
     inset: 0;
@@ -295,13 +321,12 @@ tr:hover td { background-color: #fafafa; }
     border-radius: 12px;
     padding: 2rem;
     width: 90%;
-    max-width: 400px;
+    max-width: 450px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
 }
 
 .modal-eliminar h2 { margin: 0 0 1rem; color: #333; font-size: 1.3rem; }
 .modal-eliminar p { color: #666; margin-bottom: 1.5rem; line-height: 1.5; }
-
 .modal-botones { display: flex; justify-content: flex-end; gap: 0.75rem; }
 
 .btn-cancelar {
@@ -327,11 +352,15 @@ tr:hover td { background-color: #fafafa; }
 .btn-confirmar-eliminar:hover { background-color: #dc2626; }
 .btn-confirmar-eliminar:disabled { opacity: 0.6; cursor: not-allowed; }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
     .contenedor { padding: 1rem; }
     .encabezado { flex-direction: column; align-items: flex-start; }
     .acciones-header { width: 100%; }
-    .btn-principal, .btn-secundario { flex: 1; text-align: center; }
-    th:nth-child(3), td:nth-child(3) { display: none; }
+    .btn-agregar, .btn-cerrar-sesion { flex: 1; text-align: center; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>

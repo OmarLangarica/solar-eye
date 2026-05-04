@@ -6,6 +6,7 @@
                 <p>Panel de administración global</p>
             </div>
             <div class="acciones-header">
+                <button class="btn-secundario" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button class="btn-principal" @click="router.push('/admin/clientes')">Ver todos los clientes</button>
                 <button class="btn-secundario" @click="router.push('/clientes')">Mis clientes</button>
                 <button class="btn-principal" @click="router.push('/admin/usuarios')">Gestionar usuarios</button>
@@ -170,9 +171,11 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../../auth/controladores/useAuth';
 import adminApi from '../api/adminApi';
+import { useAuthStore } from '../../../stores/authStore';
 
 const router = useRouter();
 const { cerrarSesion } = useAuth();
+const authStore = useAuthStore();
 
 const cargando = ref(false);
 const error = ref('');
@@ -206,6 +209,10 @@ const promedioClientesPorTrabajador = computed(() => {
     return (stats.value.totalClientes / stats.value.totalTrabajadores).toFixed(1);
 });
 
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
+
 const maxSimulacionesMes = computed(() => {
     if (!stats.value.simulacionesPorMes.length) return 1;
     return Math.max(...stats.value.simulacionesPorMes.map(m => m.total));
@@ -230,16 +237,20 @@ const formatearNumero = (num: number) => {
 };
 
 const traeEstadisticas = async () => {
+    const empresaId = authStore.usuario?.empresa_id;
+    if (!empresaId) {
+        error.value = 'No hay empresa activa seleccionada';
+        return;
+    }
+
     try {
         cargando.value = true;
         error.value = '';
 
         const [respStats, respClientes] = await Promise.all([
-            adminApi.get('/estadisticas/globales'),
+            adminApi.get(`/empresa/${empresaId}/estadisticas`),
             adminApi.get('/clientes/globales')
         ]);
-
-        console.log('stats completo:', JSON.stringify(respStats.data, null, 2));
 
         stats.value = {
             totalClientes: respStats.data.totalClientes ?? 0,
@@ -253,7 +264,7 @@ const traeEstadisticas = async () => {
         };
 
         // Top 5 clientes con más simulaciones
-        const clientes = respClientes.data as any[];
+        const clientes = (respClientes.data as any[]).filter((c: any) => c.empresa_id === empresaId);
         const conConteo = await Promise.all(
             clientes.map(async (c: any) => {
                 try {

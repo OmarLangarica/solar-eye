@@ -15,8 +15,11 @@ export const useClientes = () => {
         try {
             cargando.value = true;
             const usuario_id = authStore.usuario?.id;
+            const empresa_id = authStore.usuario?.empresa_id;
             const respuesta = await clientesApi.get<Cliente[]>(`/usuario/${usuario_id}`);
-            clientes.value = respuesta.data;
+            clientes.value = empresa_id
+                ? respuesta.data.filter((cliente) => cliente.empresa_id === empresa_id)
+                : respuesta.data;
         } catch (err) {
             error.value = 'No se pudieron obtener los clientes';
         } finally {
@@ -29,7 +32,21 @@ export const useClientes = () => {
         cargando.value = true;
         const respuesta = await clientesApi.get<Cliente[]>(`/${id}`);
         const data = respuesta.data;
-        clienteSeleccionado.value = Array.isArray(data) ? (data[0] ?? null) : data;
+        const cliente = Array.isArray(data) ? (data[0] ?? null) : data;
+
+        if (!cliente) {
+            clienteSeleccionado.value = null;
+            return;
+        }
+
+        const empresa_id = authStore.usuario?.empresa_id;
+        if (empresa_id && cliente.empresa_id !== empresa_id) {
+            clienteSeleccionado.value = null;
+            error.value = 'No tienes acceso a este cliente';
+            return;
+        }
+
+        clienteSeleccionado.value = cliente;
     } catch (err) {
         error.value = 'No se pudo obtener el cliente';
     } finally {

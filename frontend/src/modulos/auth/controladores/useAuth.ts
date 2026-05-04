@@ -1,33 +1,28 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import authApi from '../api/authApi';
+import usuariosApi from '../api/authApi';
 import { useAuthStore } from '../../../stores/authStore';
-import type { LoginCredenciales } from '../interfaces/auth-interface';
 
 export const useAuth = () => {
-    const router = useRouter();
     const authStore = useAuthStore();
-    const error = ref<string | null>(null);
+    const router = useRouter();
+    const error = ref('');
     const cargando = ref(false);
 
-    const limpiarError = () => {
-        error.value = null;
-    };
-
-    const login = async (credenciales: LoginCredenciales) => {
+    const login = async (credenciales: { email: string; password: string }) => {
         try {
             cargando.value = true;
-            error.value = null;
+            error.value = '';
 
             const respuesta = await authApi.post('/login', { email: credenciales.email });
-            const usuarios = respuesta.data as any[];
-
-            if (!usuarios || (Array.isArray(usuarios) && usuarios.length === 0)) {
-                error.value = 'Usuario no encontrado';
-                return false; // Retornamos false para indicar fallo
-            }
-
+            const usuarios = respuesta.data;
             const usuario = Array.isArray(usuarios) ? usuarios[0] : usuarios;
+
+            if (!usuario || !usuario.id) {
+                error.value = 'Usuario no encontrado';
+                return false;
+            }
 
             if (usuario.password_hash !== credenciales.password) {
                 error.value = 'Contraseña incorrecta';
@@ -35,7 +30,7 @@ export const useAuth = () => {
             }
 
             if (!usuario.activo) {
-                error.value = 'Usuario inactivo, contacta al administrador';
+                error.value = 'Tu cuenta está desactivada';
                 return false;
             }
 
@@ -44,47 +39,58 @@ export const useAuth = () => {
                 nombre: usuario.nombre,
                 apellido: usuario.apellido,
                 email: usuario.email,
+                telefono: usuario.telefono,
                 rol: usuario.rol,
-                activo: usuario.activo
+                activo: usuario.activo,
+                empresa_id: null,
+                empresa_nombre: null,
+                empresa_color_primario: null,
+                empresa_color_secundario: null,
+                rol_empresa: null
             });
 
-            // Tras autenticarse, el primer destino es el dashboard
-            router.push('/dashboard');
             return true;
 
         } catch (err) {
-            error.value = 'Error al conectar con el servidor';
+            error.value = 'Error al iniciar sesión';
             return false;
         } finally {
             cargando.value = false;
         }
     };
 
-    const registrar = async (datos: any) => {
+    const registrar = async (datos: {
+        nombre: string;
+        apellido: string;
+        email: string;
+        password_hash: string;
+        telefono?: string | null;
+    }) => {
         try {
             cargando.value = true;
-            error.value = null;
-            await authApi.post('/', datos);
+            error.value = '';
+
+            await authApi.post('/', {
+                ...datos,
+                rol: 'usuario',
+                activo: true
+            });
+
             return true;
         } catch (err) {
-            error.value = 'Error al registrar, intenta de nuevo';
+            error.value = 'Error al registrar usuario';
             return false;
         } finally {
             cargando.value = false;
         }
     };
+
+    const limpiarError = () => { error.value = ''; };
 
     const cerrarSesion = () => {
         authStore.cerrarSesion();
         router.push('/login');
     };
 
-    return {
-        error,
-        cargando,
-        login,
-        registrar,
-        cerrarSesion,
-        limpiarError
-    };
+    return { error, cargando, login, registrar, limpiarError, cerrarSesion };
 };

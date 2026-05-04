@@ -14,12 +14,30 @@ export const obtieneClientes = async () => {
 export const obtieneClientesPorUsuario = async (usuario_id: number) => {
     try {
         const [results] = await conexion.query(
-            'SELECT * FROM clientes WHERE usuario_id = ?',
+            `SELECT c.* FROM clientes c
+             INNER JOIN usuarios u ON c.usuario_id = u.id
+             WHERE c.usuario_id = ?`,
             [usuario_id]
         );
         return results;
     } catch (err) {
-        return { error: 'No se pudieron obtener los clientes del usuario' };
+        return { error: 'No se pudieron obtener los clientes' };
+    }
+};
+
+// Nueva función: todos los clientes de una empresa (para admin)
+export const obtieneClientesPorEmpresa = async (empresa_id: number) => {
+    try {
+        const [results] = await conexion.query(
+            `SELECT c.*, u.nombre as trabajador_nombre, u.apellido as trabajador_apellido
+             FROM clientes c
+             INNER JOIN usuarios u ON c.usuario_id = u.id
+             WHERE c.empresa_id = ?`,
+            [empresa_id]
+        );
+        return results;
+    } catch (err) {
+        return { error: 'No se pudieron obtener los clientes' };
     }
 };
 
@@ -85,3 +103,4 @@ export const borrarCliente = async (id: number) => {
         return { error: 'No se pudo borrar el cliente' };
     }
 };
+

@@ -8,7 +8,7 @@ import reportesRutas from './routes/reportesRutas.js';
 import nasaRutas from './routes/nasaRutas.js';
 
 import IaRutas from './routes/IaRutas.js'; 
-
+import empresasRutas from './routes/empresasRutas.js';
 
 const app = express();
 app.use(cors());
@@ -21,6 +21,8 @@ app.use('/api/clientes', clientesRutas);
 app.use('/api/simulaciones', simulacionesRutas);
 app.use('/api/reportes', reportesRutas);
 app.use('/api/nasa', nasaRutas);
+app.use('/api/empresas', empresasRutas);
+
 
 app.listen(PUERTO, () => {
     console.log(`Servidor en ejecución en el puerto ${PUERTO}`);
