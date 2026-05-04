@@ -14,6 +14,7 @@ export const useClientes = () => {
     const traeClientes = async () => {
         try {
             cargando.value = true;
+            error.value = null;
             const usuario_id = authStore.usuario?.id;
             const empresa_id = authStore.usuario?.empresa_id;
             const respuesta = await clientesApi.get<Cliente[]>(`/usuario/${usuario_id}`);
@@ -58,6 +59,7 @@ export const useClientes = () => {
         try {
             cargando.value = true;
             mensaje.value = null;
+            error.value = null;
             const respuesta = await clientesApi.post('/', {
                 ...cliente,
                 usuario_id: authStore.usuario?.id
