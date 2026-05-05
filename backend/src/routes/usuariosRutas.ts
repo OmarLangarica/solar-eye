@@ -61,6 +61,18 @@ router.get('/empresa/:empresa_id/usuarios', async (req: Request, res: Response) 
     }
 });
 
+router.delete('/empresa/:empresa_id/usuarios/:usuario_id', async (req: Request, res: Response) => {
+    try {
+        const empresa_id = Number(req.params.empresa_id);
+        const usuario_id = Number(req.params.usuario_id);
+
+        const resultado = await usuariosServices.quitarUsuarioDeEmpresa(usuario_id, empresa_id);
+        res.status(200).send(resultado);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'No se pudo quitar el usuario de la empresa' });
+    }
+});
+
 router.get('/empresa/:empresa_id/estadisticas', async (req: Request, res: Response) => {
     try {
         const stats = await usuariosServices.obtieneEstadisticasEmpresa(Number(req.params.empresa_id));

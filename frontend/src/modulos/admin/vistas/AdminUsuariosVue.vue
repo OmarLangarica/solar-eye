@@ -43,21 +43,12 @@
                             </span>
                         </td>
                         <td class="acciones">
-                            <button class="btn-editar" @click="router.push(`/admin/usuarios/editar/${u.id}`)">Editar</button>
-                            <button
-                                class="btn-toggle"
-                                :class="u.activo ? 'desactivar' : 'activar'"
-                                @click="toggleActivo(u)"
-                                :disabled="u.id === authStore.usuario?.id"
-                            >
-                                {{ u.activo ? 'Desactivar' : 'Activar' }}
-                            </button>
                             <button
                                 class="btn-eliminar"
                                 @click="confirmarEliminar(u)"
                                 :disabled="u.id === authStore.usuario?.id"
                             >
-                                Eliminar
+                                Expulsar
                             </button>
                         </td>
                     </tr>
@@ -70,12 +61,12 @@
         <!-- Modal eliminar -->
         <div v-if="modalEliminarVisible" class="overlay" @click.self="modalEliminarVisible = false">
             <div class="modal-eliminar">
-                <h2>¿Eliminar usuario?</h2>
-                <p>¿Estás seguro de eliminar a <strong>{{ usuarioAEliminar?.nombre }} {{ usuarioAEliminar?.apellido }}</strong>? Esta acción no se puede deshacer.</p>
+                <h2>¿Quitar usuario de la empresa?</h2>
+                <p>¿Estás seguro de quitar a <strong>{{ usuarioAEliminar?.nombre }} {{ usuarioAEliminar?.apellido }}</strong> de esta empresa? El usuario seguirá existiendo en el sistema.</p>
                 <div class="modal-botones">
                     <button class="btn-cancelar" @click="modalEliminarVisible = false">Cancelar</button>
                     <button class="btn-confirmar-eliminar" @click="ejecutarEliminar" :disabled="cargandoEliminar">
-                        {{ cargandoEliminar ? 'Eliminando...' : 'Sí, eliminar' }}
+                        {{ cargandoEliminar ? 'Quitando...' : 'Sí, quitar' }}
                     </button>
                 </div>
             </div>
@@ -129,39 +120,22 @@ const traeUsuarios = async () => {
     }
 };
 
-const toggleActivo = async (u: any) => {
-    try {
-        await adminApi.put('/', {
-            id: u.id,
-            nombre: u.nombre,
-            apellido: u.apellido,
-            email: u.email,
-            telefono: u.telefono,
-            activo: !u.activo
-        });
-        mostrarMensaje(`Usuario ${!u.activo ? 'activado' : 'desactivado'} correctamente`);
-        await traeUsuarios();
-    } catch (err) {
-        error.value = 'No se pudo cambiar el estado del usuario';
-    }
-};
-
 const confirmarEliminar = (u: any) => {
     usuarioAEliminar.value = u;
     modalEliminarVisible.value = true;
 };
 
 const ejecutarEliminar = async () => {
-    if (!usuarioAEliminar.value) return;
+    if (!usuarioAEliminar.value || !empresaId.value) return;
     try {
         cargandoEliminar.value = true;
-        await adminApi.delete('/', { data: { id: usuarioAEliminar.value.id } });
+        await adminApi.delete(`/empresa/${empresaId.value}/usuarios/${usuarioAEliminar.value.id}`);
         modalEliminarVisible.value = false;
         usuarioAEliminar.value = null;
-        mostrarMensaje('Usuario eliminado correctamente');
+        mostrarMensaje('Usuario quitado de la empresa correctamente');
         await traeUsuarios();
     } catch (err) {
-        error.value = 'No se pudo eliminar el usuario';
+        error.value = 'No se pudo quitar el usuario de la empresa';
     } finally {
         cargandoEliminar.value = false;
     }
@@ -239,31 +213,6 @@ tr:hover td { background-color: #fafafa; }
 .badge.inactivo { background: #fee2e2; color: #991b1b; }
 
 .acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-
-.btn-editar {
-    padding: 0.4rem 0.8rem;
-    background-color: #f59e0b;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-.btn-editar:hover { background-color: #d97706; }
-
-.btn-toggle {
-    padding: 0.4rem 0.8rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-.btn-toggle.desactivar { background-color: #e5e7eb; color: #374151; }
-.btn-toggle.desactivar:hover { background-color: #d1d5db; }
-.btn-toggle.activar { background-color: #22c55e; color: white; }
-.btn-toggle.activar:hover { background-color: #16a34a; }
-.btn-toggle:disabled { opacity: 0.3; cursor: not-allowed; }
 
 .btn-eliminar {
     padding: 0.4rem 0.8rem;
