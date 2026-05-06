@@ -262,25 +262,32 @@ export const useSimulaciones = () => {
     };
 
     const detectaPasoActual = async (simulacion_id: number): Promise<number> => {
-        try {
-            // Verificar qué datos ya existen para determinar el paso
-            const [techo, geo, consumo, resultados] = await Promise.all([
-                obtieneDatosTecho(simulacion_id),
-                obtieneDatosGeograficos(simulacion_id),
-                obtieneConsumoElectrico(simulacion_id),
-                obtieneResultados(simulacion_id)
-            ]);
+    try {
+        const [techo, geo, consumo, resultados] = await Promise.all([
+            obtieneDatosTecho(simulacion_id),
+            obtieneDatosGeograficos(simulacion_id),
+            obtieneConsumoElectrico(simulacion_id),
+            obtieneResultados(simulacion_id)
+        ]);
 
-            if (!techo) return 1; // Paso 1: Datos del techo
-            if (!geo) return 2; // Paso 2: Datos geográficos
-            if (!consumo) return 3; // Paso 3: Consumo eléctrico
-            if (!resultados) return 4; // Paso 4: Calcular resultados
-            return 5; // Completado
-        } catch (err) {
-            console.error('Error detectando paso actual:', err);
-            return 1; // Por defecto, empezar desde el principio
-        }
-    };
+        const tieneValor = (data: any) => {
+            if (!data) return false;
+            if (Array.isArray(data)) return data.length > 0;
+            if (data.error) return false;
+            return true;
+        };
+
+        if (!tieneValor(techo)) return 2;
+        if (!tieneValor(geo)) return 2;
+        if (!tieneValor(consumo)) return 3;
+        if (!tieneValor(resultados)) return 4;
+        return 5;
+
+    } catch (err) {
+        console.error('Error detectando paso actual:', err);
+        return 2;
+    }
+};
 
     return {
         simulaciones,

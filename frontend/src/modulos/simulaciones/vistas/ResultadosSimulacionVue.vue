@@ -596,39 +596,35 @@ const renderGraficaProyeccion = () => {
 };
 
 onMounted(async () => {
-    window.addEventListener('solar-eye-theme-changed', onThemeChanged);
+    // ─── Función helper para extraer el primer elemento de un array ───
+    const extraer = (data: any) => {
+        if (!data) return null;
+        if (Array.isArray(data)) return data.length > 0 ? data[0] : null;
+        if (data.error) return null;
+        return data;
+    };
 
-    let resultadosExistentes = await obtieneResultados(simulacion_id);
+    let resultadosRaw = await obtieneResultados(simulacion_id);
+    let resultadosExistentes = extraer(resultadosRaw);
 
-    // AQUÍ ESTÁ EL CAMBIO: Convertimos todo a números si ya existen en la base de datos
-    if (resultadosExistentes && !resultadosExistentes.error) {
-        
-        // Por si tu backend manda un arreglo en vez de un objeto directo
-        const data = Array.isArray(resultadosExistentes) ? resultadosExistentes[0] : resultadosExistentes;
-
-        resultados.value = normalizaResultados(data);
-
-        techo.value = await obtieneDatosTecho(simulacion_id);
-        geo.value = await obtieneDatosGeograficos(simulacion_id);
-        consumo.value = await obtieneConsumoElectrico(simulacion_id);
+    if (resultadosExistentes) {
+        resultados.value = normalizaResultados(resultadosExistentes);
+        techo.value = extraer(await obtieneDatosTecho(simulacion_id));
+        geo.value = extraer(await obtieneDatosGeograficos(simulacion_id));
+        consumo.value = extraer(await obtieneConsumoElectrico(simulacion_id));
         return;
     }
 
-    // EL RESTO SE QUEDA EXACTAMENTE IGUAL A COMO LO TENÍAS
-    techo.value = await obtieneDatosTecho(simulacion_id);
-    geo.value = await obtieneDatosGeograficos(simulacion_id);
-    consumo.value = await obtieneConsumoElectrico(simulacion_id);
-
-    console.log('techo:', techo.value);
-    console.log('geo:', geo.value);
-    console.log('consumo:', consumo.value);
+    // No hay resultados → calcular
+    techo.value = extraer(await obtieneDatosTecho(simulacion_id));
+    geo.value = extraer(await obtieneDatosGeograficos(simulacion_id));
+    consumo.value = extraer(await obtieneConsumoElectrico(simulacion_id));
 
     if (!techo.value || !geo.value || !consumo.value) {
         error.value = 'Faltan datos para calcular la simulación';
         return;
     }
 
-    // Convierte strings a números antes de calcular
     const techoParseado = {
         ...techo.value,
         area_m2: Number(techo.value.area_m2),
@@ -657,7 +653,6 @@ onMounted(async () => {
     };
 
     const calculados = calcularResultados(consumoParseado, techoParseado, geoParseado, simulacion_id);
-    console.log('calculados:', calculados);
     await guardarResultados(calculados);
     resultados.value = normalizaResultados(calculados);
 });

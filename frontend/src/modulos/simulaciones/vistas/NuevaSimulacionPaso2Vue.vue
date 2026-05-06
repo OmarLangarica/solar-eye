@@ -492,7 +492,7 @@ const guardarYAvanzar = async () => {
         const techoExistente = await obtieneDatosTecho(simulacion_id);
         const geoExistente = await obtieneDatosGeograficos(simulacion_id);
 
-        if (techoExistente && !techoExistente.error && techoExistente.id) {
+        if (techoExistente && techoExistente.id) {
             await simulacionesApi.put('/techo', {
                 ...datosTecho,
                 id: Number(techoExistente.id)
@@ -501,7 +501,7 @@ const guardarYAvanzar = async () => {
             await guardarDatosTecho({ ...datosTecho });
         }
 
-        if (geoExistente && !geoExistente.error && geoExistente.id) {
+        if (geoExistente && geoExistente.id) {
             await simulacionesApi.put('/geograficos', {
                 ...datosGeo.value,
                 simulacion_id,
