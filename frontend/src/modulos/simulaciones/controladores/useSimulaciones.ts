@@ -1,5 +1,7 @@
 import { ref } from 'vue';
 import simulacionesApi, { nasaApi } from '../api/simulacionesApi';
+// Importa la nueva función de la API de IA
+import { analizarReciboConIA } from '../api/simulacionesApi'; 
 import type {
     Simulacion, SimulacionNueva,
     DatosTecho, DatosGeograficos,
@@ -10,10 +12,53 @@ export const useSimulaciones = () => {
     const simulaciones = ref<Simulacion[]>([]);
     const simulacionActual = ref<Simulacion | null>(null);
     const cargando = ref(false);
+    // Nuevo estado para el proceso de visión
+    const cargandoIA = ref(false); 
     const error = ref<string | null>(null);
     const mensaje = ref<string | null>(null);
 
-    //Simulaciones
+    // --- NUEVA FUNCIONALIDAD: EXTRACCIÓN CON IA ---
+    
+    /**
+     * Procesa la imagen del recibo, la envía a la IA y 
+     * devuelve los datos para llenar el formulario automáticamente.
+     */
+    const extraerDatosConIA = async (archivo: File): Promise<any> => {
+        if (!archivo) return null;
+        
+        cargandoIA.value = true;
+        error.value = null;
+
+        return new Promise((resolve) => {
+            const lector = new FileReader();
+            lector.readAsDataURL(archivo);
+            
+            lector.onload = async () => {
+                try {
+                    const base64 = lector.result as string;
+                    console.log('Imagen convertida a base64, enviando a IA...');
+                    // Llamada al endpoint /ia/analizar-recibo que configuramos en el backend
+                    const datos = await analizarReciboConIA(base64);
+                    console.log('Datos recibidos de IA:', datos);
+                    resolve(datos);
+                } catch (err) {
+                    error.value = 'No se pudo leer el recibo automáticamente';
+                    resolve(null);
+                } finally {
+                    cargandoIA.value = false;
+                }
+            };
+
+            lector.onerror = () => {
+                error.value = 'Error al leer el archivo de imagen';
+                cargandoIA.value = false;
+                resolve(null);
+            };
+        });
+    };
+
+    // --- MÉTODOS EXISTENTES (Mantenidos intactos) ---
+
     const traeSimulacionesPorCliente = async (cliente_id: number) => {
         try {
             cargando.value = true;
@@ -53,7 +98,6 @@ export const useSimulaciones = () => {
         }
     };
 
-    //Datos Techo
     const guardarDatosTecho = async (datos: DatosTecho) => {
         try {
             const respuesta = await simulacionesApi.post('/techo', datos);
@@ -64,7 +108,6 @@ export const useSimulaciones = () => {
         }
     };
 
-    // NASA POWER 
     const consultarNasa = async (latitud: number, longitud: number): Promise<DatosGeograficos | null> => {
         try {
             const respuesta = await nasaApi.post('/', { latitud, longitud });
@@ -85,7 +128,6 @@ export const useSimulaciones = () => {
         }
     };
 
-    //Consumo Eléctrico
     const guardarConsumoElectrico = async (datos: ConsumoElectrico) => {
         try {
             const respuesta = await simulacionesApi.post('/consumo', datos);
@@ -96,17 +138,13 @@ export const useSimulaciones = () => {
         }
     };
 
-    //Resultados
     const guardarResultados = async (datos: ResultadosCalculo) => {
         try {
             const respuesta = await simulacionesApi.post('/resultados', datos);
-
-            // Marca como completada usando el nuevo endpoint
             await simulacionesApi.patch('/estado', {
                 id: datos.simulacion_id,
                 estado: 'completada'
             });
-
             return respuesta.data;
         } catch (err) {
             error.value = 'No se pudieron guardar los resultados';
@@ -114,12 +152,11 @@ export const useSimulaciones = () => {
         }
     };
 
-    //Cálculo automático
     const calcularResultados = (
-    consumo: ConsumoElectrico,
-    techo: DatosTecho,
-    geo: DatosGeograficos,
-    simulacion_id: number
+        consumo: ConsumoElectrico,
+        techo: DatosTecho,
+        geo: DatosGeograficos,
+        simulacion_id: number
     ): ResultadosCalculo => {
         const COSTO_POR_WP = 17.50;
         const CO2_POR_KWH = 0.45;
@@ -131,48 +168,24 @@ export const useSimulaciones = () => {
         const hsp = geo.horas_sol_pico_diarias;
         const areaUtil = techo.area_util_m2 ?? techo.area_m2 * 0.85;
 
-
-        
-        // Paneles que caben en el techo (panel estándar 1.96 m²)
         const cantidadPaneles = Math.floor(areaUtil / 1.96);
-        const potenciaSistemaKwp = (cantidadPaneles * 410) / 1000;
-
-        // Producción año 1 sin degradación
-        // 1. CALCULAR POTENCIA NECESARIA (Basado en consumo real)
-        // Fórmula: Consumo Diario / (HSP * Eficiencia)
         const consumoDiarioKwh = consumo.consumo_anual_kwh / 365;
         const potenciaNecesariaKwp = consumoDiarioKwh / (hsp * EFICIENCIA_INVERSOR * techo.factor_sombra);
-
-        // 2. CALCULAR CAPACIDAD MÁXIMA DEL TECHO
         const maxPanelesTecho = Math.floor(areaUtil / 1.96);
         const maxKwpTecho = (maxPanelesTecho * 410) / 1000;
-
-        
-        // 3. SELECCIONAR EL MENOR (No podemos instalar más de lo que cabe, ni más de lo que se necesita)
-        // Agregamos un pequeño margen del 5% para cubrir degradación futura
         const potenciaFinalKwp = Math.min(potenciaNecesariaKwp * 1.05, maxKwpTecho);
-        
-        // 4. RE-CALCULAR PRODUCCIÓN CON LA POTENCIA REALISTA
         const produccionAnio1 = potenciaFinalKwp * hsp * 365 * EFICIENCIA_INVERSOR * techo.factor_sombra;
-
         const numeroPanelesInstalar = Math.ceil((potenciaFinalKwp * 1000) / 410);
-        
-        // Producción promedio considerando degradación acumulada en 25 años
         const produccionAnual = produccionAnio1 * (1 - (DEGRADACION * (VIDA_UTIL - 1) / 2));
         const produccionMensual = produccionAnual / 12;
-
-        // Cobertura
         const porcentajeCobertura = Math.min((produccionAnual / consumo.consumo_anual_kwh) * 100, 100);
         const excedente = Math.max(produccionAnual - consumo.consumo_anual_kwh, 0);
-
-        // Económico
         const kwAhorrados = Math.min(produccionAnual, consumo.consumo_anual_kwh);
         const ahorroAnual = kwAhorrados * consumo.tarifa_kwh_mxn;
         const ahorroMensual = ahorroAnual / 12;
         const costoInstalacion = potenciaFinalKwp * 1000 * COSTO_POR_WP; 
         const payback = costoInstalacion / ahorroAnual;
 
-        // Ahorro en vida útil con incremento tarifario
         let ahorroTotal = 0;
         let tarifaActual = consumo.tarifa_kwh_mxn;
         let produccionActual = produccionAnio1;
@@ -182,14 +195,9 @@ export const useSimulaciones = () => {
             produccionActual *= (1 - DEGRADACION);
         }
 
-        // Proyección tarifaria
-        const tarifa5 = consumo.tarifa_kwh_mxn * Math.pow(1 + TASA_INCREMENTO, 5);
-        const tarifa10 = consumo.tarifa_kwh_mxn * Math.pow(1 + TASA_INCREMENTO, 10);
-
-        // Ambiental
         const co2Anual = produccionAnual * CO2_POR_KWH;
         const co2VidaUtil = co2Anual * VIDA_UTIL;
-        const arboles = Math.round(co2VidaUtil / 21.77); // 1 árbol absorbe ~21.77 kg CO2/año en 25 años
+        const arboles = Math.round(co2VidaUtil / 21.77);
 
         return {
             simulacion_id,
@@ -206,75 +214,82 @@ export const useSimulaciones = () => {
             co2_evitado_anual_kg: parseFloat(co2Anual.toFixed(2)),
             co2_evitado_vida_util_kg: parseFloat(co2VidaUtil.toFixed(2)),
             arboles_equivalentes: arboles,
-            precio_kwh_proyectado_anio5: parseFloat(tarifa5.toFixed(4)),
-            precio_kwh_proyectado_anio10: parseFloat(tarifa10.toFixed(4)),
+            precio_kwh_proyectado_anio5: parseFloat((consumo.tarifa_kwh_mxn * Math.pow(1 + TASA_INCREMENTO, 5)).toFixed(4)),
+            precio_kwh_proyectado_anio10: parseFloat((consumo.tarifa_kwh_mxn * Math.pow(1 + TASA_INCREMENTO, 10)).toFixed(4)),
             tasa_incremento_tarifa_pct: TASA_INCREMENTO * 100
         };
     };
 
-    //Obtener datos guardados
-    const obtieneDatosTecho = async (simulacion_id: number) => {
+    // Funciones para obtener datos existentes
+    const obtieneDatosTecho = async (simulacion_id: number): Promise<DatosTecho | null> => {
         try {
-            const respuesta = await simulacionesApi.get(`/techo/${simulacion_id}`);
-            const data = respuesta.data as any[];
-            return Array.isArray(data) ? data[0] : data;
+            const respuesta = await simulacionesApi.get<DatosTecho>(`/techo/${simulacion_id}`);
+            return respuesta.data;
         } catch (err) {
+            error.value = 'No se pudieron obtener los datos del techo';
             return null;
         }
     };
 
-    const obtieneDatosGeograficos = async (simulacion_id: number) => {
+    const obtieneDatosGeograficos = async (simulacion_id: number): Promise<DatosGeograficos | null> => {
         try {
-            const respuesta = await simulacionesApi.get(`/geograficos/${simulacion_id}`);
-            const data = respuesta.data as any[];
-            return Array.isArray(data) ? data[0] : data;
+            const respuesta = await simulacionesApi.get<DatosGeograficos>(`/geograficos/${simulacion_id}`);
+            return respuesta.data;
         } catch (err) {
+            error.value = 'No se pudieron obtener los datos geográficos';
             return null;
         }
     };
 
-    const obtieneConsumoElectrico = async (simulacion_id: number) => {
+    const obtieneConsumoElectrico = async (simulacion_id: number): Promise<ConsumoElectrico | null> => {
         try {
-            const respuesta = await simulacionesApi.get(`/consumo/${simulacion_id}`);
-            const data = respuesta.data as any[];
-            return Array.isArray(data) ? data[0] : data;
+            const respuesta = await simulacionesApi.get<ConsumoElectrico>(`/consumo/${simulacion_id}`);
+            return respuesta.data;
         } catch (err) {
+            error.value = 'No se pudo obtener el consumo eléctrico';
             return null;
         }
     };
 
-    const obtieneResultados = async (simulacion_id: number) => {
+    const obtieneResultados = async (simulacion_id: number): Promise<ResultadosCalculo | null> => {
         try {
-            const respuesta = await simulacionesApi.get(`/resultados/${simulacion_id}`);
-            const data = respuesta.data as any[];
-            return Array.isArray(data) ? data[0] : data;
+            const respuesta = await simulacionesApi.get<ResultadosCalculo>(`/resultados/${simulacion_id}`);
+            return respuesta.data;
         } catch (err) {
+            error.value = 'No se pudieron obtener los resultados';
             return null;
         }
     };
 
     const detectaPasoActual = async (simulacion_id: number): Promise<number> => {
-        const techo = await obtieneDatosTecho(simulacion_id);
-        if (!techo || techo.error) return 2; // No tiene techo → paso 2
+        try {
+            // Verificar qué datos ya existen para determinar el paso
+            const [techo, geo, consumo, resultados] = await Promise.all([
+                obtieneDatosTecho(simulacion_id),
+                obtieneDatosGeograficos(simulacion_id),
+                obtieneConsumoElectrico(simulacion_id),
+                obtieneResultados(simulacion_id)
+            ]);
 
-        const geo = await obtieneDatosGeograficos(simulacion_id);
-        if (!geo || geo.error) return 2; // No tiene geo → paso 2
-
-        const consumo = await obtieneConsumoElectrico(simulacion_id);
-        if (!consumo || consumo.error) return 3; // No tiene consumo → paso 3
-
-        const resultados = await obtieneResultados(simulacion_id);
-        if (!resultados || resultados.error) return 4; // No tiene resultados → paso 4
-
-        return 4; // Completa → resultados
+            if (!techo) return 1; // Paso 1: Datos del techo
+            if (!geo) return 2; // Paso 2: Datos geográficos
+            if (!consumo) return 3; // Paso 3: Consumo eléctrico
+            if (!resultados) return 4; // Paso 4: Calcular resultados
+            return 5; // Completado
+        } catch (err) {
+            console.error('Error detectando paso actual:', err);
+            return 1; // Por defecto, empezar desde el principio
+        }
     };
 
     return {
         simulaciones,
         simulacionActual,
         cargando,
+        cargandoIA, // Nuevo estado de carga para la visión
         error,
         mensaje,
+        extraerDatosConIA, // Nueva función para procesar el recibo
         traeSimulacionesPorCliente,
         agregarSimulacion,
         borrarSimulacion,
