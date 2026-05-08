@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const clienteSchema = z.object({
+    empresa_id: z.number().int().positive(),
     usuario_id: z.number().int().positive(),
     nombre: z.string().min(2).max(100),
     apellido: z.string().min(2).max(100),

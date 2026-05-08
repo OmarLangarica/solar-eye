@@ -15,7 +15,6 @@ import AdminDashboardVue from '@/modulos/admin/vistas/AdminDashboardVue.vue';
 import AdminUsuariosVue from '@/modulos/admin/vistas/AdminUsuariosVue.vue';
 import AdminClientesVue from '@/modulos/admin/vistas/AdminClientesVue.vue';
 import AdminAgregarUsuarioVue from '@/modulos/admin/vistas/AdminAgregarUsuarioVue.vue';
-import AdminEditarUsuarioVue from '@/modulos/admin/vistas/AdminEditarUsuarioVue.vue';
 import SuperAdminAgregarEmpresaVue from '@/modulos/superadmin/vistas/SuperAdminAgregarEmpresaVue.vue';
 import SuperAdminEmpresasVue from '@/modulos/superadmin/vistas/SuperAdminEmpresasVue.vue';
 import SuperAdminEditarEmpresaVue from '@/modulos/superadmin/vistas/SuperAdminEditarEmpresaVue.vue';
@@ -121,12 +120,6 @@ const router = createRouter({
             path: '/admin/usuarios/agregar',
             name: 'admin-agregar-usuario',
             component: AdminAgregarUsuarioVue,
-            meta: { soloAdmin: true }
-        },
-        {
-            path: '/admin/usuarios/editar/:id',
-            name: 'admin-editar-usuario',
-            component: AdminEditarUsuarioVue,
             meta: { soloAdmin: true }
         },
         {

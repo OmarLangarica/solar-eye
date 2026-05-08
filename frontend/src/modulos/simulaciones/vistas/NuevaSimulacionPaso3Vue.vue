@@ -55,7 +55,7 @@
                         <label>Foto del recibo <span class="opcional">(opcional para consulta)</span></label>
                         <div 
                             class="dropzone" 
-                            :class="{ 'dropzone-active': dragging }"
+                            :class="{ 'dropzone-active': dragging, 'dropzone-loading': cargandoIA }"
                             @dragover.prevent="dragging = true"
                             @dragleave.prevent="dragging = false"
                             @drop.prevent="onDrop"
@@ -65,17 +65,26 @@
                             type="file" 
                             ref="fileInput" 
                             class="hidden-input" 
-                            accept="image/*" 
+                            accept="image/*,application/pdf" 
                             @change="onFileSelect"
                         />
-        <div v-if="!imagenPreview" class="dropzone-info">
+        <div v-if="!imagenPreview && !cargandoIA" class="dropzone-info">
             <span class="icono-upload">📄</span>
             <p>Arrastra el recibo aquí o <strong>haz clic para buscar</strong></p>
             <span class="formato-info">JPG, PNG o PDF (Máx. 5MB)</span>
         </div>
 
+        <div v-else-if="cargandoIA" class="dropzone-info">
+            <p><strong>Analizando el archivo...</strong></p>
+            <span class="formato-info">Extrayendo datos automáticamente</span>
+        </div>
+
         <div v-else class="preview-container">
-            <img :src="imagenPreview" class="preview-img" />
+            <img v-if="imagenPreview" :src="imagenPreview" class="preview-img" />
+            <div v-else class="pdf-preview">
+                <span class="pdf-icon">📄</span>
+                <p>PDF cargado</p>
+            </div>
             <button type="button" class="btn-quitar" @click.stop="quitarImagen">✕</button>
         </div>
     </div>
@@ -222,7 +231,7 @@ import simulacionesApi from '../api/simulacionesApi';
 
 const router = useRouter();
 const route = useRoute();
-const { cargando, error, guardarConsumoElectrico, guardarResultados, calcularResultados,obtieneConsumoElectrico } = useSimulaciones();
+const { cargando, error, guardarConsumoElectrico, guardarResultados, calcularResultados, obtieneConsumoElectrico, cargandoIA, extraerDatosConIA } = useSimulaciones();
 
 const cliente_id = Number(route.params.cliente_id);
 const simulacion_id = Number(route.params.simulacion_id);
@@ -235,7 +244,7 @@ const { value: periodoValue, errorMessage: periodoError } = useField<string>('pe
 const { value: reciboValue } = useField<string>('numero_recibo');
 
 const dragging = ref(false);
-const imagenPreview = ref<string | null>(null);
+const imagenPreview = ref<string | undefined>(undefined);
 const archivoRecibo = ref<File | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 
@@ -265,7 +274,7 @@ const onSubmit = handleSubmit(async (values) => {
 
     const consumoExistente = await obtieneConsumoElectrico(simulacion_id);
 
-    if (consumoExistente && !consumoExistente.error && consumoExistente.id) {
+    if (consumoExistente && consumoExistente.id) {
         // Ya existe → PUT
         await simulacionesApi.put('/consumo', { 
             ...consumo, 
@@ -301,22 +310,48 @@ const onFileSelect = (e: Event) => {
     }
 };
 
-const procesarArchivo = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-        alert('Por favor, sube una imagen válida');
+const procesarArchivo = async (file: File) => {
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+        alert('Por favor, sube una imagen válida (JPG, PNG) o un PDF');
         return;
     }
 
     archivoRecibo.value = file;
-    // Crear URL para la vista previa
-    imagenPreview.value = URL.createObjectURL(file);
+    // Crear URL para la vista previa solo si es imagen
+    if (file.type.startsWith('image/')) {
+        imagenPreview.value = URL.createObjectURL(file);
+    } else {
+        imagenPreview.value = undefined; // Para PDFs no mostrar preview
+    }
+
+    // Extraer datos con IA
+    const resultado = await extraerDatosConIA(file);
+    if (resultado) {
+        // Llenado automático de los campos
+        if (resultado.consumoKwh) {
+            consumoValue.value = resultado.consumoKwh;
+        }
+        if (resultado.costoMx) {
+            costoValue.value = resultado.costoMx;
+        }
+        if (resultado.tarifaCfe) {
+            tarifaValue.value = resultado.tarifaCfe;
+        }
+        if (resultado.numRecibo) {
+            reciboValue.value = resultado.numRecibo;
+        }
+        if (resultado.periodo_facturacion) {
+            periodoValue.value = resultado.periodo_facturacion;
+        }
+        console.log("Datos extraídos exitosamente del recibo");
+    }
 };
 
 const quitarImagen = () => {
     if (imagenPreview.value) {
         URL.revokeObjectURL(imagenPreview.value);
     }
-    imagenPreview.value = null;
+    imagenPreview.value = undefined;
     archivoRecibo.value = null;
     if (fileInput.value) fileInput.value.value = '';
 };
@@ -642,6 +677,18 @@ const quitarImagen = () => {
     background: #fff5f2;
 }
 
+.dropzone-loading {
+    border-color: #FF7043;
+    background: #fff5f2;
+    opacity: 0.8;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
 .hidden-input { display: none; }
 
 .dropzone-info p {
@@ -669,6 +716,28 @@ const quitarImagen = () => {
     width: 100%;
     height: auto;
     object-fit: contain;
+}
+
+.pdf-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+}
+
+.pdf-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.pdf-preview p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
 }
 
 .btn-quitar {

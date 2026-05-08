@@ -147,11 +147,17 @@ const ejecutarEliminar = async () => {
 };
 
 const continuarSimulacion = async (simulacion_id: number) => {
-    if (soloConsulta) return;
-
     cargandoContinuar.value = simulacion_id;
     const paso = await detectaPasoActual(simulacion_id);
     cargandoContinuar.value = null;
+
+    if (paso === 1) {
+        router.push({
+            path: `/simulaciones/nueva/${cliente_id}/${simulacion_id}`,
+            query: { nombre: route.query.nombre }
+        });
+        return;
+    }
 
     if (paso === 2) {
         router.push({
@@ -169,16 +175,15 @@ const continuarSimulacion = async (simulacion_id: number) => {
         return;
     }
 
-    if (paso === 4) {
-        router.push({
-            path: `/simulaciones/resultados/${simulacion_id}`,
-            query: { nombre: route.query.nombre, cliente_id }
-        });
-        return;
-    }
+    // paso 4 o 5 → ir a resultados
+    router.push({
+        path: `/simulaciones/resultados/${simulacion_id}`,
+        query: { nombre: route.query.nombre, cliente_id }
+    });
 };
 
 onMounted(async () => {
+    
     const empresaId = authStore.usuario?.empresa_id;
 
     if (!empresaId) {
@@ -231,6 +236,21 @@ onMounted(async () => {
     font-weight: 600;
 }
 .btn-agregar:hover { background-color: #F4511E; }
+
+.btn-secundario {
+    padding: 0.6rem 1.2rem;
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+.btn-secundario:hover { background-color: #f5f5f5; }
 
 .btn-volver {
     padding: 0.6rem 1.2rem;

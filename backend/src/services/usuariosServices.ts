@@ -65,6 +65,18 @@ export const borrarUsuario = async (id: number) => {
     }
 };
 
+export const quitarUsuarioDeEmpresa = async (usuario_id: number, empresa_id: number) => {
+    try {
+        const [results] = await conexion.query(
+            'DELETE FROM usuarios_empresas WHERE usuario_id = ? AND empresa_id = ?',
+            [usuario_id, empresa_id]
+        );
+        return results;
+    } catch (err) {
+        return { error: 'No se pudo quitar el usuario de la empresa' };
+    }
+};
+
 export const encuentraUsuarioPorEmail = async (email: string) => {
     try {
         const [results] = await conexion.query(
