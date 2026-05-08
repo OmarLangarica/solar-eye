@@ -161,6 +161,23 @@ CREATE TABLE resultados_calculo (
     FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE CASCADE
 );
 
+CREATE TABLE citas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    empresa_id INT,
+    cliente_id INT NOT NULL,
+    simulacion_id INT,
+    usuario_id INT,
+    tipo ENUM('llamada','videollamada','visita_tecnica') DEFAULT 'visita_tecnica',
+    fecha_inicio DATETIME NOT NULL,
+    fecha_fin DATETIME,
+    estado ENUM('pendiente','confirmada','reprogramada','cancelada','realizada') DEFAULT 'pendiente',
+    notas TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+    FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE CASCADE
+);
+
 CREATE TABLE reportes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     simulacion_id INT NOT NULL,
