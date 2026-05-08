@@ -5,13 +5,41 @@ export const clienteSchema = z.object({
     usuario_id: z.number().int().positive(),
     nombre: z.string().min(2).max(100),
     apellido: z.string().min(2).max(100),
-    email: z.string().email().nullable().optional(),
-    telefono: z.string().max(20).nullable().optional(),
-    direccion: z.string().max(255).nullable().optional(),
-    ciudad: z.string().max(100).nullable().optional(),
-    estado: z.string().max(100).nullable().optional(),
-    codigo_postal: z.string().max(10).nullable().optional(),
-    notas: z.string().nullable().optional()
+    email: z.union([
+        z.string().email(),
+        z.literal(''),
+        z.null()
+    ]).optional(),
+    telefono: z.union([
+        z.string().max(20),
+        z.literal(''),
+        z.null()
+    ]).optional(),
+    direccion: z.union([
+        z.string().max(255),
+        z.literal(''),
+        z.null()
+    ]).optional(),
+    ciudad: z.union([
+        z.string().max(100),
+        z.literal(''),
+        z.null()
+    ]).optional(),
+    estado: z.union([
+        z.string().max(100),
+        z.literal(''),
+        z.null()
+    ]).optional(),
+    codigo_postal: z.union([
+        z.string().max(10),
+        z.literal(''),
+        z.null()
+    ]).optional(),
+    notas: z.union([
+        z.string(),
+        z.literal(''),
+        z.null()
+    ]).optional()
 });
 
 export const clienteActualizarSchema = clienteSchema.extend({

@@ -135,13 +135,13 @@ const onSubmit = handleSubmit(async (values) => {
     await actualizarCliente({
         ...clienteSeleccionado.value,
         ...values,
-        email: values.email || null,
-        telefono: values.telefono || null,
-        direccion: values.direccion || null,
-        ciudad: values.ciudad || null,
-        estado: values.estado || null,
-        codigo_postal: values.codigo_postal || null,
-        notas: values.notas || null
+        email: values.email ? values.email : null,
+        telefono: values.telefono ? values.telefono : null,
+        direccion: values.direccion ? values.direccion : null,
+        ciudad: values.ciudad ? values.ciudad : null,
+        estado: values.estado ? values.estado : null,
+        codigo_postal: values.codigo_postal ? values.codigo_postal : null,
+        notas: values.notas ? values.notas : null
     });
 
     if (!error.value) {

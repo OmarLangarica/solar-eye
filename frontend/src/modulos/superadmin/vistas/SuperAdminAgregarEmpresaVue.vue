@@ -160,8 +160,8 @@ const crearEmpresa = async () => {
 .grupo input:focus, .grupo select:focus { border-color: #FF7043; }
 
 .color-grupo { display: flex; gap: 0.5rem; align-items: center; }
-.input-color { width: 48px; height: 42px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; padding: 2px; }
-.input-hex { flex: 1; }
+.input-color { width: 20px; height: 42px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; padding: 2px; }
+.input-hex { flex: 1; width:20px;}
 
 /* Preview */
 .preview-branding { margin-top: 0.5rem; }
