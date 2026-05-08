@@ -8,6 +8,8 @@
 
             <div v-if="cargando" class="cargando">Cargando empresas...</div>
 
+            <div v-else-if="error" class="error-msg">{{ error }}</div>
+
             <div v-else-if="empresas.length === 0" class="sin-empresas">
                 <p>No perteneces a ninguna empresa aún.</p>
                 <div class="opciones">
@@ -78,18 +80,29 @@ const empresas = ref<any[]>([]);
 const empresaSeleccionada = ref<any>(null);
 const cargando = ref(false);
 const entrando = ref(false);
+const error = ref('');
 
 const traeEmpresas = async () => {
     try {
+        error.value = '';
         cargando.value = true;
-        const resp = await authApi.get(`/empresas/${authStore.usuario?.id}`);
+        const usuarioId = authStore.usuario?.id;
+
+        if (!usuarioId) {
+            error.value = 'No se pudo cargar la sesión. Vuelve a iniciar sesión.';
+            empresas.value = [];
+            return;
+        }
+
+        const resp = await authApi.get(`/empresas/${usuarioId}`);
         empresas.value = resp.data;
 
         // Si solo tiene una empresa, la selecciona automáticamente
         if (empresas.value.length === 1) {
             empresaSeleccionada.value = empresas.value[0];
         }
-    } catch {
+    } catch (err) {
+        error.value = 'No se pudieron cargar tus empresas. Intenta de nuevo.';
         empresas.value = [];
     } finally {
         cargando.value = false;
@@ -100,22 +113,27 @@ const seleccionarEmpresa = (empresa: any) => {
     empresaSeleccionada.value = empresa;
 };
 
-const entrar = () => {
+const entrar = async () => {
     if (!empresaSeleccionada.value) return;
     entrando.value = true;
 
-    authStore.setEmpresaActiva({
-        empresa_id: empresaSeleccionada.value.id,
-        empresa_nombre: empresaSeleccionada.value.nombre,
-        empresa_color_primario: empresaSeleccionada.value.color_primario,
-        empresa_color_secundario: empresaSeleccionada.value.color_secundario,
-        rol_empresa: empresaSeleccionada.value.rol_empresa
-    });
+    try {
+        authStore.setEmpresaActiva({
+            empresa_id: empresaSeleccionada.value.id,
+            empresa_nombre: empresaSeleccionada.value.nombre,
+            empresa_color_primario: empresaSeleccionada.value.color_primario,
+            empresa_color_secundario: empresaSeleccionada.value.color_secundario,
+            rol_empresa: empresaSeleccionada.value.rol_empresa
+        });
 
-    if (empresaSeleccionada.value.rol_empresa === 'admin') {
-        router.push('/admin/dashboard');
-    } else {
-        router.push('/clientes');
+        if (empresaSeleccionada.value.rol_empresa === 'admin') {
+            await router.push('/admin/dashboard');
+        } else {
+            await router.push('/clientes');
+        }
+    } catch {
+        error.value = 'No se pudo entrar a la empresa. Intenta de nuevo.';
+        entrando.value = false;
     }
 };
 
@@ -151,6 +169,16 @@ onMounted(() => traeEmpresas());
 .header p { color: #666; font-size: 0.9rem; margin: 0; }
 
 .cargando { text-align: center; color: #999; padding: 2rem; }
+
+.error-msg {
+    text-align: center;
+    color: #b91c1c;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+}
 
 .sin-empresas { text-align: center; }
 .sin-empresas p { color: #666; margin-bottom: 1.5rem; }

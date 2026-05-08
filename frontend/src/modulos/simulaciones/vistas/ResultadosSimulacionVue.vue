@@ -13,6 +13,12 @@
                 <button class="btn-primario" @click="descargarPDF" v-if="resultados">
                     <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
                 </button>
+                <button class="btn-primario" @click="abrirAgendarCita" v-if="resultados">
+                    <i class="bi bi-calendar-plus"></i> Agendar cita
+                </button>
+                <button class="btn-secundario" @click="verCitasCliente" v-if="resultados && route.query.cliente_id">
+                    <i class="bi bi-calendar3"></i> Ver citas del cliente
+                </button>
                 <button class="btn-volver" @click="volver">
                     ← Volver a simulaciones
                 </button>
@@ -47,6 +53,8 @@
         </div>
 
         <div v-else-if="resultados" id="reporte-area">
+
+            <AgendarCitaModal v-if="mostrarModal" :clienteId="Number(route.query.cliente_id)" :simulacionId="simulacion_id" @close="mostrarModal=false" @saved="onCitaGuardada" />
 
             <div class="tarjetas-resumen">
                 <div class="tarjeta tarjeta-produccion">
@@ -265,6 +273,8 @@ import html2canvas from 'html2canvas';
 import { Chart, registerables } from 'chart.js';
 
 import { useSimulaciones } from '../controladores/useSimulaciones';
+import { useAuthStore } from '../../../stores/authStore';
+import AgendarCitaModal from '../../citas/vistas/AgendarCitaModal.vue';
 import type { ResultadosCalculo, DatosTecho, DatosGeograficos, ConsumoElectrico } from '../interfaces/simulaciones-interface';
 
 const router = useRouter();
@@ -415,6 +425,26 @@ const volver = () => {
     }
 
     router.push({ path: `/simulaciones/${route.query.cliente_id}`, query: { nombre: route.query.nombre } });
+};
+
+const authStore = useAuthStore();
+const mostrarModal = ref(false);
+
+const abrirAgendarCita = () => {
+  mostrarModal.value = true;
+};
+
+const verCitasCliente = () => {
+    const clienteId = Number(route.query.cliente_id);
+    if (!clienteId) return alert('ID de cliente no disponible');
+    router.push({ path: `/citas/cliente/${clienteId}` });
+};
+
+const onCitaGuardada = (data: any) => {
+  alert('Cita agendada correctamente');
+  // opcional: navegar a la lista de citas del cliente
+  const clienteId = Number(route.query.cliente_id);
+  if (clienteId) router.push({ path: `/citas/cliente/${clienteId}` });
 };
 
 const limpiarGraficas = () => {

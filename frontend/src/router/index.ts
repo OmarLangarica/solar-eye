@@ -21,6 +21,8 @@ import SuperAdminEditarEmpresaVue from '@/modulos/superadmin/vistas/SuperAdminEd
 import SeleccionarEmpresaVue from '@/modulos/auth/vistas/SeleccionarEmpresaVue.vue';
 import CrearEmpresaVue from '@/modulos/auth/vistas/CrearEmpresaVue.vue';
 import UnirseEmpresaVue from '@/modulos/auth/vistas/UnirseEmpresaVue.vue';
+import CitasClienteVue from '@/modulos/citas/vistas/CitasClienteVue.vue';
+import ConsultarCitasVue from '@/modulos/citas/vistas/ConsultarCitasVue.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -83,6 +85,16 @@ const router = createRouter({
             path: '/simulaciones/:cliente_id',
             name: 'simulaciones',
             component: SimulacionesVue
+        },
+        {
+            path: '/citas/cliente/:cliente_id',
+            name: 'citas-cliente',
+            component: CitasClienteVue
+        },
+        {
+            path: '/citas',
+            name: 'consultar-citas',
+            component: ConsultarCitasVue
         },
 
         //Rutas admin

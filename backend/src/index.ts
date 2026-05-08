@@ -6,6 +6,8 @@ import clientesRutas from './routes/clientesRutas.js';
 import simulacionesRutas from './routes/simulacionesRutas.js';
 import reportesRutas from './routes/reportesRutas.js';
 import nasaRutas from './routes/nasaRutas.js';
+import citasRutas from './routes/citasRutas.js';
+
 import IaRutas from './routes/IaRutas.js'; 
 import empresasRutas from './routes/empresasRutas.js';
 
@@ -29,6 +31,7 @@ app.use('/api/simulaciones', simulacionesRutas);
 app.use('/api/reportes', reportesRutas);
 app.use('/api/nasa', nasaRutas);
 app.use('/api/empresas', empresasRutas);
+app.use('/api/citas', citasRutas);
 
 app.listen(PUERTO, () => {
     console.log(`Servidor en ejecución en el puerto ${PUERTO}`);
