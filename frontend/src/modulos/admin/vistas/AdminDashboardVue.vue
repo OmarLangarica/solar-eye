@@ -10,6 +10,7 @@
                 <button class="btn-principal" @click="router.push('/admin/clientes')">Ver todos los clientes</button>
                 <button class="btn-secundario" @click="router.push('/clientes')">Mis clientes</button>
                 <button class="btn-principal" @click="router.push('/admin/usuarios')">Gestionar usuarios</button>
+                <button class="btn-secundario" @click="router.push('/inventario')">Inventario</button>
                 <button class="btn-secundario" @click="cerrarSesion">Cerrar sesión</button>
             </div>
         </div>
@@ -309,7 +310,7 @@ onMounted(() => traeEstadisticas());
 .encabezado h1 { margin: 0; color: #1f2937; font-size: 1.9rem; }
 .encabezado p { margin: 0.25rem 0 0; color: #6b7280; }
 
-.acciones-header { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.acciones-header { display: flex; gap: 0.10rem; flex-wrap: wrap; }
 
 .btn-principal, .btn-secundario {
     border: none;

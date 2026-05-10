@@ -175,7 +175,7 @@ CREATE TABLE citas (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
-    FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE CASCADE
+    FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE SET NULL
 );
 
 CREATE TABLE reportes (
@@ -189,79 +189,181 @@ CREATE TABLE reportes (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
+-- ─── MÓDULO DE INVENTARIO ─────────────────────────────────────
+
+CREATE TABLE categorias_inventario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    empresa_id INT NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    icono VARCHAR(50) DEFAULT 'box',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE
+);
+
+CREATE TABLE productos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    empresa_id INT NOT NULL,
+    categoria_id INT,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    marca VARCHAR(100),
+    modelo VARCHAR(100),
+    unidad VARCHAR(30) DEFAULT 'pieza',
+    precio_compra DECIMAL(12,2) DEFAULT 0,
+    precio_venta DECIMAL(12,2) DEFAULT 0,
+    stock_actual INT DEFAULT 0,
+    stock_minimo INT DEFAULT 5,
+    stock_maximo INT DEFAULT 100,
+    activo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
+    FOREIGN KEY (categoria_id) REFERENCES categorias_inventario(id) ON DELETE SET NULL
+);
+
+CREATE TABLE movimientos_inventario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    empresa_id INT NOT NULL,
+    producto_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    simulacion_id INT,
+    cliente_id INT,
+    tipo ENUM('entrada','salida','ajuste','reserva','venta','devolucion') NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario DECIMAL(12,2) DEFAULT 0,
+    total DECIMAL(12,2) DEFAULT 0,
+    motivo VARCHAR(255),
+    notas TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
+    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE SET NULL,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE SET NULL
+);
+
+CREATE TABLE instalaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    empresa_id INT NOT NULL,
+    simulacion_id INT NOT NULL,
+    cliente_id INT NOT NULL,
+    tecnico_id INT NOT NULL,
+    fecha_instalacion DATE,
+    estado ENUM('pendiente','en_progreso','completada','cancelada') DEFAULT 'pendiente',
+    notas TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
+    FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE CASCADE,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+    FOREIGN KEY (tecnico_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+CREATE TABLE instalacion_materiales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    instalacion_id INT NOT NULL,
+    producto_id INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario DECIMAL(12,2) DEFAULT 0,
+    total DECIMAL(12,2) DEFAULT 0,
+    FOREIGN KEY (instalacion_id) REFERENCES instalaciones(id) ON DELETE CASCADE,
+    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
+);
+
 -- ─── Datos de prueba ──────────────────────────────────────────
 
--- Superadmin (dueño de la plataforma Solar Eye)
 INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol, activo)
 VALUES ('Omar', 'Langarica', 'omar@solareye.com', '123456', '6671234567', 'superadmin', TRUE);
 
--- Admin de empresa de prueba
 INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol, activo)
 VALUES ('Omar', 'Langarica', 'omar@solar.com', '123456', '6671234567', 'usuario', TRUE);
 
--- Trabajador de empresa de prueba
 INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol, activo)
 VALUES ('Carlos', 'Mendez', 'carlos@solar.com', '123456', '6679876543', 'usuario', TRUE);
 
--- Empresa de prueba
 INSERT INTO empresas (nombre, color_primario, color_secundario, plan, activo)
 VALUES ('Solar Eye Demo', '#FF7043', '#F4511E', 'profesional', TRUE);
 
--- Relación usuarios con empresa
 INSERT INTO usuarios_empresas (usuario_id, empresa_id, rol, activo) VALUES
 (2, 1, 'admin', TRUE),
 (3, 1, 'trabajador', TRUE);
 
--- Clientes
 INSERT INTO clientes (empresa_id, usuario_id, nombre, apellido, email, telefono, direccion, ciudad, estado, codigo_postal, notas) VALUES
 (1, 2, 'Juan', 'García', 'juan@gmail.com', '6677654321', 'Calle Girasol 123', 'Culiacán', 'Sinaloa', '80000', 'Cliente interesado en sistema de 5kWp'),
 (1, 2, 'María', 'López', 'maria@gmail.com', '6671112233', 'Av. Insurgentes 456', 'Mazatlán', 'Sinaloa', '82000', 'Casa con techo plano'),
 (1, 3, 'Pedro', 'Ramírez', 'pedro@gmail.com', '6674445566', 'Blvd. Sinaloa 789', 'Los Mochis', 'Sinaloa', '81200', 'Local comercial');
 
--- Simulaciones
 INSERT INTO simulaciones (cliente_id, usuario_id, nombre_proyecto, descripcion, estado) VALUES
 (1, 2, 'Casa principal Juan García', 'Simulación inicial techo sur', 'completada'),
 (1, 2, 'Opción económica Juan García', 'Sistema más pequeño con menos paneles', 'borrador'),
 (2, 2, 'Casa María López', 'Techo plano con máxima capacidad', 'cotizada'),
 (3, 3, 'Local comercial Pedro', 'Sistema industrial 10kWp', 'borrador');
 
--- Datos techo
 INSERT INTO datos_techo (simulacion_id, geojson, area_m2, perimetro_m, latitud, longitud, tipo_techo, angulo_inclinacion_deg, azimut_deg, factor_sombra, area_util_m2) VALUES
 (1, '{"type":"Polygon","coordinates":[[[-107.38,24.80],[-107.37,24.80],[-107.37,24.79],[-107.38,24.79],[-107.38,24.80]]]}', 85.50, 37.20, 24.8000, -107.3800, 'inclinado', 15.00, 180.00, 0.95, 75.00),
 (2, '{"type":"Polygon","coordinates":[[[-107.38,24.80],[-107.37,24.80],[-107.37,24.79],[-107.38,24.79],[-107.38,24.80]]]}', 45.00, 27.00, 24.8000, -107.3800, 'inclinado', 15.00, 180.00, 0.90, 40.00),
 (3, '{"type":"Polygon","coordinates":[[[-106.41,23.23],[-106.40,23.23],[-106.40,23.22],[-106.41,23.22],[-106.41,23.23]]]}', 120.00, 44.00, 23.2300, -106.4100, 'plano', 5.00, 180.00, 1.00, 110.00),
 (4, '{"type":"Polygon","coordinates":[[[-108.98,25.79],[-108.97,25.79],[-108.97,25.78],[-108.98,25.78],[-108.98,25.79]]]}', 200.00, 60.00, 25.7900, -108.9800, 'plano', 5.00, 180.00, 0.98, 185.00);
 
--- Datos geográficos
 INSERT INTO datos_geograficos (simulacion_id, irradiacion_anual_kwh_m2, irradiacion_diaria_promedio, horas_sol_pico_diarias, temperatura_promedio_anual, temperatura_max_verano, temperatura_min_invierno, velocidad_viento_promedio, altitud_msnm, zona_climatica, fuente_datos, fecha_consulta) VALUES
 (1, 2138.24, 5.86, 5.86, 25.28, 45.87, 3.69, 1.73, 66.00, 'seca-cálida', 'NASA POWER + Open Elevation', '2026-02-20'),
 (2, 2138.24, 5.86, 5.86, 25.28, 45.87, 3.69, 1.73, 66.00, 'seca-cálida', 'NASA POWER + Open Elevation', '2026-02-20'),
 (3, 2050.10, 5.62, 5.62, 26.10, 42.30, 8.50, 2.10, 5.00, 'seca-cálida', 'NASA POWER + Open Elevation', '2026-02-20'),
 (4, 2200.50, 6.03, 6.03, 24.50, 44.10, 5.20, 1.90, 20.00, 'seca-cálida', 'NASA POWER + Open Elevation', '2026-02-20');
 
--- Consumo eléctrico
 INSERT INTO consumo_electrico (simulacion_id, consumo_mensual_kwh, consumo_anual_kwh, tarifa_kwh_mxn, costo_mensual_mxn, tipo_tarifa, numero_recibo, periodo_facturacion) VALUES
 (1, 350.00, 4200.00, 0.9950, 348.25, '1C', 'REC-2026-001', 'bimestral'),
 (2, 350.00, 4200.00, 0.9950, 348.25, '1C', 'REC-2026-001', 'bimestral'),
 (3, 500.00, 6000.00, 0.9950, 497.50, '1D', 'REC-2026-002', 'bimestral'),
 (4, 1200.00, 14400.00, 0.9950, 1194.00, 'DAC', 'REC-2026-003', 'mensual');
 
--- Configuración sistema solar
 INSERT INTO configuracion_sistema_solar (simulacion_id, marca_panel, modelo_panel, potencia_panel_wp, eficiencia_panel, cantidad_paneles, area_por_panel_m2, marca_inversor, modelo_inversor, potencia_inversor_kw, eficiencia_inversor, tipo_inversor, potencia_total_kwp, tipo_conexion, incluye_bateria, capacidad_bateria_kwh, degradacion_anual_pct, vida_util_anios) VALUES
 (1, 'Canadian Solar', 'CS6R-410MS', 410, 20.50, 12, 1.96, 'Fronius', 'Symo 5.0-3-M', 5.00, 97.00, 'string', 4.92, 'red', FALSE, NULL, 0.50, 25),
 (2, 'Canadian Solar', 'CS6R-410MS', 410, 20.50, 6, 1.96, 'Fronius', 'Symo 3.0-3-M', 3.00, 97.00, 'string', 2.46, 'red', FALSE, NULL, 0.50, 25),
 (3, 'Jinko Solar', 'JKM400M-54HL', 400, 20.20, 16, 1.96, 'SMA', 'Sunny Boy 6.0', 6.00, 97.50, 'string', 6.40, 'red', FALSE, NULL, 0.50, 25),
 (4, 'Jinko Solar', 'JKM400M-54HL', 400, 20.20, 28, 1.96, 'SMA', 'Sunny Tripower 10', 10.00, 97.50, 'string', 11.20, 'red', FALSE, NULL, 0.50, 25);
 
--- Resultados cálculo
 INSERT INTO resultados_calculo (simulacion_id, produccion_anual_kwh, produccion_mensual_promedio_kwh, porcentaje_cobertura, excedente_kwh, ahorro_mensual_mxn, ahorro_anual_mxn, ahorro_vida_util_mxn, costo_total_instalacion_mxn, retorno_inversion_anios, co2_evitado_anual_kg, co2_evitado_vida_util_kg, arboles_equivalentes, precio_kwh_proyectado_anio5, precio_kwh_proyectado_anio10, tasa_incremento_tarifa_pct) VALUES
 (1, 3850.00, 320.83, 91.67, 150.00, 318.83, 3825.96, 95649.00, 85000.00, 7.50, 1732.50, 43312.50, 79, 1.2700, 1.6200, 5.00),
 (2, 1925.00, 160.42, 45.83, 0.00, 159.42, 1912.98, 47824.50, 45000.00, 8.20, 866.25, 21656.25, 40, 1.2700, 1.6200, 5.00),
 (3, 5120.00, 426.67, 85.33, 320.00, 424.53, 5094.36, 127359.00, 110000.00, 7.20, 2304.00, 57600.00, 105, 1.2700, 1.6200, 5.00),
 (4, 9800.00, 816.67, 68.06, 0.00, 814.47, 9773.64, 244341.00, 195000.00, 6.80, 4410.00, 110250.00, 201, 1.2700, 1.6200, 5.00);
 
--- Reportes
 INSERT INTO reportes (simulacion_id, usuario_id, nombre_archivo, ruta_archivo) VALUES
 (1, 2, 'reporte_juan_garcia_2026.pdf', '/reportes/reporte_juan_garcia_2026.pdf'),
 (3, 2, 'reporte_maria_lopez_2026.pdf', '/reportes/reporte_maria_lopez_2026.pdf'),
 (4, 3, 'reporte_pedro_ramirez_2026.pdf', '/reportes/reporte_pedro_ramirez_2026.pdf');
+
+-- ─── Categorías de inventario de prueba ───────────────────────
+INSERT INTO categorias_inventario (empresa_id, nombre, descripcion, icono) VALUES
+(1, 'Paneles Solares', 'Módulos fotovoltaicos de diferentes potencias', 'solar-panel'),
+(1, 'Inversores', 'Inversores string, microinversores e híbridos', 'inversor'),
+(1, 'Baterías', 'Sistemas de almacenamiento de energía', 'battery'),
+(1, 'Estructuras', 'Estructuras de montaje para techos planos e inclinados', 'structure'),
+(1, 'Cableado', 'Cables solares, conectores MC4 y accesorios eléctricos', 'cable'),
+(1, 'Herramientas', 'Herramientas y equipos de instalación', 'tools'),
+(1, 'Materiales', 'Materiales varios de instalación', 'materials');
+
+-- ─── Productos de prueba ──────────────────────────────────────
+INSERT INTO productos (empresa_id, categoria_id, nombre, descripcion, marca, modelo, unidad, precio_compra, precio_venta, stock_actual, stock_minimo, stock_maximo) VALUES
+(1, 1, 'Panel Solar 410W Monocristalino', 'Panel solar de alta eficiencia 20.5%', 'Canadian Solar', 'CS6R-410MS', 'pieza', 2800.00, 3500.00, 45, 10, 100),
+(1, 1, 'Panel Solar 400W Monocristalino', 'Panel solar policristalino de alta durabilidad', 'Jinko Solar', 'JKM400M-54HL', 'pieza', 2600.00, 3200.00, 30, 10, 80),
+(1, 2, 'Inversor String 5kW', 'Inversor trifásico para sistemas residenciales', 'Fronius', 'Symo 5.0-3-M', 'pieza', 18000.00, 22000.00, 8, 2, 20),
+(1, 2, 'Inversor String 3kW', 'Inversor monofásico para sistemas pequeños', 'Fronius', 'Symo 3.0-3-M', 'pieza', 14000.00, 17000.00, 10, 2, 20),
+(1, 2, 'Inversor 10kW Trifásico', 'Inversor para sistemas comerciales', 'SMA', 'Sunny Tripower 10', 'pieza', 35000.00, 42000.00, 4, 1, 10),
+(1, 3, 'Batería LiFePO4 5kWh', 'Batería de litio para almacenamiento solar', 'BYD', 'Battery-Box Premium HVS', 'pieza', 45000.00, 55000.00, 5, 1, 15),
+(1, 4, 'Estructura para Techo Inclinado', 'Kit de montaje aluminio para techo inclinado', 'Schletter', 'FlatFix Fusion', 'kit', 1200.00, 1600.00, 25, 5, 60),
+(1, 4, 'Estructura para Techo Plano', 'Kit de montaje para techo plano con lastrado', 'Schletter', 'FlatFix Fusion', 'kit', 1500.00, 2000.00, 20, 5, 50),
+(1, 5, 'Cable Solar 6mm² Negro', 'Cable fotovoltaico resistente a UV por metro', 'Prysmian', 'Tecsun PV 6mm', 'metro', 18.00, 25.00, 500, 100, 1000),
+(1, 5, 'Conector MC4 Par', 'Par de conectores MC4 macho/hembra', 'Stäubli', 'MC4', 'par', 45.00, 65.00, 200, 50, 500),
+(1, 6, 'Multímetro Digital', 'Multímetro para diagnóstico de sistemas FV', 'Fluke', '117', 'pieza', 3500.00, 4500.00, 3, 1, 5),
+(1, 7, 'Tornillo Autorroscante 1/4', 'Tornillo para fijación de estructuras', 'Generic', 'M6x50', 'bolsa', 85.00, 120.00, 50, 10, 100);
+
+-- ─── Movimientos de prueba ────────────────────────────────────
+INSERT INTO movimientos_inventario (empresa_id, producto_id, usuario_id, tipo, cantidad, precio_unitario, total, motivo) VALUES
+(1, 1, 2, 'entrada', 50, 2800.00, 140000.00, 'Compra inicial de inventario'),
+(1, 2, 2, 'entrada', 30, 2600.00, 78000.00, 'Compra inicial de inventario'),
+(1, 3, 2, 'entrada', 10, 18000.00, 180000.00, 'Compra inicial de inventario'),
+(1, 1, 3, 'salida', 5, 3500.00, 17500.00, 'Instalación proyecto Juan García'),
+(1, 3, 3, 'salida', 2, 22000.00, 44000.00, 'Instalación proyecto Juan García');

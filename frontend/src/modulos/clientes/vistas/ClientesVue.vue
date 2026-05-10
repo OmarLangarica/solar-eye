@@ -9,6 +9,7 @@
             <div class="acciones-header">
                 <button class="btn-dashboard" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button class="btn-dashboard" @click="router.push('/dashboard')">Analisis</button>
+                <button class="btn-cerrar-sesion" @click="router.push('/inventario')">Inventario</button>
                 <button class="btn-agregar" @click="router.push('/clientes/agregar')">+ Nuevo cliente</button>
                 <button 
                     v-if="authStore.usuario?.rol_empresa === 'admin'"
