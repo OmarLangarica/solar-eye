@@ -23,6 +23,13 @@ import CrearEmpresaVue from '@/modulos/auth/vistas/CrearEmpresaVue.vue';
 import UnirseEmpresaVue from '@/modulos/auth/vistas/UnirseEmpresaVue.vue';
 import CitasClienteVue from '@/modulos/citas/vistas/CitasClienteVue.vue';
 import ConsultarCitasVue from '@/modulos/citas/vistas/ConsultarCitasVue.vue';
+import InventarioDashboardVue from '@/modulos/inventario/vistas/InventarioDashboardVue.vue';
+import ProductosVue from '@/modulos/inventario/vistas/ProductosVue.vue';
+import AgregarProductoVue from '@/modulos/inventario/vistas/AgregarProductoVue.vue';
+import EditarProductoVue from '@/modulos/inventario/vistas/EditarProductoVue.vue';
+import MovimientosVue from '@/modulos/inventario/vistas/MovimientosVue.vue';
+import MovimientosProductoVue from '@/modulos/inventario/vistas/MovimientosProductoVue.vue';
+import CategoriasVue from '@/modulos/inventario/vistas/CategoriasVue.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -158,6 +165,13 @@ const router = createRouter({
         component: UnirseEmpresaVue,
         meta: { publica: false }
     },
+    { path: '/inventario', name: 'inventario', component: InventarioDashboardVue },
+{ path: '/inventario/productos', name: 'inventario-productos', component: ProductosVue },
+{ path: '/inventario/productos/agregar', name: 'inventario-agregar-producto', component: AgregarProductoVue },
+{ path: '/inventario/productos/editar/:id', name: 'inventario-editar-producto', component: EditarProductoVue },
+{ path: '/inventario/productos/:id/movimientos', name: 'inventario-movimientos-producto', component: MovimientosProductoVue },
+{ path: '/inventario/movimientos', name: 'inventario-movimientos', component: MovimientosVue },
+{ path: '/inventario/categorias', name: 'inventario-categorias', component: CategoriasVue },
     ]
 });
 
