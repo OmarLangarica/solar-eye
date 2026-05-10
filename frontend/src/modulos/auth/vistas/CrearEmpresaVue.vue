@@ -15,38 +15,6 @@
                     <input v-model="form.nombre" type="text" placeholder="Ej: Solar Sinaloa S.A." />
                 </div>
 
-                <div class="fila-doble">
-                    <div class="grupo">
-                        <label>Color primario</label>
-                        <div class="color-grupo">
-                            <input v-model="form.color_primario" type="color" class="input-color" />
-                            <input v-model="form.color_primario" type="text" class="input-hex" placeholder="#FF7043" />
-                        </div>
-                    </div>
-                    <div class="grupo">
-                        <label>Color secundario</label>
-                        <div class="color-grupo">
-                            <input v-model="form.color_secundario" type="color" class="input-color" />
-                            <input v-model="form.color_secundario" type="text" class="input-hex" placeholder="#F4511E" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Preview -->
-                <div class="preview-branding">
-                    <p class="preview-label">Vista previa</p>
-                    <div class="preview-card" :style="{ borderTopColor: form.color_primario }">
-                        <div class="preview-header" :style="{ backgroundColor: form.color_primario }">
-                            {{ form.nombre || 'Nombre de tu empresa' }}
-                        </div>
-                        <div class="preview-body">
-                            <button class="preview-btn" :style="{ backgroundColor: form.color_primario }">
-                                Botón primario
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <button class="btn-principal" @click="crearEmpresa" :disabled="cargando"
                     :style="{ backgroundColor: form.color_primario }">
                     {{ cargando ? 'Creando empresa...' : 'Crear empresa →' }}
