@@ -1,23 +1,32 @@
 <template>
     <div class="clientes-container">
-
-        <div class="encabezado">
-            <div>
-                <h1>Solar Eye</h1>
-                <p>Bienvenido, {{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</p>
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
             </div>
-            <div class="acciones-header">
-                <button class="btn-dashboard" @click="cambiarEmpresa">Cambiar de empresa</button>
-                <button class="btn-dashboard" @click="router.push('/dashboard')">Analisis</button>
-                <button class="btn-cerrar-sesion" @click="router.push('/inventario')">Inventario</button>
-                <button class="btn-agregar" @click="router.push('/clientes/agregar')">+ Nuevo cliente</button>
-                <button 
+
+            <div class="navbar-links">
+                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
+                <button class="nav-link" @click="router.push('/dashboard')">Análisis</button>
+                <button class="nav-link" @click="router.push('/inventario')">Inventario</button>
+                <button class="nav-link" @click="router.push('/clientes/agregar')">+ Nuevo cliente</button>
+                <button
                     v-if="authStore.usuario?.rol_empresa === 'admin'"
-                    class="btn-volver" 
+                    class="nav-link"
                     @click="router.push('/admin/dashboard')"
                 >← Volver</button>
-                <button class="btn-cerrar-sesion" @click="cerrarSesion">Cerrar sesión</button>
             </div>
+
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                </button>
+            </div>
+        </nav>
+
+        <div class="encabezado">
+            <p>Bienvenido, {{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</p>
         </div>
 
         
@@ -86,6 +95,7 @@ import { useClientes } from '../controladores/useClientes';
 import { useAuthStore } from '../../../stores/authStore';
 import { useAuth } from '../../auth/controladores/useAuth';
 import type { Cliente } from '../interfaces/clientes-interface';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -132,57 +142,92 @@ onMounted(() => traeClientes());
 
 <style scoped>
 .clientes-container {
-    padding: 2rem;
-    max-width: 1200px;
+    padding: 0 2rem 2rem;
+    max-width: 1240px;
     margin: 0 auto;
 }
 
-.encabezado {
+.navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    margin: 0 calc(50% - 50vw) 1.75rem;
+    width: 100vw;
+    background: #04142c;
+    border-radius: 0;
+    box-shadow: 0 10px 24px rgba(15, 47, 99, 0.18);
+    flex-wrap: wrap;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+}
+
+.navbar-logo {
+    display: block;
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.navbar-links,
+.navbar-user {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.navbar-user {
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
+.navbar-user-name {
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nav-link {
+    padding: 0;
+    background: transparent;
+    color: white;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link:hover {
+    opacity: 0.8;
+}
+
+.nav-link--logout {
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+}
+
+.encabezado {
     margin-bottom: 1.5rem;
 }
 
-.encabezado h1 { font-size: 1.8rem; color: #333; margin: 0; }
-.encabezado p { color: #666; font-size: 0.9rem; margin: 0.25rem 0 0; }
-
-.acciones-header { display: flex; gap: 1rem; }
-
-.btn-dashboard {
-    padding: 0.6rem 1.2rem;
-    background-color: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s;
+.encabezado p {
+    color: #4b5563;
+    font-size: 0.95rem;
+    margin: 0;
 }
-.btn-dashboard:hover { background-color: #1d4ed8; }
-
-.btn-agregar {
-    padding: 0.6rem 1.2rem;
-    background-color: #FF7043;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s;
-}
-.btn-agregar:hover { background-color: #F4511E; }
-
-.btn-cerrar-sesion {
-    padding: 0.6rem 1.2rem;
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.btn-cerrar-sesion:hover { background-color: #e0e0e0; }
 
 .mensaje { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
 .mensaje.exito { background: #f0fdf4; color: #16a34a; }
@@ -197,7 +242,7 @@ onMounted(() => traeClientes());
     font-size: 0.95rem;
     outline: none;
 }
-.buscador input:focus { border-color: #FF7043; }
+.buscador input:focus { border-color: #1e3a8a; }
 
 .tabla-container {
     background: white;
@@ -220,56 +265,68 @@ tr:hover td { background-color: #fafafa; }
 
 .btn-editar {
     padding: 0.4rem 0.8rem;
-    background-color: #f59e0b;
+    background-color: #1d4f91;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.85rem;
 }
-.btn-editar:hover { background-color: #d97706; }
+.btn-editar:hover { background-color: #173f72; }
 
 .btn-simulaciones {
     padding: 0.4rem 0.8rem;
-    background-color: #06b6d4;
+    background-color: #1d4f91;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.85rem;
 }
-.btn-simulaciones:hover { background-color: #0891b2; }
+.btn-simulaciones:hover { background-color: #173f72; }
 
 .btn-eliminar {
     padding: 0.4rem 0.8rem;
-    background-color: #ef4444;
+    background-color: #1d4f91;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.85rem;
 }
-.btn-eliminar:hover { background-color: #dc2626; }
+.btn-eliminar:hover { background-color: #173f72; }
 
 .btn-volver {
-    padding: 0.6rem 1.2rem;
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
+    padding: 0;
 }
-.btn-volver:hover { background-color: #e0e0e0; }
 
 .sin-datos { text-align: center; padding: 3rem; color: #999; }
 
 @media (max-width: 768px) {
-    .clientes-container { padding: 1rem; }
+    .clientes-container { padding: 0.75rem 1rem 1.5rem; }
     
-    .encabezado { flex-direction: column; align-items: flex-start; gap: 1rem; }
-    .acciones-header { width: 100%; justify-content: space-between; }
-    .btn-dashboard, .btn-agregar, .btn-cerrar-sesion { flex: 1; padding: 0.5rem; text-align: center; }
+    .navbar {
+        align-items: flex-start;
+    }
+
+    .navbar-links,
+    .navbar-user {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 0.85rem;
+    }
+
+    .navbar-user {
+        margin-left: 0;
+    }
+
+    .navbar-logo {
+        height: 32px;
+    }
+
+    .nav-link {
+        font-size: 0.92rem;
+    }
 
     
     /* --- TARJETAS FIJAS A PRUEBA DE FALLOS --- */

@@ -1,14 +1,21 @@
 <template>
     <div class="contenedor">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+            </div>
+
+            <div class="navbar-links">
+                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
+                <button class="nav-link" @click="router.push('/admin/usuarios/agregar')">+ Nuevo trabajador</button>
+                <button class="nav-link" @click="router.push('/admin/dashboard')">← Volver</button>
+            </div>
+        </nav>
+
         <div class="encabezado">
             <div>
                 <h1>Gestión de usuarios</h1>
                 <p>Administra los trabajadores del sistema</p>
-            </div>
-            <div class="acciones-header">
-                <button class="btn-secundario" @click="cambiarEmpresa">Cambiar de empresa</button>
-                <button class="btn-principal" @click="router.push('/admin/usuarios/agregar')">+ Nuevo trabajador</button>
-                <button class="btn-secundario" @click="router.push('/admin/dashboard')">← Volver</button>
             </div>
         </div>
 
@@ -80,6 +87,7 @@ import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import adminApi from '../api/adminApi';
 import { useAuthStore } from '../../../stores/authStore';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -146,6 +154,37 @@ onMounted(() => traeUsuarios());
 
 <style scoped>
 .contenedor { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    margin: -2rem calc(50% - 50vw) 1.75rem;
+    width: 100vw;
+    background: #04142c;
+    border-radius: 0;
+    box-shadow: 0 10px 24px rgba(15, 47, 99, 0.18);
+    flex-wrap: wrap;
+}
+
+.navbar-brand { display: flex; align-items: center; gap: 0.75rem; flex: 0 0 auto; }
+.navbar-logo { display: block; height: 36px; width: auto; object-fit: contain; }
+.navbar-links { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; margin-right: auto; }
+.nav-link {
+    padding: 0;
+    background: transparent;
+    color: white;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: opacity 0.2s ease;
+}
+.nav-link:hover { opacity: 0.8; }
 
 .encabezado {
     display: flex;

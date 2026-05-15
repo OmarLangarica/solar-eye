@@ -224,7 +224,7 @@ onMounted(async () => {
     outline: none;
     font-family: inherit;
 }
-.grupo input:focus, .grupo select:focus, .grupo textarea:focus { border-color: #FF7043; }
+.grupo input:focus, .grupo select:focus, .grupo textarea:focus { border-color: #1e3a8a; }
 
 .margen-info {
     display: flex;
@@ -241,8 +241,8 @@ onMounted(async () => {
 
 .botones { display: flex; justify-content: flex-end; gap: 1rem; }
 
-.btn-principal { padding: 0.75rem 1.5rem; background-color: #FF7043; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 1rem; }
-.btn-principal:hover { background-color: #F4511E; }
+.btn-principal { padding: 0.75rem 1.5rem; background-color: #1e3a8a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 1rem; }
+.btn-principal:hover { background-color: #2563eb; }
 .btn-principal:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-secundario { padding: 0.75rem 1.5rem; background-color: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-weight: 600; }
 .btn-secundario:hover { background-color: #e0e0e0; }

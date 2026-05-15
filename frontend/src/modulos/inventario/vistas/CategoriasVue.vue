@@ -176,11 +176,11 @@ onMounted(() => cargarCategorias());
 .card-form h3 { margin: 0 0 1rem; font-size: 1rem; color: #333; }
 .form-inline { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
 .input-nombre { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.95rem; outline: none; min-width: 180px; }
-.input-nombre:focus { border-color: #FF7043; }
+.input-nombre:focus { border-color: #1e3a8a; }
 .input-desc { flex: 2; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.95rem; outline: none; min-width: 200px; }
-.input-desc:focus { border-color: #FF7043; }
-.btn-principal { padding: 0.6rem 1.2rem; background-color: #FF7043; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap; }
-.btn-principal:hover { background-color: #F4511E; }
+.input-desc:focus { border-color: #1e3a8a; }
+.btn-principal { padding: 0.6rem 1.2rem; background-color: #1e3a8a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+.btn-principal:hover { background-color: #2563eb; }
 .btn-principal:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-cancelar-edit { padding: 0.6rem 0.8rem; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
 .tabla-container { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
@@ -191,8 +191,8 @@ td { padding: 0.85rem 1rem; border-top: 1px solid #f0f0f0; font-size: 0.9rem; }
 tr:hover td { background-color: #fafafa; }
 .texto-gris { color: #666; }
 .acciones { display: flex; gap: 0.5rem; }
-.btn-editar { padding: 0.4rem 0.8rem; background-color: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
-.btn-editar:hover { background-color: #d97706; }
+.btn-editar { padding: 0.4rem 0.8rem; background-color: #1e3a8a; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+.btn-editar:hover { background-color: #2563eb; }
 .btn-eliminar { padding: 0.4rem 0.8rem; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
 .btn-eliminar:hover { background-color: #dc2626; }
 .sin-datos { text-align: center; padding: 3rem; color: #999; }

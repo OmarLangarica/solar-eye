@@ -1,16 +1,16 @@
 <template>
     <div class="contenedor">
-        <div class="encabezado">
-            <div>
-                <h1>Clientes globales</h1>
-                <p>Todos los clientes registrados en el sistema</p>
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
             </div>
-            <div class="acciones-header">
-                <button class="btn-secundario" @click="cambiarEmpresa">Cambiar de empresa</button>
-                <button class="btn-exportar" @click="exportarExcel"> Exportar Excel</button>
-                <button class="btn-secundario" @click="router.push('/admin/dashboard')">← Volver</button>
+
+            <div class="navbar-links">
+                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
+                <button class="nav-link" @click="exportarExcel">Exportar Excel</button>
+                <button class="nav-link" @click="router.push('/admin/dashboard')">← Volver</button>
             </div>
-        </div>
+        </nav>
 
         <div class="mensaje error-msg" v-if="error">{{ error }}</div>
 
@@ -82,6 +82,7 @@ import { useRouter } from 'vue-router';
 import * as XLSX from 'xlsx-js-style';
 import adminApi from '../api/adminApi';
 import { useAuthStore } from '../../../stores/authStore';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -280,7 +281,58 @@ onMounted(() => traeClientes());
 </script>
 
 <style scoped>
-.contenedor { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+.contenedor { padding: 0 0 2rem; max-width: 1200px; margin: 0 auto; }
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    margin: 0 calc(50% - 50vw) 1.75rem;
+    width: 100vw;
+    background: #04142c;
+    border-radius: 0;
+    box-shadow: 0 10px 24px rgba(15, 47, 99, 0.18);
+    flex-wrap: wrap;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+}
+
+.navbar-logo {
+    display: block;
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.navbar-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+.nav-link {
+    padding: 0;
+    background: transparent;
+    color: white;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link:hover { opacity: 0.8; }
 
 .encabezado {
     display: flex;

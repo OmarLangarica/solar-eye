@@ -1,22 +1,28 @@
 <template>
     <div class="dashboard-container">
-        <div class="encabezado">
-            <div>
-                <h1>Solar Eye</h1>
-                <p>Resumen general de clientes y simulaciones</p>
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
             </div>
-            <div class="acciones-header">
-                <button class="btn-secundario" @click="cambiarEmpresa">Cambiar de empresa</button>
-                <button class="btn-inventario" @click="router.push('/inventario')">Inventario</button>
-                <button class="btn-principal" @click="router.push('/clientes')">Gestionar clientes</button>
-                <button 
+
+            <div class="navbar-links">
+                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
+                <button class="nav-link" @click="router.push('/inventario')">Inventario</button>
+                <button class="nav-link" @click="router.push('/clientes')">Gestionar clientes</button>
+                <button
                     v-if="authStore.usuario?.rol_empresa === 'admin'"
-                    class="btn-volver" 
+                    class="nav-link"
                     @click="router.push('/clientes')"
                 >← Volver</button>
-                <button class="btn-cerrar-sesion" @click="cerrarSesion">Cerrar sesión</button>
             </div>
-        </div>
+
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                </button>
+            </div>
+        </nav>
 
         <div class="mensaje error-msg" v-if="error">{{ error }}</div>
 
@@ -122,6 +128,7 @@ import { useAuthStore } from '../../../stores/authStore';
 import type { Cliente } from '../../clientes/interfaces/clientes-interface';
 import type { Simulacion } from '../../simulaciones/interfaces/simulaciones-interface';
 import { useAuth } from '../../auth/controladores/useAuth';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 type EstadoSimulacion = Simulacion['estado'];
 
@@ -256,7 +263,77 @@ onMounted(() => {
 .dashboard-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 0 0 2rem;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    margin: 0 calc(50% - 50vw) 1.75rem;
+    width: 100vw;
+    background: #04142c;
+    border-radius: 0;
+    box-shadow: 0 10px 24px rgba(15, 47, 99, 0.18);
+    flex-wrap: wrap;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+}
+
+.navbar-logo {
+    display: block;
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.navbar-links,
+.navbar-user {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.navbar-user {
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
+.navbar-user-name {
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nav-link {
+    padding: 0;
+    background: transparent;
+    color: white;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link:hover { opacity: 0.8; }
+
+.nav-link--logout {
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
 }
 
 .encabezado {

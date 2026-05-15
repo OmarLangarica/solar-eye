@@ -217,11 +217,11 @@ const onSubmit = handleSubmit(async (values) => {
 }
 
 .paso.activo .paso-numero {
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
 }
 
-.paso.activo span { color: #FF7043; font-weight: 700; }
+.paso.activo span { color: #1e3a8a; font-weight: 700; }
 
 .paso.completado .paso-numero {
     background-color: #4ade80;
@@ -267,7 +267,7 @@ const onSubmit = handleSubmit(async (values) => {
     font-family: inherit;
 }
 
-.grupo input:focus, .grupo textarea:focus { border-color: #FF7043; }
+.grupo input:focus, .grupo textarea:focus { border-color: #1e3a8a; }
 
 .input-error { border-color: #ef4444 !important; }
 
@@ -285,7 +285,7 @@ const onSubmit = handleSubmit(async (values) => {
 
 .btn-siguiente {
     padding: 0.75rem 2rem;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 6px;
@@ -295,6 +295,6 @@ const onSubmit = handleSubmit(async (values) => {
     transition: background-color 0.2s;
 }
 
-.btn-siguiente:hover { background-color: #F4511E; }
+.btn-siguiente:hover { background-color: #2563eb; }
 .btn-siguiente:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>

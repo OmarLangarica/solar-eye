@@ -1,11 +1,18 @@
 <template>
     <div class="contenedor">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+            </div>
+
+            <div class="navbar-links">
+                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
+                <button class="nav-link" @click="router.push('/clientes')">← Volver</button>
+            </div>
+        </nav>
+
         <div class="encabezado">
             <h1>Editar Cliente</h1>
-            <div class="acciones-header">
-                <button class="btn-volver" @click="cambiarEmpresa">Cambiar de empresa</button>
-                <button class="btn-volver" @click="router.push('/clientes')">← Volver</button>
-            </div>
         </div>
 
         <div class="card" v-if="clienteSeleccionado">
@@ -90,6 +97,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useForm, useField } from 'vee-validate';
 import { clienteSchema } from '../schemas/clientesSchema';
 import { useClientes } from '../controladores/useClientes';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const route = useRoute();
@@ -152,22 +160,64 @@ const onSubmit = handleSubmit(async (values) => {
 
 <style scoped>
 .contenedor {
-    padding: 2rem;
+    padding: 0 0 2rem;
     max-width: 800px;
     margin: 0 auto;
 }
 
-.encabezado {
+.navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    margin: 0 calc(50% - 50vw) 1.75rem;
+    width: 100vw;
+    background: #04142c;
+    border-radius: 0;
+    box-shadow: 0 10px 24px rgba(15, 47, 99, 0.18);
+    flex-wrap: wrap;
 }
 
-.acciones-header {
+.navbar-brand {
     display: flex;
+    align-items: center;
     gap: 0.75rem;
+    flex: 0 0 auto;
+}
+
+.navbar-logo {
+    display: block;
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.navbar-links {
+    display: flex;
+    align-items: center;
     flex-wrap: wrap;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+.nav-link {
+    padding: 0;
+    background: transparent;
+    color: white;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link:hover { opacity: 0.8; }
+
+.encabezado {
+    margin-bottom: 1.5rem;
 }
 
 .encabezado h1 {
@@ -175,19 +225,6 @@ const onSubmit = handleSubmit(async (values) => {
     color: #333;
     margin: 0;
 }
-
-.btn-volver {
-    padding: 0.6rem 1.2rem;
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s;
-}
-
-.btn-volver:hover { background-color: #e0e0e0; }
 
 .card {
     background: white;
@@ -236,7 +273,7 @@ const onSubmit = handleSubmit(async (values) => {
     font-family: inherit;
 }
 
-.grupo input:focus, .grupo textarea:focus { border-color: #FF7043; }
+.grupo input:focus, .grupo textarea:focus { border-color: #1e3a8a; }
 .input-error { border-color: #ef4444 !important; }
 
 .error-msg {
@@ -274,7 +311,7 @@ const onSubmit = handleSubmit(async (values) => {
 
 .btn-guardar {
     padding: 0.6rem 1.2rem;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 6px;
@@ -283,7 +320,7 @@ const onSubmit = handleSubmit(async (values) => {
     transition: background-color 0.2s;
 }
 
-.btn-guardar:hover { background-color: #F4511E; }
+.btn-guardar:hover { background-color: #2563eb; }
 .btn-guardar:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .cargando {

@@ -2,12 +2,15 @@
     <div class="contenedor">
         <div class="card">
             <div class="header">
-                <h1>Solar Eye</h1>
+                <nav class="navbar">
+                    <div class="navbar-brand">
+                        <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+                    </div>
+                </nav>
                 <p>Selecciona la empresa a la que deseas acceder</p>
             </div>
 
             <div v-if="cargando" class="cargando">Cargando empresas...</div>
-
             <div v-else-if="error" class="error-msg">{{ error }}</div>
 
             <div v-else-if="empresas.length === 0" class="sin-empresas">
@@ -30,16 +33,15 @@
                         class="empresa-card"
                         :class="{ 'empresa-seleccionada': empresaSeleccionada?.id === empresa.id }"
                         @click="seleccionarEmpresa(empresa)"
-                        :style="empresaSeleccionada?.id === empresa.id ? { borderColor: empresa.color_primario } : {}"
+                        :style="empresaSeleccionada?.id === empresa.id ? { borderColor: '#1e3a8a' } : {}"
                     >
-                        <div class="empresa-color-strip" :style="{ backgroundColor: empresa.color_primario }"></div>
+                        <div class="empresa-color-strip" :style="{ backgroundColor: '#1e3a8a' }"></div>
                         <div class="empresa-info">
                             <h3>{{ empresa.nombre }}</h3>
                             <span class="badge" :class="empresa.rol_empresa">
                                 {{ empresa.rol_empresa === 'admin' ? 'Administrador' : 'Trabajador' }}
                             </span>
                         </div>
-                        <!-- <span class="empresa-plan">{{ empresa.plan }}</span> -->
                     </div>
                 </div>
 
@@ -56,13 +58,10 @@
                     class="btn-entrar"
                     :disabled="!empresaSeleccionada || entrando"
                     @click="entrar"
-                    :style="empresaSeleccionada ? { backgroundColor: empresaSeleccionada.color_primario } : {}"
                 >
                     {{ entrando ? 'Entrando...' : 'Entrar →' }}
                 </button>
             </div>
-
-            <button class="btn-cerrar-sesion" @click="cerrarSesion">Cerrar sesión</button>
         </div>
     </div>
 </template>
@@ -72,6 +71,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../../stores/authStore';
 import authApi from '../api/authApi';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -97,7 +97,6 @@ const traeEmpresas = async () => {
         const resp = await authApi.get(`/empresas/${usuarioId}`);
         empresas.value = resp.data;
 
-        // Si solo tiene una empresa, la selecciona automáticamente
         if (empresas.value.length === 1) {
             empresaSeleccionada.value = empresas.value[0];
         }
@@ -137,11 +136,6 @@ const entrar = async () => {
     }
 };
 
-const cerrarSesion = () => {
-    authStore.cerrarSesion();
-    router.push('/login');
-};
-
 onMounted(() => traeEmpresas());
 </script>
 
@@ -158,14 +152,29 @@ onMounted(() => traeEmpresas());
 .card {
     background: white;
     border-radius: 12px;
-    padding: 2rem;
+    padding: 0 2rem 2rem;
     width: 100%;
     max-width: 500px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
 }
 
+.navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.9rem 1.25rem;
+    margin: 0 0 1.25rem;
+    width: 100%;
+    background: #04142c;
+    color: white;
+    margin-top: 20px;
+}
+
+.navbar-brand { display: flex; align-items: center; gap: 0.75rem; }
+.navbar-logo { height: 36px; width: auto; object-fit: contain; }
+
 .header { text-align: center; margin-bottom: 2rem; }
-.header h1 { font-size: 1.8rem; color: #333; margin: 0 0 0.5rem; }
 .header p { color: #666; font-size: 0.9rem; margin: 0; }
 
 .cargando { text-align: center; color: #999; padding: 2rem; }
@@ -199,8 +208,8 @@ onMounted(() => traeEmpresas());
     overflow: hidden;
 }
 
-.empresa-card:hover { border-color: #FF7043; background: #fff7ed; }
-.empresa-seleccionada { background: #fff7ed; }
+.empresa-card:hover { border-color: #1e3a8a; background: #eef2ff; }
+.empresa-seleccionada { background: #eef2ff; border-color: #1e3a8a; }
 
 .empresa-color-strip { width: 6px; height: 40px; border-radius: 3px; flex-shrink: 0; }
 
@@ -216,8 +225,6 @@ onMounted(() => traeEmpresas());
 .badge.admin { background: #ede9fe; color: #6d28d9; }
 .badge.trabajador { background: #dbeafe; color: #1e40af; }
 
-.empresa-plan { font-size: 0.8rem; color: #999; text-transform: capitalize; }
-
 .acciones {
     display: flex;
     justify-content: center;
@@ -228,7 +235,7 @@ onMounted(() => traeEmpresas());
 .btn-link {
     background: none;
     border: none;
-    color: #FF7043;
+    color: #1e3a8a;
     cursor: pointer;
     font-size: 0.85rem;
     text-decoration: underline;
@@ -238,7 +245,7 @@ onMounted(() => traeEmpresas());
 .btn-entrar {
     width: 100%;
     padding: 0.85rem;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 8px;
@@ -254,14 +261,14 @@ onMounted(() => traeEmpresas());
 .btn-principal {
     width: 100%;
     padding: 0.75rem;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
 }
-.btn-principal:hover { background-color: #F4511E; }
+.btn-principal:hover { opacity: 0.9; }
 
 .btn-secundario {
     width: 100%;
@@ -274,15 +281,4 @@ onMounted(() => traeEmpresas());
     font-weight: 600;
 }
 .btn-secundario:hover { background-color: #e0e0e0; }
-
-.btn-cerrar-sesion {
-    width: 100%;
-    padding: 0.6rem;
-    background: none;
-    border: none;
-    color: #999;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-.btn-cerrar-sesion:hover { color: #ef4444; }
 </style>

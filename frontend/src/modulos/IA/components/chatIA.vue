@@ -98,7 +98,7 @@ const enviar = async () => {
   width: 65px;
   height: 65px;
   border-radius: 50%;
-  background-color: #ff7043;
+  background-color: #04142c;
   color: white;
   border: none;
   font-size: 30px;
@@ -131,7 +131,7 @@ html.theme-dark .boton-abrir {
 }
 
 .header-chat {
-  background: #ff7043;
+  background: #04142c;
   color: white;
   padding: 15px;
   display: flex;

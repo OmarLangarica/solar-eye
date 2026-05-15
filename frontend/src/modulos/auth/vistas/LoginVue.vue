@@ -2,9 +2,11 @@
     <div class="contenedor">
         <div class="login-card">
 
-            <div class="login-header">
-                <h1>Solar Eye</h1>
-            </div>
+            <nav class="navbar">
+                <div class="navbar-brand">
+                    <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+                </div>
+            </nav>
 
             <div class="pestanas">
                 <button @click="cambiarModo('signin')" :class="{ activa: modoActual === 'signin' }" class="pestana">
@@ -130,6 +132,8 @@ const { error, cargando, login, registrar, limpiarError } = useAuth();
 const modoActual = ref<'signin' | 'signup'>('signin');
 const exitoRegistro = ref(false);
 
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
+
 // Login
 const { handleSubmit: handleLogin } = useForm({ validationSchema: loginSchema });
 const { value: emailValue, errorMessage: emailError } = useField<string>('email');
@@ -192,6 +196,20 @@ const onSubmitRegistro = handleRegistro(async (values) => {
     background-color: #f5f5f5;
 }
 
+.navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.9rem 1.25rem;
+    margin: 0 0 1.25rem;
+    width: 100%;
+    background: #04142c;
+    color: white;
+}
+
+.navbar-brand { display: flex; align-items: center; gap: 0.75rem; }
+.navbar-logo { height: 36px; width: auto; object-fit: contain; }
+
 .login-card {
     background: white;
     border-radius: 8px;
@@ -239,9 +257,9 @@ const onSubmitRegistro = handleRegistro(async (values) => {
 }
 
 .pestana.activa {
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
-    border-bottom: 2px solid #F4511E;
+    border-bottom: 2px solid #1e3a8a;
 }
 
 .formulario {
@@ -314,7 +332,7 @@ const onSubmitRegistro = handleRegistro(async (values) => {
 
 button[type="submit"] {
     padding: 10px;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 5px;
@@ -325,7 +343,7 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
-    background-color: #F4511E;
+    background-color: #2563eb;
 }
 
 button[type="submit"]:disabled {

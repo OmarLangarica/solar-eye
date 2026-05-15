@@ -2,14 +2,17 @@
     <div class="contenedor">
         <div class="card">
             <div class="header">
-                <h1>Solar Eye</h1>
+                <nav class="navbar">
+                    <div class="navbar-brand">
+                        <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+                    </div>
+                </nav>
                 <p>Únete a una empresa existente</p>
             </div>
 
             <div class="mensaje exito" v-if="mensaje">{{ mensaje }}</div>
             <div class="mensaje error-msg" v-if="error">{{ error }}</div>
 
-            <!-- Buscador -->
             <div class="buscador-grupo">
                 <input
                     v-model="busqueda"
@@ -19,7 +22,6 @@
                 />
             </div>
 
-            <!-- Resultados -->
             <div v-if="cargandoBusqueda" class="cargando">Buscando...</div>
 
             <div v-else-if="resultados.length > 0" class="lista-resultados">
@@ -29,9 +31,8 @@
                     class="empresa-resultado"
                     :class="{ 'seleccionada': empresaSeleccionada?.id === empresa.id }"
                     @click="empresaSeleccionada = empresa"
-                    :style="empresaSeleccionada?.id === empresa.id ? { borderColor: empresa.color_primario } : {}"
                 >
-                    <div class="empresa-color-strip" :style="{ backgroundColor: empresa.color_primario }"></div>
+                    <div class="empresa-color-strip"></div>
                     <div class="empresa-info">
                         <h3>{{ empresa.nombre }}</h3>
                     </div>
@@ -47,7 +48,6 @@
                 class="btn-principal"
                 @click="unirseAEmpresa"
                 :disabled="!empresaSeleccionada || cargando"
-                :style="empresaSeleccionada ? { backgroundColor: empresaSeleccionada.color_primario } : {}"
             >
                 {{ cargando ? 'Uniéndose...' : 'Unirme a esta empresa →' }}
             </button>
@@ -65,6 +65,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../../stores/authStore';
 import empresasApi from '../../superadmin/api/empresasApi';
 import authApi from '../api/authApi';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -145,17 +146,32 @@ const unirseAEmpresa = async () => {
 .card {
     background: white;
     border-radius: 12px;
-    padding: 2rem;
+    padding: 0 2rem 2rem;
     width: 100%;
     max-width: 500px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    overflow: hidden;
 }
 
+.navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.9rem 1.25rem;
+    margin: 0 0 0.25rem;
+    width: 100%;
+    background: #04142c;
+    color: white;
+    margin-top: 20px;
+}
+
+.navbar-brand { display: flex; align-items: center; gap: 0.75rem; }
+.navbar-logo { height: 36px; width: auto; object-fit: contain; }
+
 .header { text-align: center; }
-.header h1 { font-size: 1.8rem; color: #333; margin: 0 0 0.5rem; }
 .header p { color: #666; font-size: 0.9rem; margin: 0; }
 
 .mensaje { padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.9rem; }
@@ -171,7 +187,7 @@ const unirseAEmpresa = async () => {
     outline: none;
     box-sizing: border-box;
 }
-.buscador-grupo input:focus { border-color: #FF7043; }
+.buscador-grupo input:focus { border-color: #1e3a8a; }
 
 .cargando { text-align: center; color: #999; padding: 1rem; }
 
@@ -188,14 +204,19 @@ const unirseAEmpresa = async () => {
     transition: all 0.2s;
 }
 
-.empresa-resultado:hover { border-color: #FF7043; background: #fff7ed; }
-.empresa-resultado.seleccionada { background: #fff7ed; }
+.empresa-resultado:hover { border-color: #1e3a8a; background: #eef2ff; }
+.empresa-resultado.seleccionada { background: #eef2ff; border-color: #1e3a8a; }
 
-.empresa-color-strip { width: 6px; height: 36px; border-radius: 3px; flex-shrink: 0; }
+.empresa-color-strip {
+    width: 6px;
+    height: 36px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    background-color: #1e3a8a;
+}
 
 .empresa-info { flex: 1; }
 .empresa-info h3 { margin: 0 0 0.2rem; font-size: 0.95rem; color: #333; }
-.empresa-plan { font-size: 0.75rem; color: #999; text-transform: capitalize; }
 
 .check { color: #22c55e; font-weight: 700; font-size: 1.1rem; }
 
@@ -204,7 +225,7 @@ const unirseAEmpresa = async () => {
 .btn-principal {
     width: 100%;
     padding: 0.85rem;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 8px;

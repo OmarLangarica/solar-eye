@@ -414,8 +414,8 @@ const quitarImagen = () => {
 }
 
 .paso span { font-size: 0.8rem; color: #999; font-weight: 500; }
-.paso.activo .paso-numero { background-color: #FF7043; color: white; }
-.paso.activo span { color: #FF7043; font-weight: 700; }
+.paso.activo .paso-numero { background-color: #1e3a8a; color: white; }
+.paso.activo span { color: #1e3a8a; font-weight: 700; }
 .paso.completado .paso-numero { background-color: #4ade80; color: white; }
 .paso.completado span { color: #16a34a; }
 
@@ -468,7 +468,7 @@ const quitarImagen = () => {
     background: white;
 }
 
-.grupo input:focus, .grupo select:focus { border-color: #FF7043; }
+.grupo input:focus, .grupo select:focus { border-color: #1e3a8a; }
 .input-error { border-color: #ef4444 !important; }
 .error-msg { font-size: 0.8rem; color: #ef4444; }
 
@@ -484,7 +484,7 @@ const quitarImagen = () => {
 }
 
 .tarifa-label { font-size: 0.875rem; color: #9a3412; font-weight: 500; }
-.tarifa-valor { font-size: 1rem; font-weight: 700; color: #FF7043; }
+.tarifa-valor { font-size: 1rem; font-weight: 700; color: #1e3a8a; }
 
 .error-msg-box {
     padding: 0.75rem;
@@ -498,7 +498,7 @@ const quitarImagen = () => {
 
 .btn-siguiente {
     padding: 0.75rem 2rem;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 6px;
@@ -507,7 +507,7 @@ const quitarImagen = () => {
     font-size: 1rem;
     transition: background-color 0.2s;
 }
-.btn-siguiente:hover { background-color: #F4511E; }
+.btn-siguiente:hover { background-color: #2563eb; }
 .btn-siguiente:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Panel ayuda */
@@ -546,7 +546,7 @@ const quitarImagen = () => {
 }
 
 .promedio-item:last-child { border-bottom: none; }
-.promedio-valor { font-weight: 600; color: #FF7043; }
+.promedio-valor { font-weight: 600; color: #1e3a8a; }
 
 @media (max-width: 900px) {
     .contenedor {
@@ -673,13 +673,13 @@ const quitarImagen = () => {
 }
 
 .dropzone:hover, .dropzone-active {
-    border-color: #FF7043;
-    background: #fff5f2;
+    border-color: #1e3a8a;
+    background: #eef2ff;
 }
 
 .dropzone-loading {
-    border-color: #FF7043;
-    background: #fff5f2;
+    border-color: #1e3a8a;
+    background: #eef2ff;
     opacity: 0.8;
     animation: pulse 1.5s infinite;
 }

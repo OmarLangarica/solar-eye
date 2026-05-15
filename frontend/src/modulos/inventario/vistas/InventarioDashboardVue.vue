@@ -1,19 +1,20 @@
 <template>
     <div class="contenedor">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+            </div>
+
+            <div class="navbar-links">
+                <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/categorias')">Categorías</button>
+                <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/productos/agregar')">+ Nuevo producto</button>
+                <button class="nav-link" @click="router.push('/clientes')">← Volver</button>
+            </div>
+        </nav>
+
         <div class="encabezado">
-            <div>
-                <h1>Inventario</h1>
-                <p>Gestión de materiales y productos de {{ authStore.usuario?.empresa_nombre }}</p>
-            </div>
-            <div class="acciones-header">
-                <button v-if="esAdmin" class="btn-secundario" @click="router.push('/inventario/categorias')">
-                    <i class="bi bi-folder2-open" aria-hidden="true"></i> Categorías
-                </button>
-                <button v-if="esAdmin" class="btn-principal" @click="router.push('/inventario/productos/agregar')">
-                    + Nuevo producto
-                </button>
-                <button class="btn-volver" @click="router.push('/clientes')">← Volver</button>
-            </div>
+            <h1>Inventario</h1>
+            <p>Gestión de materiales y productos de {{ authStore.usuario?.empresa_nombre }}</p>
         </div>
 
         <!-- KPIs -->
@@ -175,6 +176,7 @@ import { ref, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../../stores/authStore';
 import inventarioApi from '../api/inventarioApi';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -263,54 +265,62 @@ onMounted(() => cargarDatos());
 </script>
 
 <style scoped>
-.contenedor { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+.contenedor { padding: 0 0 2rem; max-width: 1200px; margin: 0 auto; }
 
-.encabezado {
+.navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    margin: 0 calc(50% - 50vw) 1.75rem;
+    width: 100vw;
+    background: #04142c;
+    border-radius: 0;
+    box-shadow: 0 10px 24px rgba(15, 47, 99, 0.18);
+    flex-wrap: wrap;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+}
+
+.navbar-logo {
+    display: block;
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.navbar-links {
+    display: flex;
+    align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
+    margin-left: auto;
 }
 
-.encabezado h1 { font-size: 1.8rem; color: #333; margin: 0; }
-.encabezado p { color: #666; font-size: 0.9rem; margin: 0.25rem 0 0; }
-
-.acciones-header { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-
-.btn-principal {
-    padding: 0.6rem 1.2rem;
-    background-color: #FF7043;
+.nav-link {
+    padding: 0;
+    background: transparent;
     color: white;
     border: none;
-    border-radius: 6px;
+    outline: none;
     cursor: pointer;
     font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: opacity 0.2s ease;
 }
-.btn-principal:hover { background-color: #F4511E; }
 
-.btn-secundario {
-    padding: 0.6rem 1.2rem;
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.btn-secundario:hover { background-color: #e0e0e0; }
+.nav-link:hover { opacity: 0.8; }
 
-.btn-volver {
-    padding: 0.6rem 1.2rem;
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
+.encabezado {
+    margin-bottom: 1.5rem;
 }
-.btn-volver:hover { background-color: #e0e0e0; }
 
 .btn-link {
     background: none;

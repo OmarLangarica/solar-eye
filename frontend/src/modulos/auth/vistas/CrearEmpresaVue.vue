@@ -2,7 +2,11 @@
     <div class="contenedor">
         <div class="card">
             <div class="header">
-                <h1>Solar Eye</h1>
+                <nav class="navbar">
+                    <div class="navbar-brand">
+                        <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+                    </div>
+                </nav>
                 <p>Crea tu empresa y comienza a usar Solar Eye</p>
             </div>
 
@@ -15,8 +19,7 @@
                     <input v-model="form.nombre" type="text" placeholder="Ej: Solar Sinaloa S.A." />
                 </div>
 
-                <button class="btn-principal" @click="crearEmpresa" :disabled="cargando"
-                    :style="{ backgroundColor: form.color_primario }">
+                <button class="btn-principal" @click="crearEmpresa" :disabled="cargando">
                     {{ cargando ? 'Creando empresa...' : 'Crear empresa →' }}
                 </button>
 
@@ -34,6 +37,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../../stores/authStore';
 import empresasApi from '../../superadmin/api/empresasApi';
 import authApi from '../api/authApi';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -44,8 +48,8 @@ const mensaje = ref('');
 
 const form = reactive({
     nombre: '',
-    color_primario: '#FF7043',
-    color_secundario: '#F4511E',
+    color_primario: '#1e3a8a',
+    color_secundario: '#2563eb',
     plan: 'basico',
     activo: true
 });
@@ -59,18 +63,15 @@ const crearEmpresa = async () => {
         cargando.value = true;
         error.value = '';
 
-        // Crea la empresa
         const respEmpresa = await empresasApi.post('/', form);
         const empresa_id = respEmpresa.data.insertId;
 
-        // Une al usuario como admin de la empresa
         await authApi.post('/unirse-empresa', {
             usuario_id: authStore.usuario?.id,
             empresa_id,
             rol: 'admin'
         });
 
-        // Establece la empresa activa en el store
         authStore.setEmpresaActiva({
             empresa_id,
             empresa_nombre: form.nombre,
@@ -103,14 +104,29 @@ const crearEmpresa = async () => {
 .card {
     background: white;
     border-radius: 12px;
-    padding: 2rem;
+    padding: 0 2rem 2rem;
     width: 100%;
     max-width: 500px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
 }
 
+.navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.9rem 1.25rem;
+    margin: 0 0 1.25rem;
+    width: 100%;
+    background: #04142c;
+    color: white;
+    margin-top: 20px;
+}
+
+.navbar-brand { display: flex; align-items: center; gap: 0.75rem; }
+.navbar-logo { height: 36px; width: auto; object-fit: contain; }
+
 .header { text-align: center; margin-bottom: 2rem; }
-.header h1 { font-size: 1.8rem; color: #333; margin: 0 0 0.5rem; }
 .header p { color: #666; font-size: 0.9rem; margin: 0; }
 
 .mensaje { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
@@ -118,7 +134,6 @@ const crearEmpresa = async () => {
 .mensaje.error-msg { background: #fef2f2; color: #ef4444; }
 
 .formulario { display: flex; flex-direction: column; gap: 1.25rem; }
-.fila-doble { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .grupo { display: flex; flex-direction: column; gap: 0.4rem; }
 .grupo label { font-size: 0.875rem; font-weight: 600; color: #333; }
 
@@ -129,43 +144,12 @@ const crearEmpresa = async () => {
     font-size: 0.95rem;
     outline: none;
 }
-.grupo input:focus { border-color: #FF7043; }
-
-.color-grupo { display: flex; gap: 0.5rem; align-items: center; }
-.input-color { width: 48px; height: 42px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; padding: 2px; }
-.input-hex { flex: 1; }
-
-.preview-label { font-size: 0.875rem; font-weight: 600; color: #333; margin: 0 0 0.5rem; }
-
-.preview-card {
-    border-radius: 8px;
-    border-top: 4px solid;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.preview-header {
-    padding: 0.75rem 1rem;
-    color: white;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.preview-body { padding: 1rem; background: #fafafa; }
-
-.preview-btn {
-    padding: 0.5rem 1rem;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 0.85rem;
-    cursor: default;
-}
+.grupo input:focus { border-color: #1e3a8a; }
 
 .btn-principal {
     width: 100%;
     padding: 0.85rem;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 8px;

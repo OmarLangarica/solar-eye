@@ -365,7 +365,7 @@ onMounted(() => {
                 allowIntersection: false,
                 showArea: true,
                 shapeOptions: {
-                    color: '#FF7043',
+                    color: '#1e3a8a',
                     fillOpacity: 0.3
                 },
                 maxPoints: 4,
@@ -549,7 +549,7 @@ const guardarYAvanzar = async () => {
 
 .btn-buscar {
     padding: 0.7rem;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 6px;
@@ -559,7 +559,7 @@ const guardarYAvanzar = async () => {
     transition: background-color 0.2s;
     width: 100%;
 }
-.btn-buscar:hover { background-color: #F4511E; }
+.btn-buscar:hover { background-color: #2563eb; }
 .btn-buscar:disabled { opacity: 0.6; cursor: not-allowed; }
 .error-msg { font-size: 0.8rem; color: #ef4444; }
 
@@ -611,8 +611,8 @@ const guardarYAvanzar = async () => {
 
 .paso span { font-size: 0.8rem; color: #999; font-weight: 500; }
 
-.paso.activo .paso-numero { background-color: #FF7043; color: white; }
-.paso.activo span { color: #FF7043; font-weight: 700; }
+.paso.activo .paso-numero { background-color: #1e3a8a; color: white; }
+.paso.activo span { color: #1e3a8a; font-weight: 700; }
 .paso.completado .paso-numero { background-color: #4ade80; color: white; }
 .paso.completado span { color: #16a34a; }
 
@@ -677,7 +677,7 @@ const guardarYAvanzar = async () => {
     transition: border-color 0.3s;
 }
 
-.card-activa { border-color: #FF7043; }
+.card-activa { border-color: #1e3a8a; }
 
 .card-datos h3 { font-size: 0.95rem; color: #333; margin: 0 0 1rem; }
 
@@ -713,7 +713,7 @@ const guardarYAvanzar = async () => {
     transition: border-color 0.2s;
 }
 
-.grupo input:focus, .grupo select:focus { border-color: #FF7043; }
+.grupo input:focus, .grupo select:focus { border-color: #1e3a8a; }
 
 .ayuda { font-size: 0.75rem; color: #999; }
 
@@ -729,7 +729,7 @@ const guardarYAvanzar = async () => {
     width: 20px;
     height: 20px;
     border: 3px solid #f0f0f0;
-    border-top-color: #FF7043;
+    border-top-color: #1e3a8a;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -741,7 +741,7 @@ const guardarYAvanzar = async () => {
 .btn-siguiente {
     width: 100%;
     padding: 0.85rem;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 6px;
@@ -751,7 +751,7 @@ const guardarYAvanzar = async () => {
     transition: background-color 0.2s;
 }
 
-.btn-siguiente:hover { background-color: #F4511E; }
+.btn-siguiente:hover { background-color: #2563eb; }
 .btn-siguiente:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .error-msg-box {

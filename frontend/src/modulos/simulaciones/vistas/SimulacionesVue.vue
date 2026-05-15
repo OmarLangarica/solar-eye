@@ -1,15 +1,26 @@
 <template>
     <div class="contenedor">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+            </div>
+
+            <div class="navbar-links">
+                <button v-if="!soloConsulta" class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
+                <button v-if="!soloConsulta" class="nav-link" @click="nuevaSimulacion">+ Nueva simulación</button>
+                <button class="nav-link" @click="volver">← Volver</button>
+            </div>
+
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link nav-link--logout" @click="router.push('/clientes')" aria-label="Ir a clientes" title="Ir a clientes">
+                    <i class="bi bi-people" aria-hidden="true"></i>
+                </button>
+            </div>
+        </nav>
+
         <div class="encabezado">
-            <div>
-                <h1>Simulaciones</h1>
-                <p>Cliente: <strong>{{ route.query.nombre }}</strong></p>
-            </div>
-            <div class="acciones-header">
-                <button v-if="!soloConsulta" class="btn-secundario" @click="cambiarEmpresa">Cambiar de empresa</button>
-                <button v-if="!soloConsulta" class="btn-agregar" @click="nuevaSimulacion">+ Nueva simulación</button>
-                <button class="btn-volver" @click="volver">← Volver</button>
-            </div>
+            <p>Cliente: <strong>{{ route.query.nombre }}</strong></p>
         </div>
 
         <div class="mensaje exito" v-if="mensaje">{{ mensaje }}</div>
@@ -83,6 +94,7 @@ import { useSimulaciones } from '../controladores/useSimulaciones';
 import type { Simulacion } from '../interfaces/simulaciones-interface';
 import clientesApi from '../../clientes/api/clientesApi';
 import { useAuthStore } from '../../../stores/authStore';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const route = useRoute();
@@ -212,7 +224,86 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.contenedor { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+.contenedor { padding: 0 0 2rem; max-width: 1200px; margin: 0 auto; }
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    margin: 0 calc(50% - 50vw) 1.75rem;
+    width: 100vw;
+    background: #04142c;
+    border-radius: 0;
+    box-shadow: 0 10px 24px rgba(15, 47, 99, 0.18);
+    flex-wrap: wrap;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+}
+
+.navbar-logo {
+    display: block;
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.navbar-links,
+.navbar-user {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.navbar-user {
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
+.navbar-user-name {
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nav-link {
+    padding: 0;
+    background: transparent;
+    color: white;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link:hover { opacity: 0.8; }
+
+.nav-link--logout {
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+}
+
+.encabezado {
+    margin-bottom: 1.5rem;
+}
+
+.encabezado p {
+    color: #4b5563;
+    margin: 0;
+}
 
 .encabezado {
     display: flex;
@@ -228,14 +319,14 @@ onMounted(async () => {
 
 .btn-agregar {
     padding: 0.6rem 1.2rem;
-    background-color: #FF7043;
+    background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
 }
-.btn-agregar:hover { background-color: #F4511E; }
+.btn-agregar:hover { background-color: #2563eb; }
 
 .btn-secundario {
     padding: 0.6rem 1.2rem;
