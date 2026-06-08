@@ -2,17 +2,19 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import chatIA from './modulos/IA/components/chatIA.vue';
+import { useIaStore } from './stores/iaStore';
 
 type ThemeMode = 'light' | 'dark';
 
 const STORAGE_KEY = 'solar-eye-theme';
 const theme = ref<ThemeMode>('light');
 const route = useRoute();
+const iaStore = useIaStore();
 
 const isDark = computed(() => theme.value === 'dark');
 const mostrarChat = computed(() => {
   const rutasSinChat = new Set(['login', 'inicio', 'seleccionar-empresa', 'crear-empresa', 'unirse-empresa']);
-  return !rutasSinChat.has(String(route.name ?? ''));
+  return iaStore.disponible && !rutasSinChat.has(String(route.name ?? ''));
 });
 
 const aplicaTema = (modo: ThemeMode) => {
@@ -30,6 +32,7 @@ onMounted(() => {
   const preferenciaSistema = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   theme.value = guardado === 'dark' || guardado === 'light' ? guardado : preferenciaSistema;
   aplicaTema(theme.value);
+  iaStore.cargarDisponibilidad();
 });
 
 watch(theme, (modo) => {

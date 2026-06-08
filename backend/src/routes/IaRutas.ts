@@ -1,11 +1,19 @@
 import { Router } from 'express';
-import { consultarIA, analizarReciboIA } from '../services/IaServices.js';
+import { consultarIA, analizarReciboIA, tieneGeminiApiKey } from '../services/IaServices.js';
 
 const router = Router();
+
+router.get('/disponible', (_req, res) => {
+    return res.json({ disponible: tieneGeminiApiKey });
+});
 
 // Endpoint para el chat de SolarEye
 router.post('/chat', async (req, res) => {
     try {
+        if (!tieneGeminiApiKey) {
+            return res.status(503).json({ respuesta: 'El chat no está disponible porque falta GEMINI_API_KEY en el backend.' });
+        }
+
         const { mensaje } = req.body;
         if (!mensaje) return res.status(400).json({ respuesta: 'Mensaje requerido' });
 
@@ -28,6 +36,10 @@ router.post('/chat', async (req, res) => {
 // NUEVO: Endpoint para analizar la imagen del recibo (Paso 3)
 router.post('/analizar-recibo', async (req, res) => {
     try {
+        if (!tieneGeminiApiKey) {
+            return res.status(503).json({ respuesta: 'El detector de recibos no está disponible porque falta GEMINI_API_KEY en el backend.' });
+        }
+
         const imagen = req.body?.imagen;
         if (!imagen) return res.status(400).json({ respuesta: 'Imagen requerida o cuerpo inválido' });
 

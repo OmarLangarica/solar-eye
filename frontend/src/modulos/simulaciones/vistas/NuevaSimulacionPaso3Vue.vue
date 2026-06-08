@@ -51,45 +51,45 @@
 
                 
                 <form @submit="onSubmit" class="formulario">
-                    <div class="grupo">
+                    <div v-if="mostrarDetectorRecibos" class="grupo">
                         <label>Foto del recibo <span class="opcional">(opcional para consulta)</span></label>
-                        <div 
-                            class="dropzone" 
+                        <div
+                            class="dropzone"
                             :class="{ 'dropzone-active': dragging, 'dropzone-loading': cargandoIA }"
                             @dragover.prevent="dragging = true"
                             @dragleave.prevent="dragging = false"
                             @drop.prevent="onDrop"
                             @click="fileInput?.click()"
                         >
-                        <input 
-                            type="file" 
-                            ref="fileInput" 
-                            class="hidden-input" 
-                            accept="image/*,application/pdf" 
-                            @change="onFileSelect"
-                        />
-        <div v-if="!imagenPreview && !cargandoIA" class="dropzone-info">
-            <span class="icono-upload">📄</span>
-            <p>Arrastra el recibo aquí o <strong>haz clic para buscar</strong></p>
-            <span class="formato-info">JPG, PNG o PDF (Máx. 5MB)</span>
-        </div>
+                            <input
+                                type="file"
+                                ref="fileInput"
+                                class="hidden-input"
+                                accept="image/*,application/pdf"
+                                @change="onFileSelect"
+                            />
 
-        <div v-else-if="cargandoIA" class="dropzone-info">
-            <p><strong>Analizando el archivo...</strong></p>
-            <span class="formato-info">Extrayendo datos automáticamente</span>
-        </div>
+                            <div v-if="!imagenPreview && !cargandoIA" class="dropzone-info">
+                                <span class="icono-upload">📄</span>
+                                <p>Arrastra el recibo aquí o <strong>haz clic para buscar</strong></p>
+                                <span class="formato-info">JPG, PNG o PDF (Máx. 5MB)</span>
+                            </div>
 
-        <div v-else class="preview-container">
-            <img v-if="imagenPreview" :src="imagenPreview" class="preview-img" />
-            <div v-else class="pdf-preview">
-                <span class="pdf-icon">📄</span>
-                <p>PDF cargado</p>
-            </div>
-            <button type="button" class="btn-quitar" @click.stop="quitarImagen">✕</button>
-        </div>
-    </div>
+                            <div v-else-if="cargandoIA" class="dropzone-info">
+                                <p><strong>Analizando el archivo...</strong></p>
+                                <span class="formato-info">Extrayendo datos automáticamente</span>
+                            </div>
 
-</div>
+                            <div v-else class="preview-container">
+                                <img v-if="imagenPreview" :src="imagenPreview" class="preview-img" />
+                                <div v-else class="pdf-preview">
+                                    <span class="pdf-icon">📄</span>
+                                    <p>PDF cargado</p>
+                                </div>
+                                <button type="button" class="btn-quitar" @click.stop="quitarImagen">✕</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="fila-doble">
                         <div class="grupo">
                             <label>Consumo mensual (kWh) *</label>
@@ -222,15 +222,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useForm, useField } from 'vee-validate';
 import { paso3Schema } from '../schemas/simulacionesSchema';
 import { useSimulaciones } from '../controladores/useSimulaciones';
 import simulacionesApi from '../api/simulacionesApi';
+import { useIaStore } from '../../../stores/iaStore';
 
 const router = useRouter();
 const route = useRoute();
+const iaStore = useIaStore();
 const { cargando, error, guardarConsumoElectrico, guardarResultados, calcularResultados, obtieneConsumoElectrico, cargandoIA, extraerDatosConIA } = useSimulaciones();
 
 const cliente_id = Number(route.params.cliente_id);
@@ -247,6 +249,7 @@ const dragging = ref(false);
 const imagenPreview = ref<string | undefined>(undefined);
 const archivoRecibo = ref<File | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
+const mostrarDetectorRecibos = computed(() => iaStore.disponible);
 
 
 // Calcula la tarifa por kWh automáticamente
@@ -355,6 +358,10 @@ const quitarImagen = () => {
     archivoRecibo.value = null;
     if (fileInput.value) fileInput.value.value = '';
 };
+
+onMounted(() => {
+    iaStore.cargarDisponibilidad();
+});
 </script>
 
 <style scoped>

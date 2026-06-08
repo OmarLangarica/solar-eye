@@ -2,15 +2,16 @@ import { GoogleGenerativeAI, GoogleGenerativeAIFetchError } from "@google/genera
 import pdfParse from 'pdf-parse';
 import 'dotenv/config';
 
-const geminiApiKey = process.env.GEMINI_API_KEY;
+const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
+const tieneGeminiApiKey = Boolean(geminiApiKey && geminiApiKey.trim() !== '');
 console.log('API Key loaded:', !!geminiApiKey);
 
-if (!geminiApiKey || geminiApiKey.trim() === '') {
-    throw new Error('GEMINI_API_KEY no configurada. Establece la variable de entorno en backend/.env o en el entorno de despliegue.');
+if (!tieneGeminiApiKey) {
+    console.warn('GEMINI_API_KEY no configurada. El backend seguira funcionando sin chat ni lector de recibos IA.');
 }
 
 
-const genAI = new GoogleGenerativeAI(geminiApiKey);
+const genAI = tieneGeminiApiKey ? new GoogleGenerativeAI(geminiApiKey as string) : null;
 const modeloPreferido = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const modelosFallback = [
     modeloPreferido,
@@ -24,14 +25,31 @@ const modelosFallback = [
 console.log('Modelo preferido:', modeloPreferido);
 console.log('Modelos fallback:', modelosFallback.join(', '));
 
+export { tieneGeminiApiKey };
+
+const verificarGeminiDisponible = () => {
+    if (!tieneGeminiApiKey || !genAI) {
+        throw new Error('GEMINI_API_KEY no configurada. El chat y el lector de recibos requieren esta variable.');
+    }
+};
+
 
 const esperar = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const listarModelosDisponibles = async () => {
+    if (!tieneGeminiApiKey) {
+        return null;
+    }
+
+    const apiKey = geminiApiKey;
+    if (!apiKey) {
+        return null;
+    }
+
     try {
         const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
             headers: {
-                'x-goog-api-key': geminiApiKey,
+                'x-goog-api-key': apiKey,
                 'Content-Type': 'application/json'
             }
         });
@@ -45,6 +63,13 @@ const listarModelosDisponibles = async () => {
 };
 
 export const consultarIA = async (mensaje: string, intentos = 3): Promise<string> => {
+    verificarGeminiDisponible();
+
+    const clienteGemini = genAI;
+    if (!clienteGemini) {
+        throw new Error('GEMINI_API_KEY no configurada. El chat y el lector de recibos requieren esta variable.');
+    }
+
     const instruccion = `Eres el experto de SolarEye en Culiacán.
     Responde solamente lo que te pregunte el usuario, con un párrafo breve y directo.
     No repitas la pregunta, no inventes, y si no sabes responde "No tengo suficiente información".
@@ -55,7 +80,7 @@ export const consultarIA = async (mensaje: string, intentos = 3): Promise<string
     for (const modelo of modelosFallback) {
         try {
             console.log('Intentando modelo IA:', modelo);
-            const model = genAI.getGenerativeModel({ model: modelo });
+            const model = clienteGemini.getGenerativeModel({ model: modelo });
             const result = await model.generateContent([instruccion, mensaje]);
             console.log('Respuesta recibida con modelo', modelo);
 
@@ -99,6 +124,13 @@ export const consultarIA = async (mensaje: string, intentos = 3): Promise<string
     throw new Error(`No se encontró un modelo compatible en fallback. Último error: ${ultimoError?.message || 'desconocido'}`);
 };
 export const analizarReciboIA = async (imagenBase64: string): Promise<any> => {
+    verificarGeminiDisponible();
+
+    const clienteGemini = genAI;
+    if (!clienteGemini) {
+        throw new Error('GEMINI_API_KEY no configurada. El chat y el lector de recibos requieren esta variable.');
+    }
+
     const instruccionVision = `Analiza la imagen o PDF de este recibo de CFE y extrae los datos exactos del periodo mostrado en el recibo. No inventes valores. Devuelve únicamente un objeto JSON válido sin ningún texto adicional, sin bloques de código y sin explicaciones.
 
 Instrucciones importantes:
@@ -179,7 +211,7 @@ Ejemplo de respuesta: {"consumoKwh": 86.5, "costoMx": 306, "tarifaCfe": "1A", "n
 
     try {
         console.log('Iniciando análisis de imagen/PDF en SolarEye... Tipo MIME:', mimeType);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const model = clienteGemini.getGenerativeModel({ model: 'gemini-2.5-flash' });
         let result;
 
         if (isPdf) {
