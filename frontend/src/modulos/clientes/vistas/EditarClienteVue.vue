@@ -6,8 +6,15 @@
             </div>
 
             <div class="navbar-links">
-                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button class="nav-link" @click="router.push('/clientes')">← Volver</button>
+            </div>
+
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                </button>
             </div>
         </nav>
 
@@ -97,11 +104,15 @@ import { useRouter, useRoute } from 'vue-router';
 import { useForm, useField } from 'vee-validate';
 import { clienteSchema } from '../schemas/clientesSchema';
 import { useClientes } from '../controladores/useClientes';
+import { useAuth } from '../../auth/controladores/useAuth';
+import { useAuthStore } from '../../../stores/authStore';
 import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const route = useRoute();
 const { cargando, error, mensaje, clienteSeleccionado, traeClienteId, actualizarCliente } = useClientes();
+const authStore = useAuthStore();
+const { cerrarSesion } = useAuth();
 
 const cambiarEmpresa = () => {
     router.push('/seleccionar-empresa');
@@ -198,7 +209,28 @@ const onSubmit = handleSubmit(async (values) => {
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
+}
+
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     margin-left: auto;
+    justify-content: flex-end;
+}
+
+.navbar-user-name {
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nav-link--logout {
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
 }
 
 .nav-link {

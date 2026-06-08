@@ -5,11 +5,17 @@
                 <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
             </div>
 
-            <div class="navbar-links">
-                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
-                <button class="nav-link" @click="router.push('/admin/usuarios/agregar')">+ Nuevo trabajador</button>
-                <button class="nav-link" @click="router.push('/admin/dashboard')">← Volver</button>
-            </div>
+                    <div class="navbar-links">
+                        <button class="nav-link" @click="router.push('/admin/dashboard')">← Volver</button>
+                    </div>
+
+                    <div class="navbar-user">
+                        <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                        <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+                        <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </div>
         </nav>
 
         <div class="encabezado">
@@ -87,10 +93,12 @@ import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import adminApi from '../api/adminApi';
 import { useAuthStore } from '../../../stores/authStore';
+import { useAuth } from '../../auth/controladores/useAuth';
 import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { cerrarSesion } = useAuth();
 const empresaId = computed(() => authStore.usuario?.empresa_id ?? null);
 
 const usuarios = ref<any[]>([]);
@@ -171,7 +179,16 @@ onMounted(() => traeUsuarios());
 
 .navbar-brand { display: flex; align-items: center; gap: 0.75rem; flex: 0 0 auto; }
 .navbar-logo { display: block; height: 36px; width: auto; object-fit: contain; }
-.navbar-links { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; margin-right: auto; }
+.navbar-links { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+    justify-content: flex-end;
+}
+.navbar-user-name { color: white; font-weight: 600; white-space: nowrap; }
+.nav-link--logout { font-weight: 500; display: inline-flex; align-items: center; justify-content: center; font-size: 1.15rem; }
 .nav-link {
     padding: 0;
     background: transparent;

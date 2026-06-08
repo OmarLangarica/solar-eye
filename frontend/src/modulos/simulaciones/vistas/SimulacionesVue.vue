@@ -6,15 +6,15 @@
             </div>
 
             <div class="navbar-links">
-                <button v-if="!soloConsulta" class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button v-if="!soloConsulta" class="nav-link" @click="nuevaSimulacion">+ Nueva simulación</button>
                 <button class="nav-link" @click="volver">← Volver</button>
             </div>
 
             <div class="navbar-user">
                 <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
-                <button class="nav-link nav-link--logout" @click="router.push('/clientes')" aria-label="Ir a clientes" title="Ir a clientes">
-                    <i class="bi bi-people" aria-hidden="true"></i>
+                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                 </button>
             </div>
         </nav>
@@ -95,6 +95,7 @@ import type { Simulacion } from '../interfaces/simulaciones-interface';
 import clientesApi from '../../clientes/api/clientesApi';
 import { useAuthStore } from '../../../stores/authStore';
 import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
+import { useAuth } from '../../auth/controladores/useAuth';
 
 const router = useRouter();
 const route = useRoute();
@@ -106,7 +107,7 @@ const soloConsulta = route.query.readonly === '1';
 const modalEliminarVisible = ref(false);
 const simAEliminar = ref<Simulacion | null>(null);
 const cargandoContinuar = ref<number | null>(null);
-
+const { cerrarSesion } = useAuth();
 const cambiarEmpresa = () => {
     router.push('/seleccionar-empresa');
 };
@@ -386,18 +387,18 @@ tr:hover td { background-color: #fafafa; }
 
 .btn-ver {
     padding: 0.4rem 0.8rem;
-    background-color: #3b82f6;
+    background-color: #173f72;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.85rem;
 }
-.btn-ver:hover { background-color: #2563eb; }
+.btn-ver:hover { background-color: #173f72; }
 
 .btn-continuar {
     padding: 0.4rem 0.8rem;
-    background-color: #22c55e;
+    background-color: #15a54a;
     color: white;
     border: none;
     border-radius: 4px;
@@ -405,12 +406,12 @@ tr:hover td { background-color: #fafafa; }
     font-size: 0.85rem;
     transition: background-color 0.2s;
 }
-.btn-continuar:hover { background-color: #16a34a; }
+.btn-continuar:hover { background-color: #0d9b41; }
 .btn-continuar:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .btn-eliminar {
     padding: 0.4rem 0.8rem;
-    background-color: #ef4444;
+    background-color: #c63333;
     color: white;
     border: none;
     border-radius: 4px;

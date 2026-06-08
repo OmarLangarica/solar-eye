@@ -1,11 +1,28 @@
 <template>
     <div class="contenedor">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+            </div>
+
+            <div class="navbar-links">
+                <button class="nav-link" @click="router.push('/inventario/productos')">← Volver</button>
+            </div>
+
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                </button>
+            </div>
+        </nav>
+
         <div class="encabezado">
             <div>
                 <h1>{{ producto?.nombre ?? 'Movimientos' }}</h1>
                 <p>Historial de movimientos del producto</p>
             </div>
-            <button class="btn-secundario" @click="router.push('/inventario/productos')">← Volver</button>
         </div>
 
         <!-- Info del producto -->
@@ -71,13 +88,20 @@
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../../stores/authStore';
+import { useAuth } from '../../auth/controladores/useAuth';
 import inventarioApi from '../api/inventarioApi';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const { cerrarSesion } = useAuth();
 const empresa_id = authStore.usuario?.empresa_id;
 const producto_id = Number(route.params.id);
+
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
 
 const movimientos = ref<any[]>([]);
 const producto = ref<any>(null);
@@ -107,11 +131,80 @@ onMounted(async () => {
 
 <style scoped>
 .contenedor { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+
+.navbar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    margin: -2rem calc(50% - 50vw) 1.75rem;
+    width: 100vw;
+    background: #04142c;
+    border-radius: 0;
+    box-shadow: 0 10px 24px rgba(15, 47, 99, 0.18);
+    flex-wrap: wrap;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+}
+
+.navbar-logo {
+    display: block;
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.navbar-links,
+.navbar-user {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.navbar-user {
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
+.navbar-user-name {
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nav-link {
+    padding: 0;
+    background: transparent;
+    color: white;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link:hover { opacity: 0.8; }
+
+.nav-link--logout {
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+}
+
 .encabezado { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
 .encabezado h1 { font-size: 1.8rem; color: #333; margin: 0; }
 .encabezado p { color: #666; font-size: 0.9rem; margin: 0.25rem 0 0; }
-.btn-secundario { padding: 0.6rem 1.2rem; background-color: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-weight: 600; }
-.btn-secundario:hover { background-color: #e0e0e0; }
 .producto-card { display: flex; gap: 2rem; background: white; border-radius: 8px; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1.5rem; flex-wrap: wrap; }
 .prod-dato { display: flex; flex-direction: column; gap: 0.2rem; }
 .prod-label { font-size: 0.75rem; color: #999; }
@@ -137,4 +230,29 @@ tr:hover td { background-color: #fafafa; }
 .cantidad.negativo { color: #ef4444; }
 .texto-motivo { color: #666; font-size: 0.82rem; }
 .sin-datos { text-align: center; padding: 3rem; color: #999; }
+
+@media (max-width: 768px) {
+    .navbar {
+        align-items: flex-start;
+    }
+
+    .navbar-links,
+    .navbar-user {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 0.85rem;
+    }
+
+    .navbar-user {
+        margin-left: 0;
+    }
+
+    .navbar-logo {
+        height: 32px;
+    }
+
+    .nav-link {
+        font-size: 0.92rem;
+    }
+}
 </style>

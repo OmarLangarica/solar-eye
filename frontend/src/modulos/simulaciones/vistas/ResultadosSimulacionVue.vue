@@ -7,7 +7,6 @@
       </div>
 
       <div class="navbar-links">
-        <button class="nav-link" @click="volver">← Volver</button>
         <button class="nav-link" @click="imprimirReporte" v-if="resultados">
           <i class="bi bi-printer"></i> Imprimir
         </button>
@@ -20,10 +19,15 @@
         <button class="nav-link" @click="verCitasCliente" v-if="resultados && route.query.cliente_id">
           <i class="bi bi-calendar3"></i> Ver citas
         </button>
+        <button class="nav-link" @click="volver">← Volver</button>
       </div>
 
       <div class="navbar-user">
         <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+        <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+        <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                </button>
       </div>
     </nav>
 
@@ -269,7 +273,7 @@ import { useRouter, useRoute } from 'vue-router';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Chart, registerables } from 'chart.js';
-
+import { useAuth } from '../../auth/controladores/useAuth';
 import { useSimulaciones } from '../controladores/useSimulaciones';
 import { useAuthStore } from '../../../stores/authStore';
 import AgendarCitaModal from '../../citas/vistas/AgendarCitaModal.vue';
@@ -279,6 +283,10 @@ import type { ResultadosCalculo, DatosTecho, DatosGeograficos, ConsumoElectrico 
 const router = useRouter();
 const route = useRoute();
 Chart.register(...registerables);
+const { cerrarSesion } = useAuth();
+const cambiarEmpresa = () => {
+router.push('/seleccionar-empresa');
+};
 
 const {
   cargando, error,

@@ -6,7 +6,6 @@
             </div>
 
             <div class="navbar-links">
-                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button class="nav-link" @click="router.push('/inventario')">Inventario</button>
                 <button class="nav-link" @click="router.push('/clientes')">Gestionar clientes</button>
                 <button
@@ -18,6 +17,7 @@
 
             <div class="navbar-user">
                 <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
                 <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
                     <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                 </button>

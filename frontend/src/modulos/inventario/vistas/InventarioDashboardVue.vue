@@ -7,8 +7,17 @@
 
             <div class="navbar-links">
                 <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/categorias')">Categorías</button>
-                <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/productos/agregar')">+ Nuevo producto</button>
+                <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/productos')">Productos</button>
+                                <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/movimientos')">Movimientos</button>
                 <button class="nav-link" @click="router.push('/clientes')">← Volver</button>
+            </div>
+
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                </button>
             </div>
         </nav>
 
@@ -175,11 +184,13 @@
 import { ref, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../../stores/authStore';
+import { useAuth } from '../../auth/controladores/useAuth';
 import inventarioApi from '../api/inventarioApi';
 import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { cerrarSesion } = useAuth();
 const esAdmin = authStore.usuario?.rol_empresa === 'admin';
 const empresa_id = authStore.usuario?.empresa_id;
 
@@ -189,6 +200,10 @@ const movimientos = ref<any[]>([]);
 const modalMovimiento = ref(false);
 const productoSeleccionado = ref<any>(null);
 const guardando = ref(false);
+
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
 
 const formMov = reactive({
     tipo: 'entrada' as 'entrada' | 'salida',
@@ -269,7 +284,7 @@ onMounted(() => cargarDatos());
 
 .navbar {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     gap: 1rem;
     padding: 0.9rem 1.25rem;
@@ -300,7 +315,6 @@ onMounted(() => cargarDatos());
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
-    margin-left: auto;
 }
 
 .nav-link {
@@ -318,6 +332,27 @@ onMounted(() => cargarDatos());
 
 .nav-link:hover { opacity: 0.8; }
 
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+.navbar-user-name {
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nav-link--logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 500;
+}
+
 .encabezado {
     margin-bottom: 1.5rem;
 }
@@ -325,7 +360,7 @@ onMounted(() => cargarDatos());
 .btn-link {
     background: none;
     border: none;
-    color: #FF7043;
+    color: #1e3a8a;
     cursor: pointer;
     font-size: 0.85rem;
     font-weight: 600;
@@ -359,10 +394,10 @@ onMounted(() => cargarDatos());
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    border-left: 4px solid #FF7043;
+    border-left: 4px solid #1e3a8a;
 }
 
-.kpi-card.alerta { border-left-color: #ef4444; }
+.kpi-card.alerta { border-left-color: #1e3a8a; }
 
 .kpi-icono { font-size: 1.8rem; }
 .kpi-info { display: flex; flex-direction: column; }

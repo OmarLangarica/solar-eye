@@ -6,9 +6,16 @@
             </div>
 
             <div class="navbar-links">
-                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button class="nav-link" @click="exportarExcel">Exportar Excel</button>
                 <button class="nav-link" @click="router.push('/admin/dashboard')">← Volver</button>
+            </div>
+
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                </button>
             </div>
         </nav>
 
@@ -82,10 +89,12 @@ import { useRouter } from 'vue-router';
 import * as XLSX from 'xlsx-js-style';
 import adminApi from '../api/adminApi';
 import { useAuthStore } from '../../../stores/authStore';
+import { useAuth } from '../../auth/controladores/useAuth';
 import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { cerrarSesion } = useAuth();
 
 const clientes = ref<any[]>([]);
 const trabajadores = ref<any[]>([]);
@@ -316,7 +325,28 @@ onMounted(() => traeClientes());
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
+}
+
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     margin-left: auto;
+    justify-content: flex-end;
+}
+
+.navbar-user-name {
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nav-link--logout {
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
 }
 
 .nav-link {
@@ -441,7 +471,7 @@ tr:hover td { background-color: #fafafa; }
 
 .btn-consultar-sims {
     padding: 0.4rem 0.8rem;
-    background-color: #2563eb;
+    background-color: #1d4f91;
     color: white;
     border: none;
     border-radius: 4px;
@@ -449,7 +479,7 @@ tr:hover td { background-color: #fafafa; }
     font-size: 0.85rem;
     font-weight: 600;
 }
-.btn-consultar-sims:hover { background-color: #1d4ed8; }
+.btn-consultar-sims:hover { background-color: #173f72; }
 
 .centrado { text-align: center; }
 .sin-datos { text-align: center; padding: 3rem; color: #999; }

@@ -6,8 +6,15 @@
             </div>
 
             <div class="navbar-links">
-                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button class="nav-link" @click="router.push('/clientes')">← Volver</button>
+            </div>
+
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                </button>
             </div>
         </nav>
 
@@ -94,10 +101,12 @@ import { useForm, useField } from 'vee-validate';
 import { clienteSchema } from '../schemas/clientesSchema';
 import { useClientes } from '../controladores/useClientes';
 import { useAuthStore } from '../../../stores/authStore';
+import { useAuth } from '../../auth/controladores/useAuth';
 import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { cerrarSesion } = useAuth();
 const { cargando, error, mensaje, agregarCliente } = useClientes();
 
 const { handleSubmit, resetForm } = useForm({ validationSchema: clienteSchema });
@@ -149,7 +158,7 @@ const onSubmit = handleSubmit(async (values) => {
 
 .navbar {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     gap: 1rem;
     padding: 0.9rem 1.25rem;
@@ -175,12 +184,23 @@ const onSubmit = handleSubmit(async (values) => {
     object-fit: contain;
 }
 
-.navbar-links {
+.navbar-links,
+.navbar-user {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
+}
+
+.navbar-user {
     margin-left: auto;
+    justify-content: flex-end;
+}
+
+.navbar-user-name {
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .nav-link {
@@ -198,8 +218,41 @@ const onSubmit = handleSubmit(async (values) => {
 
 .nav-link:hover { opacity: 0.8; }
 
+.nav-link--logout {
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+}
+
 .encabezado {
     margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        align-items: flex-start;
+    }
+
+    .navbar-links,
+    .navbar-user {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 0.85rem;
+    }
+
+    .navbar-user {
+        margin-left: 0;
+    }
+
+    .navbar-logo {
+        height: 32px;
+    }
+
+    .nav-link {
+        font-size: 0.92rem;
+    }
 }
 
 .encabezado h1 {

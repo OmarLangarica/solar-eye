@@ -9,6 +9,14 @@
                 <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/productos/agregar')">+ Nuevo producto</button>
                 <button class="nav-link" @click="router.push('/inventario')">← Volver</button>
             </div>
+
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                </button>
+            </div>
         </nav>
 
         <div class="encabezado">
@@ -173,13 +181,19 @@
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../../stores/authStore';
+import { useAuth } from '../../auth/controladores/useAuth';
 import inventarioApi from '../api/inventarioApi';
 import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { cerrarSesion } = useAuth();
 const esAdmin = authStore.usuario?.rol_empresa === 'admin';
 const empresa_id = authStore.usuario?.empresa_id;
+
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
 
 const productos = ref<any[]>([]);
 const categorias = ref<any[]>([]);
@@ -315,7 +329,7 @@ onMounted(() => cargarProductos());
 
 .navbar {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     gap: 1rem;
     padding: 0.9rem 1.25rem;
@@ -329,7 +343,7 @@ onMounted(() => cargarProductos());
 
 .navbar-brand { display: flex; align-items: center; gap: 0.75rem; flex: 0 0 auto; }
 .navbar-logo { display: block; height: 36px; width: auto; object-fit: contain; }
-.navbar-links { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; margin-left: auto; }
+.navbar-links { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
 .nav-link {
     padding: 0;
     background: transparent;
@@ -343,6 +357,27 @@ onMounted(() => cargarProductos());
     transition: opacity 0.2s ease;
 }
 .nav-link:hover { opacity: 0.8; }
+
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+.navbar-user-name {
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nav-link--logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 500;
+}
 
 .encabezado {
     display: flex;

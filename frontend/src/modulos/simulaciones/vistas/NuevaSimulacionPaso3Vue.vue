@@ -1,21 +1,29 @@
 <template>
     <div class="contenedor">
 
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+            </div>
+
+            <div class="navbar-links">
+                <button class="nav-link" @click="volverPaso2">← Volver</button>
+                <button class="nav-link" @click="volverASimulaciones">↩ Volver a simulaciones</button>
+            </div>
+
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                </button>
+            </div>
+        </nav>
+
         <div class="encabezado">
             <div>
                 <h1>Nueva Simulación</h1>
                 <p>Cliente: <strong>{{ route.query.nombre }}</strong></p>
-            </div>
-            <div class="botones">
-                <button class="btn-volver" @click="router.push({ 
-                    path: `/simulaciones/nueva/${cliente_id}/paso2/${simulacion_id}`, 
-                    query: { nombre: route.query.nombre } 
-                })">← Volver</button>
-
-                <button class="btn-volver" @click="router.push({ 
-                    path: `/simulaciones/${cliente_id}`, 
-                    query: { nombre: route.query.nombre } 
-                })">↩ Volver a simulaciones</button>
             </div>
         </div>
 
@@ -229,14 +237,37 @@ import { paso3Schema } from '../schemas/simulacionesSchema';
 import { useSimulaciones } from '../controladores/useSimulaciones';
 import simulacionesApi from '../api/simulacionesApi';
 import { useIaStore } from '../../../stores/iaStore';
+import { useAuthStore } from '../../../stores/authStore';
+import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
+import { useAuth } from '../../auth/controladores/useAuth';
 
 const router = useRouter();
 const route = useRoute();
 const iaStore = useIaStore();
+const authStore = useAuthStore();
+const { cerrarSesion } = useAuth();
 const { cargando, error, guardarConsumoElectrico, guardarResultados, calcularResultados, obtieneConsumoElectrico, cargandoIA, extraerDatosConIA } = useSimulaciones();
 
 const cliente_id = Number(route.params.cliente_id);
 const simulacion_id = Number(route.params.simulacion_id);
+
+const volverPaso2 = () => {
+    router.push({
+        path: `/simulaciones/nueva/${cliente_id}/paso2/${simulacion_id}`,
+        query: { nombre: route.query.nombre }
+    });
+};
+
+const volverASimulaciones = () => {
+    router.push({
+        path: `/simulaciones/${cliente_id}`,
+        query: { nombre: route.query.nombre }
+    });
+};
+
+const cambiarEmpresa = () => {
+    router.push('/seleccionar-empresa');
+};
 
 const { handleSubmit } = useForm({ validationSchema: paso3Schema });
 const { value: consumoValue, errorMessage: consumoError } = useField<number>('consumo_mensual_kwh');
@@ -365,7 +396,77 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.contenedor { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+.contenedor { padding: 0 0 2rem; max-width: 1100px; margin: 0 auto; }
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    margin: 0 calc(50% - 50vw) 1.75rem;
+    width: 100vw;
+    background: #04142c;
+    border-radius: 0;
+    box-shadow: 0 10px 24px rgba(15, 47, 99, 0.18);
+    flex-wrap: wrap;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+}
+
+.navbar-logo {
+    display: block;
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.navbar-links,
+.navbar-user {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.navbar-user {
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
+.navbar-user-name {
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nav-link {
+    padding: 0;
+    background: transparent;
+    color: white;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link:hover { opacity: 0.8; }
+
+.nav-link--logout {
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+}
 
 .encabezado {
     display: flex;
@@ -376,17 +477,6 @@ onMounted(() => {
 
 .encabezado h1 { font-size: 1.8rem; color: #333; margin: 0; }
 .encabezado p { color: #666; font-size: 0.9rem; margin: 0.25rem 0 0; }
-
-.btn-volver {
-    padding: 0.6rem 1.2rem;
-    background-color: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.btn-volver:hover { background-color: #e0e0e0; }
 
 /* Pasos */
 .pasos {

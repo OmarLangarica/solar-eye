@@ -6,7 +6,6 @@
             </div>
 
             <div class="navbar-links">
-                <button class="nav-link" @click="cambiarEmpresa">Cambiar de empresa</button>
                 <button class="nav-link" @click="router.push('/dashboard')">Análisis</button>
                 <button class="nav-link" @click="router.push('/inventario')">Inventario</button>
                 <button class="nav-link" @click="router.push('/clientes/agregar')">+ Nuevo cliente</button>
@@ -19,6 +18,7 @@
 
             <div class="navbar-user">
                 <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
                 <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
                     <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                 </button>
@@ -287,14 +287,14 @@ tr:hover td { background-color: #fafafa; }
 
 .btn-eliminar {
     padding: 0.4rem 0.8rem;
-    background-color: #1d4f91;
+    background-color: #c63333;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.85rem;
 }
-.btn-eliminar:hover { background-color: #173f72; }
+.btn-eliminar:hover { background-color: #dc2626; }
 
 .btn-volver {
     padding: 0;

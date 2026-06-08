@@ -12,6 +12,7 @@
 
       <div class="navbar-user">
         <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+        <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
         <button class="nav-link nav-link--logout" @click="router.push('/clientes')" aria-label="Cerrar sesión" title="Cerrar sesión">
           <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
         </button>
@@ -93,6 +94,10 @@ const authStore = useAuthStore();
 const mostrarModal = ref(false);
 const citaSeleccionada = ref<any | null>(null);
 const modalSimulacionId = ref<number | null>(null);
+
+const cambiarEmpresa = () => {
+router.push('/seleccionar-empresa');
+};
 
 const traeCitas = async () => {
   try {
