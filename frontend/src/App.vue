@@ -12,10 +12,15 @@ const route = useRoute();
 const iaStore = useIaStore();
 
 const isDark = computed(() => theme.value === 'dark');
-const mostrarChat = computed(() => {
-  const rutasSinChat = new Set(['login', 'inicio', 'seleccionar-empresa', 'crear-empresa', 'unirse-empresa']);
-  return iaStore.disponible && !rutasSinChat.has(String(route.name ?? ''));
+
+const esRutaPrivada = computed(() => {
+  const rutasSinElementos = new Set(['login', 'inicio', 'seleccionar-empresa', 'crear-empresa', 'unirse-empresa', '']);
+  return !rutasSinElementos.has(String(route.name ?? ''));
 });
+
+const mostrarChat = computed(() => esRutaPrivada.value && iaStore.disponible);
+
+const mostrarToggleTema = computed(() => esRutaPrivada.value);
 
 const aplicaTema = (modo: ThemeMode) => {
   const root = document.documentElement;
@@ -44,6 +49,7 @@ watch(theme, (modo) => {
 
 <template>
   <button
+    v-if="mostrarToggleTema"
     class="theme-toggle-flotante"
     type="button"
     @click="alternarTema"
