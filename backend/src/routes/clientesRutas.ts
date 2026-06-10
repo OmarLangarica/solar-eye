@@ -67,4 +67,14 @@ router.delete('/', async (req: Request, res: Response) => {
     }
 });
 
+// GET http://localhost:3001/api/clientes/empresa/1  → clientes de toda la empresa (para admin)
+router.get('/empresa/:empresa_id', async (req: Request, res: Response) => {
+    try {
+        const clientes = await clientesServices.obtieneClientesPorEmpresa(Number(req.params.empresa_id));
+        res.status(200).send(clientes);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
+    }
+});
+
 export default router;

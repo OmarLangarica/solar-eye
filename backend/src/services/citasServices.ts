@@ -57,7 +57,22 @@ export const obtieneCitasPorSimulacion = async (simulacion_id: number) => {
 
 export const obtieneCitasPorEmpresa = async (empresa_id: number) => {
     try {
-        const [results] = await conexion.query('SELECT * FROM citas WHERE empresa_id = ?', [empresa_id]);
+        const [results] = await conexion.query(
+            `SELECT c.*,
+             DATE_FORMAT(c.fecha_inicio, '%Y-%m-%dT%H:%i:%s') as fecha_inicio,
+             DATE_FORMAT(c.fecha_fin, '%Y-%m-%dT%H:%i:%s') as fecha_fin,
+             cl.nombre as cliente_nombre, cl.apellido as cliente_apellido,
+             cl.telefono as cliente_telefono,
+             u.nombre as usuario_nombre, u.apellido as usuario_apellido,
+             s.nombre_proyecto as simulacion_nombre
+             FROM citas c
+             LEFT JOIN clientes cl ON c.cliente_id = cl.id
+             LEFT JOIN usuarios u ON c.usuario_id = u.id
+             LEFT JOIN simulaciones s ON c.simulacion_id = s.id
+             WHERE c.empresa_id = ?
+             ORDER BY c.fecha_inicio ASC`,
+            [empresa_id]
+        );
         return results;
     } catch (err) {
         return { error: 'No se pudieron obtener las citas de la empresa' };
@@ -96,5 +111,26 @@ export const borrarCita = async (id: number) => {
         return results;
     } catch (err) {
         return { error: 'No se pudo borrar la cita' };
+    }
+};
+
+export const obtieneCitasPorUsuario = async (usuario_id: number) => {
+    try {
+        const [results] = await conexion.query(
+            `SELECT c.*, 
+             cl.nombre as cliente_nombre, cl.apellido as cliente_apellido, cl.telefono as cliente_telefono,
+             u.nombre as usuario_nombre, u.apellido as usuario_apellido,
+             s.nombre_proyecto as simulacion_nombre
+             FROM citas c
+             LEFT JOIN clientes cl ON c.cliente_id = cl.id
+             LEFT JOIN usuarios u ON c.usuario_id = u.id
+             LEFT JOIN simulaciones s ON c.simulacion_id = s.id
+             WHERE c.usuario_id = ?
+             ORDER BY c.fecha_inicio ASC`,
+            [usuario_id]
+        );
+        return results;
+    } catch (err) {
+        return { error: 'No se pudieron obtener las citas del usuario' };
     }
 };

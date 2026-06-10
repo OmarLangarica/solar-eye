@@ -7,11 +7,12 @@
 
             <div class="navbar-links">
                 <button class="nav-link" @click="router.push('/inventario')">Inventario</button>
-                <button class="nav-link" @click="router.push('/clientes')">Gestionar clientes</button>
+                <button class="nav-link" @click="router.push('/clientes')">Clientes</button>
+                <button class="nav-link" @click="router.push('/citas')">Citas</button>
                 <button
                     v-if="authStore.usuario?.rol_empresa === 'admin'"
                     class="nav-link"
-                    @click="router.push('/clientes')"
+                    @click="router.push('/admin/dashboard')"
                 >← Volver</button>
             </div>
 

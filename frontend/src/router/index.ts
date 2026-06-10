@@ -30,6 +30,8 @@ import EditarProductoVue from '@/modulos/inventario/vistas/EditarProductoVue.vue
 import MovimientosVue from '@/modulos/inventario/vistas/MovimientosVue.vue';
 import MovimientosProductoVue from '@/modulos/inventario/vistas/MovimientosProductoVue.vue';
 import CategoriasVue from '@/modulos/inventario/vistas/CategoriasVue.vue';
+import CitasGlobalVue from '@/modulos/citas/vistas/CitasGlobalVue.vue';
+
 
 const router = createRouter({
     history: createWebHistory(),
@@ -99,7 +101,7 @@ const router = createRouter({
             component: CitasClienteVue
         },
         {
-            path: '/citas',
+            path: '/citas/tabla',
             name: 'consultar-citas',
             component: ConsultarCitasVue
         },
@@ -172,6 +174,11 @@ const router = createRouter({
 { path: '/inventario/productos/:id/movimientos', name: 'inventario-movimientos-producto', component: MovimientosProductoVue },
 { path: '/inventario/movimientos', name: 'inventario-movimientos', component: MovimientosVue },
 { path: '/inventario/categorias', name: 'inventario-categorias', component: CategoriasVue },
+{
+    path: '/citas',
+    name: 'citas-global',
+    component: CitasGlobalVue
+},
     ]
 });
 

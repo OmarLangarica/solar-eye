@@ -128,7 +128,7 @@ const entrar = async () => {
         if (empresaSeleccionada.value.rol_empresa === 'admin') {
             await router.push('/admin/dashboard');
         } else {
-            await router.push('/clientes');
+            await router.push('/dashboard');
         }
     } catch {
         error.value = 'No se pudo entrar a la empresa. Intenta de nuevo.';

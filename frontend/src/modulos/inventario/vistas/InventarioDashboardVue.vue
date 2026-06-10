@@ -8,8 +8,9 @@
             <div class="navbar-links">
                 <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/categorias')">Categorías</button>
                 <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/productos')">Productos</button>
-                                <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/movimientos')">Movimientos</button>
-                <button class="nav-link" @click="router.push('/clientes')">← Volver</button>
+                <button v-if="esAdmin" class="nav-link" @click="router.push('/inventario/movimientos')">Movimientos</button>
+                <button v-if="esAdmin" class="nav-link" @click="router.push('/admin/dashboard')">← Volver</button>
+                <button v-if="authStore.usuario?.rol_empresa === 'trabajador'" class="nav-link" @click="router.push('/dashboard')">← Volver</button>
             </div>
 
             <div class="navbar-user">

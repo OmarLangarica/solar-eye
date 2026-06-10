@@ -6,10 +6,11 @@
             </div>
 
             <div class="navbar-links">
-                <button class="nav-link" @click="router.push('/admin/clientes')">Ver todos los clientes</button>
-                <button class="nav-link" @click="router.push('/clientes')">Mis clientes</button>
-                <button class="nav-link" @click="router.push('/admin/usuarios')">Gestionar usuarios</button>
+                <button  class="nav-link" @click="router.push('/dashboard')">Dashboard Personal</button>
+                <button class="nav-link" @click="router.push('/clientes')">Clientes</button>
+                <button class="nav-link" @click="router.push('/admin/usuarios')">Empleados</button>
                 <button class="nav-link" @click="router.push('/inventario')">Inventario</button>
+                <button class="nav-link" @click="router.push('/citas')">Citas</button>
             </div>
 
             <div class="navbar-user">

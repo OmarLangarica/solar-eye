@@ -6,8 +6,9 @@
             </div>
 
             <div class="navbar-links">
-                <button class="nav-link" @click="router.push('/dashboard')">Análisis</button>
-                <button class="nav-link" @click="router.push('/inventario')">Inventario</button>
+                <button v-if="authStore.usuario?.rol_empresa === 'trabajador'" class="nav-link" @click="router.push('/dashboard')">Dashboard</button>
+                <button v-if="authStore.usuario?.rol_empresa === 'trabajador'" class="nav-link" @click="router.push('/inventario')">Inventario</button>
+                <button v-if="authStore.usuario?.rol_empresa === 'admin'" class="nav-link" @click="router.push('/admin/clientes')">Ver todos los clientes</button>
                 <button class="nav-link" @click="router.push('/clientes/agregar')">+ Nuevo cliente</button>
                 <button
                     v-if="authStore.usuario?.rol_empresa === 'admin'"
