@@ -9,6 +9,35 @@ router.get('/', async (_req, res) => {
     res.send(empresas);
 });
 
+// Pública — sin autenticación
+router.get('/publicas', async (_req, res) => {
+    try {
+        const resultado = await empresasServices.obtieneEmpresasPublicas();
+        res.status(200).send(resultado);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno' });
+    }
+});
+
+router.get('/publica/:id', async (req, res) => {
+    try {
+        const resultado = await empresasServices.obtieneEmpresaPublica(Number(req.params.id));
+        res.status(200).send(resultado);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno' });
+    }
+});
+
+// Admin actualiza perfil de su empresa
+router.put('/perfil', async (req, res) => {
+    try {
+        const resultado = await empresasServices.actualizaPerfilEmpresa(req.body);
+        res.status(200).send(resultado);
+    } catch (err) {
+        res.status(500).json({ mensaje: 'Error interno' });
+    }
+});
+
 router.get('/:id', async (req, res) => {
     const empresa = await empresasServices.encuentraEmpresa(Number(req.params.id));
     res.send(empresa);
@@ -52,4 +81,7 @@ router.delete('/', async (req, res) => {
     }
 });
 
+
+
 export default router;
+

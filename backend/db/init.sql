@@ -5,11 +5,36 @@ USE solar_eye;
 CREATE TABLE empresas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
+
+    -- Branding
+    descripcion TEXT,
+    slogan VARCHAR(255),
+    imagen_logo VARCHAR(500),
+    imagen_portada VARCHAR(500),
+
+    -- Contacto
+    telefono VARCHAR(20),
+    email_contacto VARCHAR(150),
+    sitio_web VARCHAR(255),
+    direccion VARCHAR(255),
+    ciudad VARCHAR(100),
+    estado_republica VARCHAR(100),
+
+    -- Redes sociales
+    facebook VARCHAR(255),
+    instagram VARCHAR(255),
+    whatsapp VARCHAR(20),
+
+    -- Configuración visual
     logo_url VARCHAR(500),
     color_primario VARCHAR(7) DEFAULT '#FF7043',
     color_secundario VARCHAR(7) DEFAULT '#F4511E',
+
+    -- Configuración de cuenta
     plan ENUM('basico','profesional','enterprise') DEFAULT 'basico',
+    publica BOOLEAN DEFAULT FALSE,
     activo BOOLEAN DEFAULT TRUE,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -274,16 +299,22 @@ CREATE TABLE instalacion_materiales (
 -- ─── Datos de prueba ──────────────────────────────────────────
 
 INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol, activo)
-VALUES ('Omar', 'Langarica', 'omar@solareye.com', '123456', '6671234567', 'superadmin', TRUE);
+VALUES ('Omar', 'Langarica', 'admin@solar.com', '123456', '6671234567', 'superadmin', TRUE);
 
 INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol, activo)
 VALUES ('Omar', 'Langarica', 'omar@solar.com', '123456', '6671234567', 'usuario', TRUE);
 
 INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol, activo)
-VALUES ('Carlos', 'Mendez', 'carlos@solar.com', '123456', '6679876543', 'usuario', TRUE);
+VALUES ('Bryan', 'Zamudio', 'bryan@solar.com', '123456', '6679876543', 'usuario', TRUE);
+
+INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol, activo)
+VALUES ('Alex', 'Fernando', 'alex@solar.com', '123456', '6679876543', 'usuario', TRUE);
+
+INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol, activo)
+VALUES ('Aldhair', 'Sarabia', 'aldhair@solar.com', '123456', '6679876543', 'usuario', TRUE);
 
 INSERT INTO empresas (nombre, color_primario, color_secundario, plan, activo)
-VALUES ('Solar Eye Demo', '#FF7043', '#F4511E', 'profesional', TRUE);
+VALUES ('Solar Eye Demo', '#1e3a8a', '#2563eb', 'profesional', TRUE);
 
 INSERT INTO usuarios_empresas (usuario_id, empresa_id, rol, activo) VALUES
 (2, 1, 'admin', TRUE),

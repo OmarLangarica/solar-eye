@@ -96,3 +96,59 @@ export const obtieneEstadisticasEmpresa = async (empresa_id: number) => {
         return { error: 'No se pudieron obtener las estadísticas' };
     }
 };
+
+// Obtiene solo empresas públicas para la landing
+export const obtieneEmpresasPublicas = async () => {
+    try {
+        const [results] = await conexion.query(
+            `SELECT id, nombre, descripcion, slogan, telefono, email_contacto,
+             sitio_web, direccion, ciudad, estado_republica, facebook, instagram,
+             whatsapp, imagen_portada, imagen_logo, color_primario, color_secundario, plan
+             FROM empresas
+             WHERE publica = TRUE AND activo = TRUE
+             ORDER BY nombre ASC`
+        );
+        return results;
+    } catch (err) {
+        return { error: 'No se pudieron obtener las empresas' };
+    }
+};
+
+// Obtiene una empresa pública por id
+export const obtieneEmpresaPublica = async (id: number) => {
+    try {
+        const [results] = await conexion.query(
+            `SELECT id, nombre, descripcion, slogan, telefono, email_contacto,
+             sitio_web, direccion, ciudad, estado_republica, facebook, instagram,
+             whatsapp, imagen_portada, imagen_logo, color_primario, color_secundario, plan
+             FROM empresas
+             WHERE id = ? AND publica = TRUE AND activo = TRUE LIMIT 1`,
+            [id]
+        );
+        return results;
+    } catch (err) {
+        return { error: 'No se pudo obtener la empresa' };
+    }
+};
+
+// Actualiza perfil público de empresa
+export const actualizaPerfilEmpresa = async (datos: any) => {
+    try {
+        const [results] = await conexion.query(
+            `UPDATE empresas SET
+             descripcion = ?, slogan = ?, telefono = ?, email_contacto = ?,
+             sitio_web = ?, direccion = ?, ciudad = ?, estado_republica = ?,
+             facebook = ?, instagram = ?, whatsapp = ?,
+             imagen_portada = ?, imagen_logo = ?, publica = ?
+             WHERE id = ?`,
+            [datos.descripcion ?? null, datos.slogan ?? null, datos.telefono ?? null,
+             datos.email_contacto ?? null, datos.sitio_web ?? null, datos.direccion ?? null,
+             datos.ciudad ?? null, datos.estado_republica ?? null, datos.facebook ?? null,
+             datos.instagram ?? null, datos.whatsapp ?? null, datos.imagen_portada ?? null,
+             datos.imagen_logo ?? null, datos.publica ?? false, datos.id]
+        );
+        return results;
+    } catch (err) {
+        return { error: 'No se pudo actualizar el perfil' };
+    }
+};

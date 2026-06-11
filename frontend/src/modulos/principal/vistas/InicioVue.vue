@@ -9,6 +9,7 @@
         <a href="#caracteristicas" class="nav-link-item">Características</a>
         <a href="#como-funciona" class="nav-link-item">¿Cómo funciona?</a>
         <a href="#para-quien" class="nav-link-item">¿Para quién?</a>
+        <a href="#empresas" class="nav-link-item">Instaladores</a>
       </div>
       <router-link to="/login" class="btn-nav-cta">Iniciar sesión →</router-link>
     </nav>
@@ -320,6 +321,138 @@
       </div>
     </section>
 
+    <!-- EMPRESAS REGISTRADAS -->
+<section class="empresas-section" id="empresas">
+    <div class="section-header">
+        <span class="section-tag">Red de instaladores</span>
+        <h2>Empresas instaladoras verificadas</h2>
+        <p>Encuentra un instalador solar certificado cerca de ti y solicita tu cotización gratuita.</p>
+    </div>
+
+    <div v-if="empresas.length === 0" class="sin-empresas">
+        <p>Pronto habrá instaladores registrados en tu zona.</p>
+    </div>
+
+    <div class="empresas-grid" v-else>
+        <div
+            v-for="empresa in empresas"
+            :key="empresa.id"
+            class="empresa-card"
+            @click="abrirEmpresa(empresa)">
+            <div class="empresa-portada"
+                :style="empresa.imagen_portada
+                    ? { backgroundImage: `url(${empresa.imagen_portada})` }
+                    : { background: `linear-gradient(135deg, ${empresa.color_primario ?? '#04142c'}, #1d4f91)` }">
+                <div class="empresa-portada-overlay"></div>
+            </div>
+            <div class="empresa-card-body">
+                <div class="empresa-logo-row">
+                    <div class="empresa-logo-circle"
+                        :style="{ backgroundColor: empresa.color_primario ?? '#1d4f91' }">
+                        <img v-if="empresa.imagen_logo" :src="empresa.imagen_logo" :alt="empresa.nombre" />
+                        <span v-else>{{ empresa.nombre?.charAt(0) }}</span>
+                    </div>
+                    <div>
+                        <div class="empresa-nombre">{{ empresa.nombre }}</div>
+                        <div class="empresa-ubicacion" v-if="empresa.ciudad">
+                            {{ empresa.ciudad }}{{ empresa.estado_republica ? ', ' + empresa.estado_republica : '' }}
+                        </div>
+                    </div>
+                </div>
+                <p class="empresa-slogan" v-if="empresa.slogan">{{ empresa.slogan }}</p>
+                <p class="empresa-desc" v-if="empresa.descripcion">
+                    {{ empresa.descripcion.slice(0, 100) }}{{ empresa.descripcion.length > 100 ? '...' : '' }}
+                </p>
+                <button class="empresa-btn-contactar"
+                    :style="{ backgroundColor: empresa.color_primario ?? '#1d4f91' }"
+                    @click.stop="abrirEmpresa(empresa)">
+                    Contactar empresa →
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal detalle empresa -->
+<Teleport to="body">
+    <div v-if="modalEmpresa" class="landing-overlay" @click.self="modalEmpresa = false">
+        <div class="modal-empresa">
+            <div class="modal-empresa-portada"
+                :style="empresaActiva?.imagen_portada
+                    ? { backgroundImage: `url(${empresaActiva.imagen_portada})` }
+                    : { background: `linear-gradient(135deg, ${empresaActiva?.color_primario ?? '#04142c'}, #1d4f91)` }">
+                <div class="modal-empresa-overlay"></div>
+                <button class="modal-btn-cerrar" @click="modalEmpresa = false">✕</button>
+            </div>
+
+            <div class="modal-empresa-body">
+                <div class="modal-logo-row">
+                    <div class="modal-logo-circle"
+                        :style="{ backgroundColor: empresaActiva?.color_primario ?? '#1d4f91' }">
+                        <img v-if="empresaActiva?.imagen_logo" :src="empresaActiva.imagen_logo" :alt="empresaActiva?.nombre" />
+                        <span v-else>{{ empresaActiva?.nombre?.charAt(0) }}</span>
+                    </div>
+                    <div>
+                        <h2 class="modal-empresa-nombre">{{ empresaActiva?.nombre }}</h2>
+                        <p class="modal-empresa-slogan" v-if="empresaActiva?.slogan">{{ empresaActiva.slogan }}</p>
+                    </div>
+                </div>
+
+                <p class="modal-empresa-desc" v-if="empresaActiva?.descripcion">{{ empresaActiva.descripcion }}</p>
+
+                <div class="modal-empresa-ubicacion" v-if="empresaActiva?.ciudad">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    {{ empresaActiva?.ciudad }}{{ empresaActiva?.estado_republica ? ', ' + empresaActiva.estado_republica : '' }}
+                    <span v-if="empresaActiva?.direccion"> — {{ empresaActiva.direccion }}</span>
+                </div>
+
+                <div class="modal-contacto-grid">
+                    <a v-if="empresaActiva?.whatsapp"
+                        :href="`https://wa.me/${empresaActiva.whatsapp.replace(/\D/g,'')}`"
+                        target="_blank"
+                        class="modal-contacto-btn whatsapp">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        WhatsApp
+                    </a>
+                    <a v-if="empresaActiva?.telefono"
+                        :href="`tel:${empresaActiva.telefono}`"
+                        class="modal-contacto-btn telefono">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        {{ empresaActiva.telefono }}
+                    </a>
+                    <a v-if="empresaActiva?.email_contacto"
+                        :href="`mailto:${empresaActiva.email_contacto}`"
+                        class="modal-contacto-btn email">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        {{ empresaActiva.email_contacto }}
+                    </a>
+                    <a v-if="empresaActiva?.sitio_web"
+                        :href="empresaActiva.sitio_web"
+                        target="_blank"
+                        class="modal-contacto-btn web">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                        Sitio web
+                    </a>
+                    <a v-if="empresaActiva?.facebook"
+                        :href="empresaActiva.facebook"
+                        target="_blank"
+                        class="modal-contacto-btn facebook">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        Facebook
+                    </a>
+                    <a v-if="empresaActiva?.instagram"
+                        :href="empresaActiva.instagram"
+                        target="_blank"
+                        class="modal-contacto-btn instagram">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        Instagram
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</Teleport>
+
     <section class="cta-section">
       <div class="cta-content">
         <h2>Empieza a digitalizar tu empresa hoy</h2>
@@ -342,6 +475,27 @@
 
   </div>
 </template>
+
+<script setup lang="ts">
+  import { ref, onMounted } from 'vue';
+  import axios from 'axios';
+
+  const empresasApi = axios.create({ baseURL: 'http://localhost:3001/api/empresas' });
+
+  const empresas = ref<any[]>([]);
+  const modalEmpresa = ref(false);
+  const empresaActiva = ref<any>(null);
+
+  const abrirEmpresa = (empresa: any) => {
+      empresaActiva.value = empresa;
+      modalEmpresa.value = true;
+  };
+
+  onMounted(async () => {
+      const resp = await empresasApi.get('/publicas');
+      empresas.value = Array.isArray(resp.data) ? resp.data : [];
+  });
+</script>
 
 <style scoped>
 * { box-sizing: border-box; }
@@ -921,4 +1075,259 @@
   .section-header h2 { font-size: 1.6rem; }
   .cta-content h2 { font-size: 1.8rem; }
 }
+
+/* ─── EMPRESAS ───────────────────────────────────────────────── */
+.empresas-section {
+  padding: 6rem 6%;
+  background: white;
+}
+
+.sin-empresas {
+  text-align: center;
+  color: #999;
+  padding: 3rem;
+  font-size: 1rem;
+}
+
+.empresas-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.75rem;
+}
+
+.empresa-card {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #e8edf2;
+  box-shadow: 0 4px 16px rgba(4,20,44,0.07);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.empresa-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(4,20,44,0.14);
+}
+
+.empresa-portada {
+  height: 110px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.empresa-portada-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(4,20,44,0.25);
+}
+
+.empresa-card-body { padding: 1.25rem; }
+
+.empresa-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: -40px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0.75rem;
+}
+
+.empresa-logo-row > div:last-child {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 60px; /* mismo alto que el logo */
+}
+
+.empresa-logo-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  border: 3px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+.empresa-logo-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+.empresa-nombre {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #04142c;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  margin-top: 15px;
+}
+
+.empresa-ubicacion {
+  font-size: 0.78rem;
+  color: #888;
+  line-height: 1.2;
+}
+.empresa-slogan { font-size: 0.85rem; font-weight: 600; color: #1d4f91; margin: 0 0 0.5rem; }
+.empresa-desc { font-size: 0.82rem; color: #555; line-height: 1.5; margin: 0 0 1rem; }
+
+.empresa-btn-contactar {
+  width: 100%;
+  padding: 0.65rem;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.empresa-btn-contactar:hover { opacity: 0.88; }
+
+/* ─── MODAL EMPRESA ──────────────────────────────────────────── */
+.landing-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4,20,44,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.modal-empresa {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 60px rgba(4,20,44,0.3);
+}
+
+.modal-empresa-portada {
+  height: 160px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-empresa-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(4,20,44,0.35);
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-btn-cerrar {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  color: #333;
+  transition: background 0.2s;
+}
+.modal-btn-cerrar:hover { background: white; }
+
+.modal-empresa-body { padding: 1.5rem; }
+
+.modal-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: -50px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 1.25rem;
+}
+
+.modal-logo-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  border: 4px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: white;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.modal-logo-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+.modal-empresa-nombre { font-size: 1.4rem; font-weight: 800; color: #04142c; margin: 0 0 0.2rem; }
+.modal-empresa-slogan { font-size: 0.9rem; color: #1d4f91; font-weight: 600; margin: 0; }
+.modal-empresa-desc { font-size: 0.92rem; color: #444; line-height: 1.7; margin: 0 0 1.25rem; }
+
+.modal-empresa-ubicacion {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.modal-contacto-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.modal-contacto-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: opacity 0.2s, transform 0.15s;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-contacto-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+.modal-contacto-btn.whatsapp { background: #25d366; color: white; }
+.modal-contacto-btn.telefono { background: #1d4f91; color: white; }
+.modal-contacto-btn.email { background: #f8fafc; color: #333; border: 1px solid #e8edf2; }
+.modal-contacto-btn.web { background: #f8fafc; color: #333; border: 1px solid #e8edf2; }
+.modal-contacto-btn.facebook { background: #1877f2; color: white; }
+.modal-contacto-btn.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: white; }
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .empresas-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .empresas-grid { grid-template-columns: 1fr; }
+  .modal-contacto-grid { grid-template-columns: 1fr; }
+}
+
 </style>
