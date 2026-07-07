@@ -1,6 +1,7 @@
 import express from 'express';
 import type { Request, Response } from 'express';
 import * as simulacionesServices from '../services/simulacionesServices.js';
+import axios from 'axios';
 
 const router = express.Router();
 
@@ -230,4 +231,17 @@ router.put('/geograficos', async (req: Request, res: Response) => {
     }
 });
 
+const SIMULADOR_PYTHON = 'http://localhost:8000';
+
+router.post('/pvlib', async (req: Request, res: Response) => {
+    try {
+        const resp = await axios.post(`${SIMULADOR_PYTHON}/simular`, req.body, {
+            timeout: 120000 // 2 minutos por si NASA tarda
+        });
+        res.status(200).send(resp.data.resultado);
+    } catch (err: any) {
+        console.error('Error microservicio pvlib:', err.message);
+        res.status(500).json({ mensaje: 'Error en el motor de simulación' });
+    }
+});
 export default router;

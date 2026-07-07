@@ -53,7 +53,6 @@ export interface ConsumoElectrico {
 }
 
 export interface ResultadosCalculo {
-    id?: number;
     simulacion_id: number;
     numero_paneles: number;
     produccion_anual_kwh: number;
@@ -71,4 +70,28 @@ export interface ResultadosCalculo {
     precio_kwh_proyectado_anio5: number;
     precio_kwh_proyectado_anio10: number;
     tasa_incremento_tarifa_pct: number;
+    // Nuevos campos pvlib
+    performance_ratio?: number;
+    produccion_mensual_detalle?: ProduccionMensual[];
+    perdidas?: PorcentajePerdidas;
+    metodo_simulacion?: string;
+}
+
+export interface ProduccionMensual {
+    mes: string;
+    numero_mes: number;
+    produccion_kwh: number;
+    irradiancia_poa_kwh_m2: number;
+    temp_celda_promedio_c: number;
+}
+
+export interface PorcentajePerdidas {
+    temperatura_pct: number;
+    suciedad_pct: number;
+    cableado_pct: number;
+    mismatch_pct: number;
+    disponibilidad_pct: number;
+    sombra_pct: number;
+    total_pct: number;
+    performance_ratio: number;
 }

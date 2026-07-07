@@ -87,24 +87,28 @@ export interface ConfiguracionSistema {
 export type ConfiguracionSistemaNueva = Omit<ConfiguracionSistema, 'id'>;
 
 //Resultados
-export interface ResultadosCalculo {
-    id: number;
+export interface ResultadosCalculoNuevo {
     simulacion_id: number;
-    produccion_anual_kwh: number | null;
-    produccion_mensual_promedio_kwh: number | null;
-    porcentaje_cobertura: number | null;
-    excedente_kwh: number | null;
-    ahorro_mensual_mxn: number | null;
-    ahorro_anual_mxn: number | null;
-    ahorro_vida_util_mxn: number | null;
-    costo_total_instalacion_mxn: number | null;
-    retorno_inversion_anios: number | null;
-    co2_evitado_anual_kg: number | null;
-    co2_evitado_vida_util_kg: number | null;
-    arboles_equivalentes: number | null;
-    precio_kwh_proyectado_anio5: number | null;
-    precio_kwh_proyectado_anio10: number | null;
+    produccion_anual_kwh: number;
+    produccion_mensual_promedio_kwh: number;
+    porcentaje_cobertura: number;
+    excedente_kwh: number;
+    ahorro_mensual_mxn: number;
+    ahorro_anual_mxn: number;
+    ahorro_vida_util_mxn: number;
+    costo_total_instalacion_mxn: number;
+    retorno_inversion_anios: number;
+    co2_evitado_anual_kg: number;
+    co2_evitado_vida_util_kg: number;
+    arboles_equivalentes: number;
+    precio_kwh_proyectado_anio5: number;
+    precio_kwh_proyectado_anio10: number;
     tasa_incremento_tarifa_pct: number;
+    // Nuevos campos pvlib
+    numero_paneles?: number | null;
+    performance_ratio?: number | null;
+    perdidas_json?: object | null;
+    metodo_simulacion?: string | null;
+    produccion_mensual_json?: object[] | null;
 }
 
-export type ResultadosCalculoNuevo = Omit<ResultadosCalculo, 'id'>;

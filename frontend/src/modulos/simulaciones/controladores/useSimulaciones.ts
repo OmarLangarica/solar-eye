@@ -140,7 +140,33 @@ export const useSimulaciones = () => {
 
     const guardarResultados = async (datos: ResultadosCalculo) => {
         try {
-            const respuesta = await simulacionesApi.post('/resultados', datos);
+            // Mapear campos del frontend al formato que espera el backend
+            const payload = {
+                simulacion_id: datos.simulacion_id,
+                produccion_anual_kwh: datos.produccion_anual_kwh,
+                produccion_mensual_promedio_kwh: datos.produccion_mensual_promedio_kwh,
+                porcentaje_cobertura: datos.porcentaje_cobertura,
+                excedente_kwh: datos.excedente_kwh,
+                ahorro_mensual_mxn: datos.ahorro_mensual_mxn,
+                ahorro_anual_mxn: datos.ahorro_anual_mxn,
+                ahorro_vida_util_mxn: datos.ahorro_vida_util_mxn,
+                costo_total_instalacion_mxn: datos.costo_total_instalacion_mxn,
+                retorno_inversion_anios: datos.retorno_inversion_anios,
+                co2_evitado_anual_kg: datos.co2_evitado_anual_kg,
+                co2_evitado_vida_util_kg: datos.co2_evitado_vida_util_kg,
+                arboles_equivalentes: datos.arboles_equivalentes,
+                precio_kwh_proyectado_anio5: datos.precio_kwh_proyectado_anio5,
+                precio_kwh_proyectado_anio10: datos.precio_kwh_proyectado_anio10,
+                tasa_incremento_tarifa_pct: datos.tasa_incremento_tarifa_pct,
+                // Campos pvlib — mapeo correcto de nombres
+                numero_paneles: datos.numero_paneles ?? null,
+                performance_ratio: datos.performance_ratio ?? null,
+                perdidas_json: datos.perdidas ?? null,
+                metodo_simulacion: datos.metodo_simulacion ?? null,
+                produccion_mensual_json: datos.produccion_mensual_detalle ?? null
+            };
+
+            const respuesta = await simulacionesApi.post('/resultados', payload);
             await simulacionesApi.patch('/estado', {
                 id: datos.simulacion_id,
                 estado: 'completada'
@@ -152,73 +178,112 @@ export const useSimulaciones = () => {
         }
     };
 
-    const calcularResultados = (
-        consumo: ConsumoElectrico,
-        techo: DatosTecho,
-        geo: DatosGeograficos,
-        simulacion_id: number
-    ): ResultadosCalculo => {
-        const COSTO_POR_WP = 17.50;
-        const CO2_POR_KWH = 0.45;
-        const VIDA_UTIL = 25;
-        const DEGRADACION = 0.005;
-        const EFICIENCIA_INVERSOR = 0.97;
-        const TASA_INCREMENTO = 0.05;
+    const calcularResultadosPvlib = async (
+    consumo: ConsumoElectrico,
+    techo: DatosTecho,
+    geo: DatosGeograficos,
+    simulacion_id: number
+): Promise<ResultadosCalculo> => {
+    try {
+        cargando.value = true;
+        error.value = '';
 
-        const hsp = geo.horas_sol_pico_diarias;
-        const areaUtil = techo.area_util_m2 ?? techo.area_m2 * 0.85;
+        // Llamar al microservicio Python
+        const respPvlib = await simulacionesApi.post('/pvlib', {
+            lat: Number(techo.latitud),
+            lon: Number(techo.longitud),
+            tilt: Number(techo.angulo_inclinacion_deg),
+            azimut: Number(techo.azimut_deg) || 180,
+            potencia_kwp: Number(techo.area_util_m2) / 1.96 * 410 / 1000,
+            area_util_m2: Number(techo.area_util_m2),
+            factor_sombra: Number(techo.factor_sombra),
+            eficiencia_panel: 0.205,
+            coef_temp_panel: -0.0035,
+            eficiencia_inversor: 0.97
+        });
 
-        const cantidadPaneles = Math.floor(areaUtil / 1.96);
-        const consumoDiarioKwh = consumo.consumo_anual_kwh / 365;
-        const potenciaNecesariaKwp = consumoDiarioKwh / (hsp * EFICIENCIA_INVERSOR * techo.factor_sombra);
-        const maxPanelesTecho = Math.floor(areaUtil / 1.96);
-        const maxKwpTecho = (maxPanelesTecho * 410) / 1000;
-        const potenciaFinalKwp = Math.min(potenciaNecesariaKwp * 1.05, maxKwpTecho);
-        const produccionAnio1 = potenciaFinalKwp * hsp * 365 * EFICIENCIA_INVERSOR * techo.factor_sombra;
-        const numeroPanelesInstalar = Math.ceil((potenciaFinalKwp * 1000) / 410);
-        const produccionAnual = produccionAnio1 * (1 - (DEGRADACION * (VIDA_UTIL - 1) / 2));
-        const produccionMensual = produccionAnual / 12;
-        const porcentajeCobertura = Math.min((produccionAnual / consumo.consumo_anual_kwh) * 100, 100);
-        const excedente = Math.max(produccionAnual - consumo.consumo_anual_kwh, 0);
-        const kwAhorrados = Math.min(produccionAnual, consumo.consumo_anual_kwh);
-        const ahorroAnual = kwAhorrados * consumo.tarifa_kwh_mxn;
-        const ahorroMensual = ahorroAnual / 12;
-        const costoInstalacion = potenciaFinalKwp * 1000 * COSTO_POR_WP; 
-        const payback = costoInstalacion / ahorroAnual;
+        const pvlib = respPvlib.data;
 
-        let ahorroTotal = 0;
-        let tarifaActual = consumo.tarifa_kwh_mxn;
-        let produccionActual = produccionAnio1;
-        for (let i = 0; i < VIDA_UTIL; i++) {
-            ahorroTotal += Math.min(produccionActual, consumo.consumo_anual_kwh) * tarifaActual;
-            tarifaActual *= (1 + TASA_INCREMENTO);
-            produccionActual *= (1 - DEGRADACION);
+        // Datos base
+        const produccionAnual = pvlib.produccion_anual_kwh;
+        const consumoAnual = Number(consumo.consumo_anual_kwh);
+        const consumoMensual = Number(consumo.consumo_mensual_kwh);
+        const costoMensual = Number(consumo.costo_mensual_mxn);
+        const tarifaKwh = Number(consumo.tarifa_kwh_mxn);
+        const cantidadPaneles = Math.floor(Number(techo.area_util_m2) / 1.96);
+        const potenciaKwp = cantidadPaneles * 410 / 1000;
+
+        // Cálculos económicos
+        const porcentajeCobertura = Math.min((produccionAnual / consumoAnual) * 100, 100);
+        const excedente = Math.max(produccionAnual - consumoAnual, 0);
+        const ahorroMensual = Math.min(produccionAnual / 12, consumoMensual) * tarifaKwh;
+        const ahorroAnual = ahorroMensual * 12;
+
+        // Costo de instalación basado en potencia
+        const costoInstalacion = potenciaKwp * 18000;
+
+        // Proyección a 25 años con degradación y aumento tarifario
+        const tasaIncremento = 0.05;
+        const degradacion = 0.005;
+        let ahorroAcumulado = 0;
+        let anioPayback = 0;
+        let produccionAcum = produccionAnual;
+
+        for (let anio = 1; anio <= 25; anio++) {
+            const tarifaAnio = tarifaKwh * Math.pow(1 + tasaIncremento, anio);
+            const produccionAnio = produccionAnual * Math.pow(1 - degradacion, anio - 1);
+            const ahorroAnio = Math.min(produccionAnio, consumoAnual) * tarifaAnio;
+            ahorroAcumulado += ahorroAnio;
+            if (anioPayback === 0 && ahorroAcumulado >= costoInstalacion) {
+                anioPayback = anio;
+            }
         }
 
-        const co2Anual = produccionAnual * CO2_POR_KWH;
-        const co2VidaUtil = co2Anual * VIDA_UTIL;
-        const arboles = Math.round(co2VidaUtil / 21.77);
+        const retornoInversion = anioPayback || 25;
 
-        return {
+        // Proyección tarifaria
+        const precioAnio5 = tarifaKwh * Math.pow(1 + tasaIncremento, 5);
+        const precioAnio10 = tarifaKwh * Math.pow(1 + tasaIncremento, 10);
+
+        // Impacto ambiental
+        const co2AnualKg = produccionAnual * 0.45;
+        const co2VidaUtilKg = co2AnualKg * 25;
+        const arbolesEquivalentes = Math.round(co2AnualKg / 21.77);
+
+        const resultados: ResultadosCalculo = {
             simulacion_id,
-            numero_paneles: numeroPanelesInstalar,
-            produccion_anual_kwh: parseFloat(produccionAnual.toFixed(2)),
-            produccion_mensual_promedio_kwh: parseFloat(produccionMensual.toFixed(2)),
+            numero_paneles: cantidadPaneles,
+            produccion_anual_kwh: produccionAnual,
+            produccion_mensual_promedio_kwh: pvlib.produccion_mensual_promedio_kwh,
             porcentaje_cobertura: parseFloat(porcentajeCobertura.toFixed(2)),
             excedente_kwh: parseFloat(excedente.toFixed(2)),
             ahorro_mensual_mxn: parseFloat(ahorroMensual.toFixed(2)),
             ahorro_anual_mxn: parseFloat(ahorroAnual.toFixed(2)),
-            ahorro_vida_util_mxn: parseFloat(ahorroTotal.toFixed(2)),
-            costo_total_instalacion_mxn: parseFloat(costoInstalacion.toFixed(2)),
-            retorno_inversion_anios: parseFloat(payback.toFixed(2)),
-            co2_evitado_anual_kg: parseFloat(co2Anual.toFixed(2)),
-            co2_evitado_vida_util_kg: parseFloat(co2VidaUtil.toFixed(2)),
-            arboles_equivalentes: arboles,
-            precio_kwh_proyectado_anio5: parseFloat((consumo.tarifa_kwh_mxn * Math.pow(1 + TASA_INCREMENTO, 5)).toFixed(4)),
-            precio_kwh_proyectado_anio10: parseFloat((consumo.tarifa_kwh_mxn * Math.pow(1 + TASA_INCREMENTO, 10)).toFixed(4)),
-            tasa_incremento_tarifa_pct: TASA_INCREMENTO * 100
+            ahorro_vida_util_mxn: parseFloat(ahorroAcumulado.toFixed(2)),
+            costo_total_instalacion_mxn: costoInstalacion,
+            retorno_inversion_anios: retornoInversion,
+            co2_evitado_anual_kg: parseFloat(co2AnualKg.toFixed(2)),
+            co2_evitado_vida_util_kg: parseFloat(co2VidaUtilKg.toFixed(2)),
+            arboles_equivalentes: arbolesEquivalentes,
+            precio_kwh_proyectado_anio5: parseFloat(precioAnio5.toFixed(4)),
+            precio_kwh_proyectado_anio10: parseFloat(precioAnio10.toFixed(4)),
+            tasa_incremento_tarifa_pct: 5.00,
+            // Nuevos campos pvlib
+            performance_ratio: pvlib.performance_ratio,
+            produccion_mensual_detalle: pvlib.produccion_mensual,
+            perdidas: pvlib.perdidas,
+            metodo_simulacion: pvlib.metodo
         };
-    };
+
+        return resultados;
+
+    } catch (err: any) {
+        error.value = 'Error en el motor de simulación';
+        throw err;
+    } finally {
+        cargando.value = false;
+    }
+};
 
     // Funciones para obtener datos existentes
     const obtieneDatosTecho = async (simulacion_id: number): Promise<DatosTecho | null> => {
@@ -305,7 +370,7 @@ export const useSimulaciones = () => {
         guardarDatosGeograficos,
         guardarConsumoElectrico,
         guardarResultados,
-        calcularResultados,
+        calcularResultadosPvlib,
         obtieneDatosTecho,
         obtieneDatosGeograficos,
         obtieneConsumoElectrico,

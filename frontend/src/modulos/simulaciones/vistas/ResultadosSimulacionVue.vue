@@ -125,7 +125,111 @@
       </div>
 
       <div class="grid-resultados">
+        <!-- Card Performance Ratio y Pérdidas -->
+      <div class="card card-perdidas" v-if="resultados?.perdidas">
+          <h3><i class="bi bi-speedometer2"></i> Performance Ratio y pérdidas</h3>
+          <div class="pr-display">
+              <div class="pr-valor">{{ ((resultados.performance_ratio ?? 0) * 100).toFixed(1) }}%</div>
+              <div class="pr-label">Performance Ratio</div>
+              <div class="pr-escala">
+                  <div class="pr-barra">
+                      <div class="pr-fill"
+                        :style="{ width: `${(resultados.performance_ratio ?? 0) * 100}%` }">
+                      </div>
+                  </div>
+                  <div class="pr-rangos">
+                      <span>0%</span>
+                      <span class="pr-malo">60%</span>
+                      <span class="pr-bueno">75%</span>
+                      <span>100%</span>
+                  </div>
+              </div>
+          </div>
 
+          <div class="perdidas-grid">
+              <div class="perdida-item">
+                  <div class="perdida-barra-wrap">
+                      <div class="perdida-barra"
+                          :style="{ height: `${resultados.perdidas.temperatura_pct * 4}px` }">
+                      </div>
+                  </div>
+                  <span class="perdida-valor">{{ resultados.perdidas.temperatura_pct }}%</span>
+                  <span class="perdida-nombre">Temperatura</span>
+              </div>
+              <div class="perdida-item">
+                  <div class="perdida-barra-wrap">
+                      <div class="perdida-barra"
+                          :style="{ height: `${resultados.perdidas.suciedad_pct * 4}px` }">
+                      </div>
+                  </div>
+                  <span class="perdida-valor">{{ resultados.perdidas.suciedad_pct }}%</span>
+                  <span class="perdida-nombre">Suciedad</span>
+              </div>
+              <div class="perdida-item">
+                  <div class="perdida-barra-wrap">
+                      <div class="perdida-barra"
+                          :style="{ height: `${resultados.perdidas.cableado_pct * 4}px` }">
+                      </div>
+                  </div>
+                  <span class="perdida-valor">{{ resultados.perdidas.cableado_pct }}%</span>
+                  <span class="perdida-nombre">Cableado</span>
+              </div>
+              <div class="perdida-item">
+                  <div class="perdida-barra-wrap">
+                      <div class="perdida-barra"
+                          :style="{ height: `${resultados.perdidas.mismatch_pct * 4}px` }">
+                      </div>
+                  </div>
+                  <span class="perdida-valor">{{ resultados.perdidas.mismatch_pct }}%</span>
+                  <span class="perdida-nombre">Mismatch</span>
+              </div>
+              <div class="perdida-item">
+                  <div class="perdida-barra-wrap">
+                      <div class="perdida-barra"
+                          :style="{ height: `${resultados.perdidas.sombra_pct * 4}px` }">
+                      </div>
+                  </div>
+                  <span class="perdida-valor">{{ resultados.perdidas.sombra_pct }}%</span>
+                  <span class="perdida-nombre">Sombras</span>
+              </div>
+              <div class="perdida-item">
+                  <div class="perdida-barra-wrap">
+                      <div class="perdida-barra"
+                          :style="{ height: `${resultados.perdidas.disponibilidad_pct * 4}px` }">
+                      </div>
+                  </div>
+                  <span class="perdida-valor">{{ resultados.perdidas.disponibilidad_pct }}%</span>
+                  <span class="perdida-nombre">Disponibilidad</span>
+              </div>
+          </div>
+
+          <div class="metodo-tag" v-if="resultados.metodo_simulacion">
+              Calculado con: {{ resultados.metodo_simulacion }}
+          </div>
+      </div>
+
+      <!-- Card producción mensual detallada -->
+      <div class="card" v-if="resultados?.produccion_mensual_detalle">
+          <h3><i class="bi bi-sun"></i> Producción mensual detallada (pvlib)</h3>
+          <table class="tabla-mensual">
+              <thead>
+                  <tr>
+                      <th>Mes</th>
+                      <th>Producción (kWh)</th>
+                      <th>Irradiancia POA (kWh/m²)</th>
+                      <th>Temp. Celda (°C)</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr v-for="m in resultados.produccion_mensual_detalle" :key="m.numero_mes">
+                      <td>{{ m.mes }}</td>
+                      <td class="valor-positivo">{{ m.produccion_kwh.toLocaleString('es-MX') }}</td>
+                      <td>{{ m.irradiancia_poa_kwh_m2 }}</td>
+                      <td>{{ m.temp_celda_promedio_c }}°C</td>
+                  </tr>
+              </tbody>
+          </table>
+      </div>
         <div class="columna">
           <div class="card">
             <h3><i class="bi bi-cash-coin"></i> Análisis económico</h3>
@@ -294,7 +398,7 @@ const {
   obtieneDatosGeograficos,
   obtieneConsumoElectrico,
   obtieneResultados,
-  calcularResultados,
+  calcularResultadosPvlib,
   guardarResultados
 } = useSimulaciones();
 
@@ -323,28 +427,45 @@ const obtienePaletaGrafica = () => {
 };
 
 const normalizaResultados = (data: Partial<ResultadosCalculo>): ResultadosCalculo => {
-  const ahorroAnual = Number(data.ahorro_anual_mxn || 0);
-  const costoInstalacion = Number(data.costo_total_instalacion_mxn || 0);
-  const retornoConsistente = ahorroAnual > 0 ? costoInstalacion / ahorroAnual : 0;
-  return {
-    simulacion_id,
-    numero_paneles: Number(data.numero_paneles || 0),
-    produccion_anual_kwh: Number(data.produccion_anual_kwh || 0),
-    produccion_mensual_promedio_kwh: Number(data.produccion_mensual_promedio_kwh || 0),
-    porcentaje_cobertura: Number(data.porcentaje_cobertura || 0),
-    excedente_kwh: Number(data.excedente_kwh || 0),
-    ahorro_mensual_mxn: redondeaMoneda(ahorroAnual / 12),
-    ahorro_anual_mxn: ahorroAnual,
-    ahorro_vida_util_mxn: Number(data.ahorro_vida_util_mxn || 0),
-    costo_total_instalacion_mxn: costoInstalacion,
-    retorno_inversion_anios: redondeaMoneda(retornoConsistente),
-    co2_evitado_anual_kg: Number(data.co2_evitado_anual_kg || 0),
-    co2_evitado_vida_util_kg: Number(data.co2_evitado_vida_util_kg || 0),
-    arboles_equivalentes: Number(data.arboles_equivalentes || 0),
-    precio_kwh_proyectado_anio5: Number(data.precio_kwh_proyectado_anio5 || 0),
-    precio_kwh_proyectado_anio10: Number(data.precio_kwh_proyectado_anio10 || 0),
-    tasa_incremento_tarifa_pct: Number(data.tasa_incremento_tarifa_pct || 0)
-  };
+    const ahorroAnual = Number(data.ahorro_anual_mxn || 0);
+    const costoInstalacion = Number(data.costo_total_instalacion_mxn || 0);
+    const retornoConsistente = ahorroAnual > 0 ? costoInstalacion / ahorroAnual : 0;
+
+    // Deserializar JSON si vienen como string desde la BD
+    let perdidas = data.perdidas;
+    if (typeof perdidas === 'string') {
+        try { perdidas = JSON.parse(perdidas); } catch { perdidas = undefined; }
+    }
+
+    let produccion_mensual_detalle = data.produccion_mensual_detalle;
+    if (typeof produccion_mensual_detalle === 'string') {
+        try { produccion_mensual_detalle = JSON.parse(produccion_mensual_detalle); } catch { produccion_mensual_detalle = undefined; }
+    }
+
+    return {
+        simulacion_id,
+        numero_paneles: Number(data.numero_paneles || 0),
+        produccion_anual_kwh: Number(data.produccion_anual_kwh || 0),
+        produccion_mensual_promedio_kwh: Number(data.produccion_mensual_promedio_kwh || 0),
+        porcentaje_cobertura: Number(data.porcentaje_cobertura || 0),
+        excedente_kwh: Number(data.excedente_kwh || 0),
+        ahorro_mensual_mxn: redondeaMoneda(ahorroAnual / 12),
+        ahorro_anual_mxn: ahorroAnual,
+        ahorro_vida_util_mxn: Number(data.ahorro_vida_util_mxn || 0),
+        costo_total_instalacion_mxn: costoInstalacion,
+        retorno_inversion_anios: redondeaMoneda(retornoConsistente),
+        co2_evitado_anual_kg: Number(data.co2_evitado_anual_kg || 0),
+        co2_evitado_vida_util_kg: Number(data.co2_evitado_vida_util_kg || 0),
+        arboles_equivalentes: Number(data.arboles_equivalentes || 0),
+        precio_kwh_proyectado_anio5: Number(data.precio_kwh_proyectado_anio5 || 0),
+        precio_kwh_proyectado_anio10: Number(data.precio_kwh_proyectado_anio10 || 0),
+        tasa_incremento_tarifa_pct: Number(data.tasa_incremento_tarifa_pct || 0),
+        // Campos pvlib
+        performance_ratio: data.performance_ratio ? Number(data.performance_ratio) : undefined,
+        perdidas: perdidas,
+        produccion_mensual_detalle: produccion_mensual_detalle,
+        metodo_simulacion: data.metodo_simulacion ?? undefined
+    };
 };
 
 const calcularProyeccion = () => {
@@ -516,8 +637,7 @@ onMounted(async () => {
   const geoParseado = { ...geo.value, horas_sol_pico_diarias: Number(geo.value.horas_sol_pico_diarias), irradiacion_anual_kwh_m2: Number(geo.value.irradiacion_anual_kwh_m2), temperatura_promedio_anual: Number(geo.value.temperatura_promedio_anual), altitud_msnm: Number(geo.value.altitud_msnm), velocidad_viento_promedio: Number(geo.value.velocidad_viento_promedio) };
   const consumoParseado = { ...consumo.value, consumo_mensual_kwh: Number(consumo.value.consumo_mensual_kwh), consumo_anual_kwh: Number(consumo.value.consumo_anual_kwh), tarifa_kwh_mxn: Number(consumo.value.tarifa_kwh_mxn), costo_mensual_mxn: Number(consumo.value.costo_mensual_mxn) };
 
-  const calculados = calcularResultados(consumoParseado, techoParseado, geoParseado, simulacion_id);
-  await guardarResultados(calculados);
+  const calculados = await calcularResultadosPvlib(consumoParseado, techoParseado, geoParseado, simulacion_id);  await guardarResultados(calculados);
   resultados.value = normalizaResultados(calculados);
 });
 
@@ -704,6 +824,70 @@ const descargarPDF = async () => {
 .impacto-label { font-size: 0.72rem; color: #4ade80; text-align: center; line-height: 1.3; }
 
 .sin-datos { text-align: center; padding: 4rem; color: #999; }
+
+/* Performance Ratio */
+.card-perdidas { border-top: 3px solid #1d4f91; }
+
+.pr-display { text-align: center; margin-bottom: 1.5rem; }
+.pr-valor { font-size: 3rem; font-weight: 800; color: #1d4f91; line-height: 1; }
+.pr-label { font-size: 0.85rem; color: #666; margin-bottom: 0.75rem; }
+
+.pr-escala { padding: 0 1rem; }
+.pr-barra { height: 10px; background: #f0f0f0; border-radius: 999px; overflow: hidden; margin-bottom: 0.25rem; }
+.pr-fill { height: 100%; background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e); border-radius: 999px; transition: width 1s ease; }
+.pr-rangos { display: flex; justify-content: space-between; font-size: 0.7rem; color: #999; }
+.pr-malo { color: #f59e0b; font-weight: 600; }
+.pr-bueno { color: #22c55e; font-weight: 600; }
+
+.perdidas-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.5rem;
+    margin: 1rem 0;
+    align-items: end;
+}
+
+.perdida-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.perdida-barra-wrap {
+    width: 100%;
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.perdida-barra {
+    width: 70%;
+    background: linear-gradient(to top, #1d4f91, #3b82f6);
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    transition: height 0.8s ease;
+}
+
+.perdida-valor { font-size: 0.8rem; font-weight: 700; color: #333; }
+.perdida-nombre { font-size: 0.7rem; color: #666; text-align: center; }
+
+.metodo-tag {
+    font-size: 0.75rem;
+    color: #999;
+    text-align: center;
+    padding: 0.5rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+/* Tabla mensual */
+.tabla-mensual { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.tabla-mensual th { padding: 0.6rem 0.75rem; background: #f5f5f5; text-align: left; font-size: 0.8rem; color: #666; }
+.tabla-mensual td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #f0f0f0; }
+.tabla-mensual tr:hover td { background: #fafafa; }
 
 /* Modo oscuro */
 :global(html.theme-dark) .contenedor .card,

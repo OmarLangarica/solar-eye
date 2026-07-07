@@ -183,6 +183,11 @@ CREATE TABLE resultados_calculo (
     precio_kwh_proyectado_anio5 DECIMAL(6,4),
     precio_kwh_proyectado_anio10 DECIMAL(6,4),
     tasa_incremento_tarifa_pct DECIMAL(4,2) DEFAULT 5.00,
+    numero_paneles INT,
+    performance_ratio DECIMAL(5,4),
+    perdidas_json TEXT,
+    metodo_simulacion VARCHAR(100),
+    produccion_mensual_json TEXT,
     FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE CASCADE
 );
 

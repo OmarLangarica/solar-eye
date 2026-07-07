@@ -1,0 +1,20 @@
+# Entorno virtual
+venv/
+
+# Caché TMY (datos generados automáticamente)
+cache_tmy/
+
+# Datos NASA POWER descargados manualmente
+q1.json
+q2.json
+q3.json
+q4.json
+
+# Archivos de prueba temporales
+test_*.py
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env

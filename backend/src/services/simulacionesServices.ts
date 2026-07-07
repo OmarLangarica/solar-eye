@@ -15,7 +15,7 @@ import {
     datosGeograficosSchema,
     consumoElectricoSchema, consumoElectricoActualizarSchema,
     configuracionSistemaSchema, configuracionSistemaActualizarSchema,
-    resultadosCalculoSchema
+    //resultadosCalculoSchema
 } from '../schema/simulacionesSchema.js';
 
 //Simulaciones
@@ -339,26 +339,31 @@ export const obtieneConfiguracionSistema = async (simulacion_id: number) => {
 
 export const agregaResultadosCalculo = async (nuevo: ResultadosCalculoNuevo) => {
     try {
-        const validacion = resultadosCalculoSchema.safeParse(nuevo);
-        if (!validacion.success) return { error: validacion.error };
-
         const [results] = await conexion.query(
             `INSERT INTO resultados_calculo 
             (simulacion_id, produccion_anual_kwh, produccion_mensual_promedio_kwh, porcentaje_cobertura,
             excedente_kwh, ahorro_mensual_mxn, ahorro_anual_mxn, ahorro_vida_util_mxn,
             costo_total_instalacion_mxn, retorno_inversion_anios, co2_evitado_anual_kg,
             co2_evitado_vida_util_kg, arboles_equivalentes, precio_kwh_proyectado_anio5,
-            precio_kwh_proyectado_anio10, tasa_incremento_tarifa_pct) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            precio_kwh_proyectado_anio10, tasa_incremento_tarifa_pct,
+            numero_paneles, performance_ratio, perdidas_json,
+            metodo_simulacion, produccion_mensual_json) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [nuevo.simulacion_id, nuevo.produccion_anual_kwh, nuevo.produccion_mensual_promedio_kwh,
              nuevo.porcentaje_cobertura, nuevo.excedente_kwh, nuevo.ahorro_mensual_mxn,
              nuevo.ahorro_anual_mxn, nuevo.ahorro_vida_util_mxn, nuevo.costo_total_instalacion_mxn,
              nuevo.retorno_inversion_anios, nuevo.co2_evitado_anual_kg, nuevo.co2_evitado_vida_util_kg,
              nuevo.arboles_equivalentes, nuevo.precio_kwh_proyectado_anio5,
-             nuevo.precio_kwh_proyectado_anio10, nuevo.tasa_incremento_tarifa_pct]
+             nuevo.precio_kwh_proyectado_anio10, nuevo.tasa_incremento_tarifa_pct,
+             nuevo.numero_paneles ?? null,
+             nuevo.performance_ratio ?? null,
+             nuevo.perdidas_json ? JSON.stringify(nuevo.perdidas_json) : null,
+             nuevo.metodo_simulacion ?? null,
+             nuevo.produccion_mensual_json ? JSON.stringify(nuevo.produccion_mensual_json) : null]
         );
         return results;
     } catch (err) {
+        console.error('Error MySQL resultados_calculo:', err);
         return { error: 'No se pudieron guardar los resultados del cálculo' };
     }
 };
@@ -369,7 +374,20 @@ export const obtieneResultadosCalculo = async (simulacion_id: number) => {
             'SELECT * FROM resultados_calculo WHERE simulacion_id = ? LIMIT 1',
             [simulacion_id]
         );
-        return results;
+        const filas = results as any[];
+        if (!filas.length) return [];
+
+        const fila = filas[0];
+
+        // Deserializar JSON guardados
+        if (fila.perdidas_json && typeof fila.perdidas_json === 'string') {
+            try { fila.perdidas = JSON.parse(fila.perdidas_json); } catch {}
+        }
+        if (fila.produccion_mensual_json && typeof fila.produccion_mensual_json === 'string') {
+            try { fila.produccion_mensual_detalle = JSON.parse(fila.produccion_mensual_json); } catch {}
+        }
+
+        return [fila];
     } catch (err) {
         return { error: 'No se pudieron obtener los resultados del cálculo' };
     }
