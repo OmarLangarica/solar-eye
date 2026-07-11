@@ -9,7 +9,8 @@ import EditarClienteVue from '../modulos/clientes/vistas/EditarClienteVue.vue';
 import SimulacionesVue from '@/modulos/simulaciones/vistas/SimulacionesVue.vue';
 import NuevaSimulacionPaso1Vue from '../modulos/simulaciones/vistas/NuevaSimulacionPaso1Vue.vue';
 import NuevaSimulacionPaso2Vue from '@/modulos/simulaciones/vistas/NuevaSimulacionPaso2Vue.vue';
-import NuevaSimulacionPaso3Vue from '@/modulos/simulaciones/vistas/NuevaSimulacionPaso3Vue.vue';
+import NuevaSimulacionPaso3Vue from '../modulos/simulaciones/vistas/NuevaSimulacionPaso3Vue.vue';
+import NuevaSimulacionPaso4Vue from '../modulos/simulaciones/vistas/NuevaSimulacionPaso4Vue.vue';
 import ResultadosSimulacionVue from '@/modulos/simulaciones/vistas/ResultadosSimulacionVue.vue';
 import AdminDashboardVue from '@/modulos/admin/vistas/AdminDashboardVue.vue';
 import AdminUsuariosVue from '@/modulos/admin/vistas/AdminUsuariosVue.vue';
@@ -81,7 +82,12 @@ const router = createRouter({
         {
             path: '/simulaciones/nueva/:cliente_id/paso3/:simulacion_id',
             name: 'nueva-simulacion-paso3',
-            component: NuevaSimulacionPaso3Vue
+            component: NuevaSimulacionPaso3Vue  // ← NUEVO: Componentes
+        },
+        {
+            path: '/simulaciones/nueva/:cliente_id/paso4/:simulacion_id',
+            name: 'nueva-simulacion-paso4',
+            component: NuevaSimulacionPaso4Vue  // ← antes era paso3 (Consumo)
         },
         {
             path: '/simulaciones/resultados/:simulacion_id',

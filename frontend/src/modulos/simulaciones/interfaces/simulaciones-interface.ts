@@ -70,11 +70,17 @@ export interface ResultadosCalculo {
     precio_kwh_proyectado_anio5: number;
     precio_kwh_proyectado_anio10: number;
     tasa_incremento_tarifa_pct: number;
-    // Nuevos campos pvlib
+    // Campos pvlib
     performance_ratio?: number;
     produccion_mensual_detalle?: ProduccionMensual[];
     perdidas?: PorcentajePerdidas;
     metodo_simulacion?: string;
+    // Campos componentes ← AGREGA AQUÍ
+    panel_modelo?: string;
+    panel_potencia_wp?: number;
+    inversor_modelo?: string;
+    inversor_potencia_kw?: number;
+    potencia_kwp?: number;
 }
 
 export interface ProduccionMensual {
@@ -94,4 +100,46 @@ export interface PorcentajePerdidas {
     sombra_pct: number;
     total_pct: number;
     performance_ratio: number;
+}
+
+export interface PanelSolar {
+    id: number;
+    fabricante_id: number;
+    fabricante_nombre: string;
+    modelo: string;
+    potencia_wp: number;
+    eficiencia: number;
+    voc: number;
+    isc: number;
+    vmp: number;
+    imp: number;
+    coef_temp_potencia: number;
+    coef_temp_voc: number;
+    ancho_m: number;
+    alto_m: number;
+    area_m2: number;
+    peso_kg: number;
+    tecnologia: string;
+    numero_celdas: number;
+    garantia_anios: number;
+}
+
+export interface InversorSolar {
+    id: number;
+    fabricante_id: number;
+    fabricante_nombre: string;
+    modelo: string;
+    potencia_nominal_kw: number;
+    potencia_maxima_kw: number;
+    eficiencia_maxima: number;
+    eficiencia_europea: number;
+    voltaje_mppt_min: number;
+    voltaje_mppt_max: number;
+    voltaje_max_entrada: number;
+    corriente_max_entrada: number;
+    numero_mppt: number;
+    numero_entradas_por_mppt: number;
+    tipo: string;
+    fases: string;
+    garantia_anios: number;
 }

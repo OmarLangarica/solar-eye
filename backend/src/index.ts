@@ -10,6 +10,7 @@ import citasRutas from './routes/citasRutas.js';
 import inventarioRutas from './routes/inventarioRutas.js';
 import IaRutas from './routes/IaRutas.js'; 
 import empresasRutas from './routes/empresasRutas.js';
+import catalogoRutas from './routes/catalogoRutas.js';
 
 const app = express();
 app.use(cors());
@@ -33,6 +34,7 @@ app.use('/api/nasa', nasaRutas);
 app.use('/api/empresas', empresasRutas);
 app.use('/api/citas', citasRutas);
 app.use('/api/inventario', inventarioRutas);
+app.use('/api/catalogo', catalogoRutas);
 
 app.listen(PUERTO, () => {
     console.log(`Servidor en ejecución en el puerto ${PUERTO}`);

@@ -301,6 +301,58 @@ CREATE TABLE instalacion_materiales (
     FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
 );
 
+CREATE TABLE fabricantes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    tipo ENUM('panel', 'inversor', 'ambos') NOT NULL DEFAULT 'ambos',
+    pais_origen VARCHAR(100),
+    activo BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE paneles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fabricante_id INT NOT NULL,
+    modelo VARCHAR(150) NOT NULL,
+    potencia_wp DECIMAL(8,2) NOT NULL,
+    eficiencia DECIMAL(5,4) NOT NULL,
+    voc DECIMAL(6,2) NOT NULL,
+    isc DECIMAL(6,2) NOT NULL,
+    vmp DECIMAL(6,2) NOT NULL,
+    imp DECIMAL(6,2) NOT NULL,
+    coef_temp_potencia DECIMAL(7,5) NOT NULL,
+    coef_temp_voc DECIMAL(7,5),
+    ancho_m DECIMAL(5,3) NOT NULL,
+    alto_m DECIMAL(5,3) NOT NULL,
+    area_m2 DECIMAL(5,3) NOT NULL,
+    peso_kg DECIMAL(5,2),
+    tecnologia VARCHAR(50),
+    numero_celdas INT,
+    garantia_anios INT DEFAULT 25,
+    activo BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (fabricante_id) REFERENCES fabricantes(id)
+);
+
+CREATE TABLE inversores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fabricante_id INT NOT NULL,
+    modelo VARCHAR(150) NOT NULL,
+    potencia_nominal_kw DECIMAL(8,2) NOT NULL,
+    potencia_maxima_kw DECIMAL(8,2) NOT NULL,
+    eficiencia_maxima DECIMAL(5,4) NOT NULL,
+    eficiencia_europea DECIMAL(5,4),
+    voltaje_mppt_min DECIMAL(6,2) NOT NULL,
+    voltaje_mppt_max DECIMAL(6,2) NOT NULL,
+    voltaje_max_entrada DECIMAL(6,2) NOT NULL,
+    corriente_max_entrada DECIMAL(6,2) NOT NULL,
+    numero_mppt INT NOT NULL DEFAULT 1,
+    numero_entradas_por_mppt INT NOT NULL DEFAULT 1,
+    tipo VARCHAR(50),
+    fases ENUM('monofasico','trifasico') NOT NULL,
+    garantia_anios INT DEFAULT 10,
+    activo BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (fabricante_id) REFERENCES fabricantes(id)
+);
+
 -- ─── Datos de prueba ──────────────────────────────────────────
 
 INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol, activo)
@@ -403,3 +455,49 @@ INSERT INTO movimientos_inventario (empresa_id, producto_id, usuario_id, tipo, c
 (1, 3, 2, 'entrada', 10, 18000.00, 180000.00, 'Compra inicial de inventario'),
 (1, 1, 3, 'salida', 5, 3500.00, 17500.00, 'Instalación proyecto Juan García'),
 (1, 3, 3, 'salida', 2, 22000.00, 44000.00, 'Instalación proyecto Juan García');
+
+INSERT INTO fabricantes (nombre, tipo, pais_origen) VALUES
+('Jinko Solar', 'panel', 'China'),
+('Trina Solar', 'panel', 'China'),
+('JA Solar', 'panel', 'China'),
+('Canadian Solar', 'panel', 'Canada'),
+('Huawei', 'inversor', 'China'),
+('Solis', 'inversor', 'China'),
+('Growatt', 'inversor', 'China');
+
+INSERT INTO paneles (fabricante_id, modelo, potencia_wp, eficiencia, voc, isc, vmp, imp, coef_temp_potencia, coef_temp_voc, ancho_m, alto_m, area_m2, peso_kg, tecnologia, numero_celdas, garantia_anios) VALUES
+-- Jinko Solar
+((SELECT id FROM fabricantes WHERE nombre='Jinko Solar'), 'Tiger Neo JKM575N-72HL4-V', 575.00, 0.2226, 51.80, 14.15, 43.38, 13.25, -0.00290, -0.00240, 1.134, 2.278, 2.583, 28.6, 'N-Type TOPCon', 72, 25),
+((SELECT id FROM fabricantes WHERE nombre='Jinko Solar'), 'Tiger Pro JKM460M-60HL4-V', 460.00, 0.2114, 41.80, 13.95, 34.92, 13.17, -0.00350, -0.00280, 1.134, 1.722, 1.953, 22.5, 'Monocristalino PERC', 60, 25),
+
+-- Trina Solar
+((SELECT id FROM fabricantes WHERE nombre='Trina Solar'), 'Vertex S+ TSM-NEG9R.28 440W', 440.00, 0.2230, 41.50, 13.65, 34.50, 12.76, -0.00290, -0.00250, 1.134, 1.762, 1.999, 21.5, 'N-Type i-TOPCon', 66, 25),
+((SELECT id FROM fabricantes WHERE nombre='Trina Solar'), 'Vertex TSM-DE21 605W', 605.00, 0.2210, 53.90, 14.16, 45.20, 13.39, -0.00340, -0.00270, 1.134, 2.384, 2.704, 33.8, 'Monocristalino PERC Bifacial', 132, 25),
+
+-- JA Solar
+((SELECT id FROM fabricantes WHERE nombre='JA Solar'), 'DeepBlue 4.0 JAM54S31-415', 415.00, 0.2160, 38.10, 13.92, 31.95, 12.99, -0.00300, -0.00260, 1.134, 1.722, 1.953, 21.0, 'N-Type Bifacial', 54, 25),
+((SELECT id FROM fabricantes WHERE nombre='JA Solar'), 'DeepBlue 3.0 JAM72S20-460', 460.00, 0.2110, 50.20, 11.62, 42.10, 10.93, -0.00350, -0.00280, 1.134, 2.120, 2.404, 24.0, 'Monocristalino PERC', 72, 25),
+
+-- Canadian Solar
+((SELECT id FROM fabricantes WHERE nombre='Canadian Solar'), 'HiKu6 CS6L-540MS', 540.00, 0.2090, 49.80, 13.84, 41.70, 12.95, -0.00340, -0.00270, 1.134, 2.261, 2.564, 27.5, 'Monocristalino PERC', 132, 25),
+((SELECT id FROM fabricantes WHERE nombre='Canadian Solar'), 'TopHiKu6 CS6W-580MS', 580.00, 0.2245, 53.40, 13.91, 44.60, 13.00, -0.00290, -0.00250, 1.134, 2.278, 2.583, 29.0, 'N-Type TOPCon Bifacial', 132, 25);
+
+INSERT INTO inversores (fabricante_id, modelo, potencia_nominal_kw, potencia_maxima_kw, eficiencia_maxima, eficiencia_europea, voltaje_mppt_min, voltaje_mppt_max, voltaje_max_entrada, corriente_max_entrada, numero_mppt, numero_entradas_por_mppt, tipo, fases, garantia_anios) VALUES
+-- Huawei
+((SELECT id FROM fabricantes WHERE nombre='Huawei'), 'SUN2000-3KTL-L1', 3.00, 3.30, 0.9840, 0.9810, 90.00, 560.00, 600.00, 13.00, 2, 1, 'String', 'monofasico', 10),
+((SELECT id FROM fabricantes WHERE nombre='Huawei'), 'SUN2000-5KTL-L1', 5.00, 5.50, 0.9840, 0.9810, 90.00, 560.00, 600.00, 13.00, 2, 1, 'String', 'monofasico', 10),
+((SELECT id FROM fabricantes WHERE nombre='Huawei'), 'SUN2000-10KTL-M1', 10.00, 11.00, 0.9850, 0.9820, 140.00, 980.00, 1080.00, 22.00, 2, 2, 'String', 'trifasico', 10),
+((SELECT id FROM fabricantes WHERE nombre='Huawei'), 'SUN2000-15KTL-M2', 15.00, 16.50, 0.9860, 0.9830, 140.00, 980.00, 1080.00, 22.00, 4, 1, 'String', 'trifasico', 10),
+((SELECT id FROM fabricantes WHERE nombre='Huawei'), 'SUN2000-20KTL-M2', 20.00, 22.00, 0.9860, 0.9840, 140.00, 980.00, 1080.00, 22.00, 4, 2, 'String', 'trifasico', 10),
+
+-- Solis
+((SELECT id FROM fabricantes WHERE nombre='Solis'), 'S6-GR1P3K', 3.00, 3.30, 0.9760, 0.9710, 80.00, 500.00, 550.00, 13.00, 1, 2, 'String', 'monofasico', 10),
+((SELECT id FROM fabricantes WHERE nombre='Solis'), 'S6-GR1P5K', 5.00, 5.50, 0.9780, 0.9730, 80.00, 500.00, 550.00, 13.50, 2, 1, 'String', 'monofasico', 10),
+((SELECT id FROM fabricantes WHERE nombre='Solis'), 'S6-GR3P10K', 10.00, 11.00, 0.9820, 0.9780, 160.00, 950.00, 1000.00, 22.00, 2, 2, 'String', 'trifasico', 10),
+((SELECT id FROM fabricantes WHERE nombre='Solis'), 'S6-GR3P15K', 15.00, 16.50, 0.9830, 0.9790, 160.00, 950.00, 1000.00, 22.00, 3, 2, 'String', 'trifasico', 10),
+
+-- Growatt
+((SELECT id FROM fabricantes WHERE nombre='Growatt'), 'MIN 3000TL-X', 3.00, 3.30, 0.9740, 0.9700, 60.00, 500.00, 550.00, 11.00, 2, 1, 'String', 'monofasico', 10),
+((SELECT id FROM fabricantes WHERE nombre='Growatt'), 'MIN 5000TL-X', 5.00, 5.50, 0.9750, 0.9710, 60.00, 500.00, 550.00, 12.50, 2, 1, 'String', 'monofasico', 10),
+((SELECT id FROM fabricantes WHERE nombre='Growatt'), 'MOD 10KTL3-X', 10.00, 11.00, 0.9810, 0.9770, 160.00, 1000.00, 1100.00, 22.00, 2, 2, 'String', 'trifasico', 10),
+((SELECT id FROM fabricantes WHERE nombre='Growatt'), 'MOD 15KTL3-X', 15.00, 16.50, 0.9820, 0.9780, 160.00, 1000.00, 1100.00, 22.00, 2, 2, 'String', 'trifasico', 10);
