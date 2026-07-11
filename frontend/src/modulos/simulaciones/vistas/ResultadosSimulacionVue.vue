@@ -39,25 +39,30 @@
     </div>
 
     <div class="pasos">
-      <div class="paso completado">
-        <div class="paso-numero">✓</div>
-        <span>Datos generales</span>
-      </div>
-      <div class="paso-linea completado"></div>
-      <div class="paso completado">
-        <div class="paso-numero">✓</div>
-        <span>Techo</span>
-      </div>
-      <div class="paso-linea completado"></div>
-      <div class="paso completado">
-        <div class="paso-numero">✓</div>
-        <span>Consumo</span>
-      </div>
-      <div class="paso-linea completado"></div>
-      <div class="paso activo">
-        <div class="paso-numero">4</div>
-        <span>Resultados</span>
-      </div>
+        <div class="paso completado">
+            <div class="paso-numero">✓</div>
+            <span>Datos generales</span>
+        </div>
+        <div class="paso-linea"></div>
+        <div class="paso completado">
+            <div class="paso-numero">✓</div>
+            <span>Techo</span>
+        </div>
+        <div class="paso-linea"></div>
+        <div class="paso completado">
+            <div class="paso-numero">✓</div>
+            <span>Componentes</span>
+        </div>
+        <div class="paso-linea"></div>
+        <div class="paso completado">
+            <div class="paso-numero">✓</div>
+            <span>Consumo</span>
+        </div>
+        <div class="paso-linea"></div>
+        <div class="paso activo">
+            <div class="paso-numero">5</div>
+            <span>Resultados</span>
+        </div>
     </div>
 
     <div v-if="cargando" class="cargando">
@@ -307,6 +312,16 @@
                 <div class="barra-relleno" :style="{ width: `${Math.min(resultados.porcentaje_cobertura, 100)}%` }"></div>
               </div>
             </div>
+              <!-- Advertencia de sobredimensionamiento -->
+            <div class="advertencia-sobre" v-if="resultados.excedente_kwh > resultados.produccion_anual_kwh * 0.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 00-3.42 0z"/>
+                </svg>
+                El sistema genera un excedente de 
+                <strong>{{ resultados.excedente_kwh.toLocaleString('es-MX') }} kWh/año</strong> 
+                — más del 50% de tu producción no se aprovecha. 
+                Considera reducir el área del techo para optimizar la inversión.
+            </div>
           </div>
 
           <div class="card card-verde">
@@ -339,7 +354,7 @@
               </div>
               <div class="fila-dato">
                 <span>Paneles a instalar</span>
-                <span>{{ resultados.numero_paneles }} módulos (410W)</span>
+                <span>{{ resultados.numero_paneles }} módulos ({{ resultados.panel_potencia_wp ?? 410 }}W)</span>
               </div>
               <div class="fila-dato">
                 <span>Área útil</span>
@@ -358,6 +373,37 @@
                 <span>{{ consumo?.consumo_mensual_kwh }} kWh</span>
               </div>
             </div>
+          </div>
+
+          <!-- Card componentes seleccionados -->
+          <div class="card" v-if="resultados?.panel_modelo">
+              <h3><i class="bi bi-cpu"></i> Componentes seleccionados</h3>
+              <div class="info-grid">
+                  <div class="info-fila">
+                      <span class="info-label">Panel solar</span>
+                      <span class="info-valor">{{ resultados.panel_modelo }}</span>
+                  </div>
+                  <div class="info-fila">
+                      <span class="info-label">Potencia del panel</span>
+                      <span class="info-valor">{{ resultados.panel_potencia_wp }} W</span>
+                  </div>
+                  <div class="info-fila">
+                      <span class="info-label">Inversor</span>
+                      <span class="info-valor">{{ resultados.inversor_modelo }}</span>
+                  </div>
+                  <div class="info-fila">
+                      <span class="info-label">Potencia inversor</span>
+                      <span class="info-valor">{{ resultados.inversor_potencia_kw }} kW</span>
+                  </div>
+                  <div class="info-fila">
+                      <span class="info-label">Potencia instalada</span>
+                      <span class="info-valor">{{ resultados.potencia_kwp }} kWp</span>
+                  </div>
+                  <div class="info-fila">
+                      <span class="info-label">Paneles instalados</span>
+                      <span class="info-valor">{{ resultados.numero_paneles }} módulos</span>
+                  </div>
+              </div>
           </div>
         </div>
 
@@ -431,6 +477,10 @@ const normalizaResultados = (data: Partial<ResultadosCalculo>): ResultadosCalcul
     const costoInstalacion = Number(data.costo_total_instalacion_mxn || 0);
     const retornoConsistente = ahorroAnual > 0 ? costoInstalacion / ahorroAnual : 0;
 
+    // Leer componentes desde sessionStorage como fallback
+    const componentesRaw = sessionStorage.getItem(`componentes_${simulacion_id}`);
+    const componentes = componentesRaw ? JSON.parse(componentesRaw) : null;
+
     // Deserializar JSON si vienen como string desde la BD
     let perdidas = data.perdidas;
     if (typeof perdidas === 'string') {
@@ -462,9 +512,22 @@ const normalizaResultados = (data: Partial<ResultadosCalculo>): ResultadosCalcul
         tasa_incremento_tarifa_pct: Number(data.tasa_incremento_tarifa_pct || 0),
         // Campos pvlib
         performance_ratio: data.performance_ratio ? Number(data.performance_ratio) : undefined,
-        perdidas: perdidas,
-        produccion_mensual_detalle: produccion_mensual_detalle,
-        metodo_simulacion: data.metodo_simulacion ?? undefined
+        perdidas,
+        produccion_mensual_detalle,
+        metodo_simulacion: data.metodo_simulacion ?? undefined,
+        // Campos componentes — primero desde data, fallback a sessionStorage
+        panel_modelo: data.panel_modelo ?? componentes?.panel_modelo ?? undefined,
+        panel_potencia_wp: data.panel_potencia_wp
+            ? Number(data.panel_potencia_wp)
+            : componentes?.panel_potencia_wp ?? undefined,
+        inversor_modelo: data.inversor_modelo ?? componentes?.inversor_modelo ?? undefined,
+        inversor_potencia_kw: data.inversor_potencia_kw
+            ? Number(data.inversor_potencia_kw)
+            : componentes?.inversor_potencia_kw ?? undefined,
+        potencia_kwp: data.potencia_kwp
+            ? Number(data.potencia_kwp)
+            : componentes?.potencia_kwp ?? undefined,
+        
     };
 };
 
@@ -639,6 +702,8 @@ onMounted(async () => {
 
   const calculados = await calcularResultadosPvlib(consumoParseado, techoParseado, geoParseado, simulacion_id);  await guardarResultados(calculados);
   resultados.value = normalizaResultados(calculados);
+  console.log('resultados:', resultados.value);
+  console.log('panel_modelo:', resultados.value?.panel_modelo);
 });
 
 watch([resultados, consumo], async () => {
@@ -881,6 +946,19 @@ const descargarPDF = async () => {
     background: #f8fafc;
     border-radius: 6px;
     margin-top: 0.5rem;
+}
+
+.advertencia-sobre {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #fef9c3;
+    color: #854d0e;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+    border: 1px solid #fde68a;
 }
 
 /* Tabla mensual */

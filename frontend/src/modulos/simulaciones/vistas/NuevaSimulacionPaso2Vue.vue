@@ -33,7 +33,7 @@
                 <div class="paso-numero">✓</div>
                 <span>Datos generales</span>
             </div>
-            <div class="paso-linea completado"></div>
+            <div class="paso-linea"></div>
             <div class="paso activo">
                 <div class="paso-numero">2</div>
                 <span>Techo</span>
@@ -41,11 +41,16 @@
             <div class="paso-linea"></div>
             <div class="paso">
                 <div class="paso-numero">3</div>
-                <span>Consumo</span>
+                <span>Componentes</span>
             </div>
             <div class="paso-linea"></div>
             <div class="paso">
                 <div class="paso-numero">4</div>
+                <span>Consumo</span>
+            </div>
+            <div class="paso-linea"></div>
+            <div class="paso">
+                <div class="paso-numero">5</div>
                 <span>Resultados</span>
             </div>
         </div>
