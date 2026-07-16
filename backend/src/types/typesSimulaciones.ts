@@ -109,6 +109,7 @@ export interface ResultadosCalculoNuevo {
     performance_ratio?: number | null;
     perdidas_json?: object | null;
     metodo_simulacion?: string | null;
-    produccion_mensual_json?: object[] | null;
+    produccion_mensual_json?: object[] | null,
+    modelado_electrico_json?: object | null;
 }
 
