@@ -1,4 +1,5 @@
 import conexion from '../db/conexion.js';
+import axios from 'axios';
 import type {
     //Simulacion,
      SimulacionNueva,
@@ -346,9 +347,9 @@ export const agregaResultadosCalculo = async (nuevo: ResultadosCalculoNuevo) => 
             costo_total_instalacion_mxn, retorno_inversion_anios, co2_evitado_anual_kg,
             co2_evitado_vida_util_kg, arboles_equivalentes, precio_kwh_proyectado_anio5,
             precio_kwh_proyectado_anio10, tasa_incremento_tarifa_pct,
-            numero_paneles, performance_ratio, perdidas_json,
-            metodo_simulacion, produccion_mensual_json) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            numero_paneles, performance_ratio, perdidas_json, 
+            metodo_simulacion, produccion_mensual_json,modelado_electrico_json) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [nuevo.simulacion_id, nuevo.produccion_anual_kwh, nuevo.produccion_mensual_promedio_kwh,
              nuevo.porcentaje_cobertura, nuevo.excedente_kwh, nuevo.ahorro_mensual_mxn,
              nuevo.ahorro_anual_mxn, nuevo.ahorro_vida_util_mxn, nuevo.costo_total_instalacion_mxn,
@@ -359,7 +360,8 @@ export const agregaResultadosCalculo = async (nuevo: ResultadosCalculoNuevo) => 
              nuevo.performance_ratio ?? null,
              nuevo.perdidas_json ? JSON.stringify(nuevo.perdidas_json) : null,
              nuevo.metodo_simulacion ?? null,
-             nuevo.produccion_mensual_json ? JSON.stringify(nuevo.produccion_mensual_json) : null]
+             nuevo.produccion_mensual_json ? JSON.stringify(nuevo.produccion_mensual_json) : null,
+             nuevo.modelado_electrico_json ? JSON.stringify(nuevo.modelado_electrico_json) : null]
         );
         return results;
     } catch (err) {
@@ -387,8 +389,41 @@ export const obtieneResultadosCalculo = async (simulacion_id: number) => {
             try { fila.produccion_mensual_detalle = JSON.parse(fila.produccion_mensual_json); } catch {}
         }
 
+        if (fila.modelado_electrico_json && typeof fila.modelado_electrico_json === 'string') {
+            try { fila.modelado_electrico = JSON.parse(fila.modelado_electrico_json); } catch {}
+        }
+
         return [fila];
     } catch (err) {
         return { error: 'No se pudieron obtener los resultados del cálculo' };
+    }
+};
+
+export const ejecutaModeladoElectrico = async (params: {
+    cantidad_paneles: number;
+    voc_panel: number;
+    vmp_panel: number;
+    isc_panel: number;
+    imp_panel: number;
+    coef_temp_voc: number;
+    voltaje_mppt_min: number;
+    voltaje_mppt_max: number;
+    voltaje_max_entrada: number;
+    corriente_max_entrada: number;
+    numero_mppt: number;
+    numero_entradas_por_mppt: number;
+    temp_min_sitio?: number;
+    temp_max_celda?: number;
+}) => {
+    try {
+        const resp = await axios.post(
+            'http://localhost:8000/electrico/strings',
+            params,
+            { timeout: 30000 }
+        );
+        return resp.data.resultado;
+    } catch (err: any) {
+        console.error('Error modelado eléctrico:', err.message);
+        return { error: 'No se pudo calcular el modelado eléctrico' };
     }
 };

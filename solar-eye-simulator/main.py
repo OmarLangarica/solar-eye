@@ -246,3 +246,73 @@ async def debug_poa():
         }
 
     return resultados
+
+
+from simulador.electrico import calcula_strings
+from pydantic import BaseModel, Field
+
+class ParametrosElectricos(BaseModel):
+    # Panel
+    cantidad_paneles: int = Field(..., gt=0)
+    voc_panel: float = Field(..., gt=0)
+    vmp_panel: float = Field(..., gt=0)
+    isc_panel: float = Field(..., gt=0)
+    imp_panel: float = Field(..., gt=0)
+    coef_temp_voc: float = Field(..., lt=0)
+    # Inversor
+    voltaje_mppt_min: float = Field(..., gt=0)
+    voltaje_mppt_max: float = Field(..., gt=0)
+    voltaje_max_entrada: float = Field(..., gt=0)
+    corriente_max_entrada: float = Field(..., gt=0)
+    numero_mppt: int = Field(..., gt=0)
+    numero_entradas_por_mppt: int = Field(..., gt=0)
+    # Sitio
+    temp_min_sitio: float = Field(5.0)
+    temp_max_celda: float = Field(70.0)
+
+
+@app.post("/electrico/strings")
+async def calcular_strings(params: ParametrosElectricos):
+    try:
+        resultado = calcula_strings(
+            cantidad_paneles=params.cantidad_paneles,
+            voc_panel=params.voc_panel,
+            vmp_panel=params.vmp_panel,
+            isc_panel=params.isc_panel,
+            imp_panel=params.imp_panel,
+            coef_temp_voc=params.coef_temp_voc,
+            voltaje_mppt_min=params.voltaje_mppt_min,
+            voltaje_mppt_max=params.voltaje_mppt_max,
+            voltaje_max_entrada=params.voltaje_max_entrada,
+            corriente_max_entrada=params.corriente_max_entrada,
+            numero_mppt=params.numero_mppt,
+            numero_entradas_por_mppt=params.numero_entradas_por_mppt,
+            temp_min_sitio=params.temp_min_sitio,
+            temp_max_celda=params.temp_max_celda
+        )
+        return {"ok": True, "resultado": resultado}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/test-electrico")
+async def test_electrico():
+    """Prueba con Jinko Tiger Neo + Huawei SUN2000-15KTL-M2"""
+    resultado = calcula_strings(
+        cantidad_paneles=30,
+        voc_panel=51.80,
+        vmp_panel=43.38,
+        isc_panel=14.15,
+        imp_panel=13.25,
+        coef_temp_voc=-0.0024,
+        voltaje_mppt_min=140.0,
+        voltaje_mppt_max=980.0,
+        voltaje_max_entrada=1080.0,
+        corriente_max_entrada=22.0,
+        numero_mppt=4,
+        numero_entradas_por_mppt=1,
+        temp_min_sitio=5.0,
+        temp_max_celda=70.0
+    )
+    return {"ok": True, "resultado": resultado}

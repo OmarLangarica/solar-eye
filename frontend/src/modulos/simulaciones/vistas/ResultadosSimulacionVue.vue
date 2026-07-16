@@ -405,6 +405,136 @@
                   </div>
               </div>
           </div>
+
+          <!-- Card Modelado Eléctrico -->
+          <div class="card card-electrico" v-if="resultados?.modelado_electrico && !resultados.modelado_electrico.error">
+              <h3>
+                  <i class="bi bi-lightning-charge"></i>
+                  Modelado eléctrico del sistema
+              </h3>
+
+              <!-- Resumen -->
+              <div class="electrico-resumen">
+                  {{ resultados.modelado_electrico.resumen }}
+              </div>
+
+              <!-- Compatibilidad general -->
+              <div class="electrico-compatible" :class="resultados.modelado_electrico.compatible ? 'compatible' : 'incompatible'">
+                  <svg v-if="resultados.modelado_electrico.compatible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                      <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+                  </svg>
+                  {{ resultados.modelado_electrico.compatible ? 'Sistema eléctrico compatible' : 'Revisar compatibilidad eléctrica' }}
+              </div>
+
+              <!-- Sugerencia cuando hay incompatibilidad -->
+              <div class="electrico-sugerencia" v-if="resultados.modelado_electrico.sugerencia">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M12 8v4M12 16h.01"/>
+                  </svg>
+                  {{ resultados.modelado_electrico.sugerencia }}
+              </div>
+
+          <!-- Grid de datos eléctricos -->
+          <div class="electrico-grid">
+              <div class="electrico-seccion">
+                  <h4>Configuración de strings</h4>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Paneles en serie</span>
+                      <span class="electrico-valor">{{ resultados.modelado_electrico.paneles_serie }}</span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Strings en paralelo</span>
+                      <span class="electrico-valor">{{ resultados.modelado_electrico.strings_paralelo }}</span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Strings por MPPT</span>
+                      <span class="electrico-valor">{{ resultados.modelado_electrico.strings_por_mppt }}</span>
+                  </div>
+                  <div class="electrico-fila" v-if="resultados.modelado_electrico.paneles_ajustados > 0">
+                      <span class="electrico-label">Paneles ajustados</span>
+                      <span class="electrico-valor advertencia">+{{ resultados.modelado_electrico.paneles_ajustados }}</span>
+                  </div>
+              </div>
+
+              <div class="electrico-seccion">
+                  <h4>Voltajes del arreglo</h4>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Voc string (STC)</span>
+                      <span class="electrico-valor">{{ resultados.modelado_electrico.voc_string_v }} V</span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Vmp string (STC)</span>
+                      <span class="electrico-valor">{{ resultados.modelado_electrico.vmp_string_v }} V</span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Voc frío ({{ resultados.modelado_electrico.temp_min_sitio_c }}°C)</span>
+                      <span class="electrico-valor" :class="resultados.modelado_electrico.voc_dentro_limite ? 'ok' : 'error'">
+                          {{ resultados.modelado_electrico.voc_frio_string_v }} V
+                      </span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Vmp calor ({{ resultados.modelado_electrico.temp_max_celda_c }}°C)</span>
+                      <span class="electrico-valor" :class="resultados.modelado_electrico.mppt_dentro_rango ? 'ok' : 'error'">
+                          {{ resultados.modelado_electrico.vmp_calor_string_v }} V
+                      </span>
+                  </div>
+              </div>
+
+              <div class="electrico-seccion">
+                  <h4>Corrientes del arreglo</h4>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Isc total</span>
+                      <span class="electrico-valor">{{ resultados.modelado_electrico.isc_total_a }} A</span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Imp total</span>
+                      <span class="electrico-valor">{{ resultados.modelado_electrico.imp_total_a }} A</span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Isc por MPPT</span>
+                      <span class="electrico-valor" :class="resultados.modelado_electrico.corriente_dentro_limite ? 'ok' : 'error'">
+                          {{ resultados.modelado_electrico.isc_por_mppt_a }} A
+                      </span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Potencia DC</span>
+                      <span class="electrico-valor">{{ resultados.modelado_electrico.potencia_dc_kw }} kW</span>
+                  </div>
+              </div>
+
+              <div class="electrico-seccion">
+                  <h4>Validación MPPT</h4>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Rango MPPT inversor</span>
+                      <span class="electrico-valor">
+                          {{ resultados.modelado_electrico.voltaje_mppt_min_v }}-{{ resultados.modelado_electrico.voltaje_mppt_max_v }} V
+                      </span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Vmp calor en MPPT</span>
+                      <span class="electrico-valor" :class="resultados.modelado_electrico.mppt_dentro_rango ? 'ok' : 'error'">
+                          {{ resultados.modelado_electrico.mppt_dentro_rango ? 'Dentro del rango' : 'Fuera del rango' }}
+                      </span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Voc vs límite máximo</span>
+                      <span class="electrico-valor" :class="resultados.modelado_electrico.voc_dentro_limite ? 'ok' : 'error'">
+                          {{ resultados.modelado_electrico.voc_dentro_limite ? 'Dentro del límite' : 'Excede el límite' }}
+                      </span>
+                  </div>
+                  <div class="electrico-fila">
+                      <span class="electrico-label">Corriente por MPPT</span>
+                      <span class="electrico-valor" :class="resultados.modelado_electrico.corriente_dentro_limite ? 'ok' : 'error'">
+                          {{ resultados.modelado_electrico.corriente_dentro_limite ? 'Dentro del límite' : 'Excede el límite' }}
+                      </span>
+                  </div>
+            </div>
+        </div>
+    </div>
         </div>
 
       </div>
@@ -527,6 +657,7 @@ const normalizaResultados = (data: Partial<ResultadosCalculo>): ResultadosCalcul
         potencia_kwp: data.potencia_kwp
             ? Number(data.potencia_kwp)
             : componentes?.potencia_kwp ?? undefined,
+        modelado_electrico: data.modelado_electrico ?? undefined,    
         
     };
 };
@@ -681,6 +812,7 @@ onMounted(async () => {
 
   if (resultadosExistentes) {
     resultados.value = normalizaResultados(resultadosExistentes);
+    console.log('modelado_electrico:', resultados.value?.modelado_electrico);
     techo.value = extraer(await obtieneDatosTecho(simulacion_id));
     geo.value = extraer(await obtieneDatosGeograficos(simulacion_id));
     consumo.value = extraer(await obtieneConsumoElectrico(simulacion_id));
@@ -959,6 +1091,93 @@ const descargarPDF = async () => {
     font-size: 0.85rem;
     margin-top: 0.75rem;
     border: 1px solid #fde68a;
+}
+
+/* ─── Modelado eléctrico ─────────────────────────────────────── */
+.card-electrico { border-top: 3px solid #1d4f91; }
+
+.electrico-resumen {
+    background: #f0f5fb;
+    border: 1px solid #c7d9f0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    color: #1d4f91;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-family: monospace;
+}
+
+.electrico-compatible {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.electrico-compatible.compatible {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.electrico-compatible.incompatible {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.electrico-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.electrico-seccion h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #04142c;
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.electrico-fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid #f8f8f8;
+    font-size: 0.85rem;
+}
+
+.electrico-label { color: #666; }
+.electrico-valor { font-weight: 600; color: #333; }
+.electrico-valor.ok { color: #16a34a; }
+.electrico-valor.error { color: #dc2626; }
+.electrico-valor.advertencia { color: #f59e0b; }
+
+.electrico-sugerencia {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    background: #fef9c3;
+    color: #854d0e;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    border: 1px solid #fde68a;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .electrico-grid { grid-template-columns: 1fr; }
 }
 
 /* Tabla mensual */

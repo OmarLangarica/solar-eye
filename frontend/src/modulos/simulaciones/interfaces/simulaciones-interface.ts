@@ -81,6 +81,7 @@ export interface ResultadosCalculo {
     inversor_modelo?: string;
     inversor_potencia_kw?: number;
     potencia_kwp?: number;
+    modelado_electrico?: ModeladoElectrico;
 }
 
 export interface ProduccionMensual {
@@ -142,4 +143,33 @@ export interface InversorSolar {
     tipo: string;
     fases: string;
     garantia_anios: number;
+}
+
+export interface ModeladoElectrico {
+    paneles_serie: number;
+    strings_paralelo: number;
+    paneles_totales: number;
+    paneles_originales: number;
+    paneles_ajustados: number;
+    voc_string_v: number;
+    vmp_string_v: number;
+    voc_frio_string_v: number;
+    vmp_calor_string_v: number;
+    isc_total_a: number;
+    imp_total_a: number;
+    isc_por_mppt_a: number;
+    strings_por_mppt: number;
+    corriente_dentro_limite: boolean;
+    potencia_dc_kw: number;
+    voc_dentro_limite: boolean;
+    mppt_dentro_rango: boolean;
+    temp_min_sitio_c: number;
+    temp_max_celda_c: number;
+    voltaje_mppt_min_v: number;
+    voltaje_mppt_max_v: number;
+    voltaje_max_entrada_v: number;
+    compatible: boolean;
+    resumen: string;
+    error?: string;
+    sugerencia?: string | null;
 }

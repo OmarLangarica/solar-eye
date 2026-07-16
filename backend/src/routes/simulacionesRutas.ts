@@ -244,4 +244,14 @@ router.post('/pvlib', async (req: Request, res: Response) => {
         res.status(500).json({ mensaje: 'Error en el motor de simulación' });
     }
 });
+
+router.post('/electrico', async (req: Request, res: Response) => {
+    try {
+        const resultado = await simulacionesServices.ejecutaModeladoElectrico(req.body);
+        res.status(200).send(resultado);
+    } catch {
+        res.status(500).json({ mensaje: 'Error en modelado eléctrico' });
+    }
+});
+
 export default router;

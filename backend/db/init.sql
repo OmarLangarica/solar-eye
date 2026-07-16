@@ -188,6 +188,7 @@ CREATE TABLE resultados_calculo (
     perdidas_json TEXT,
     metodo_simulacion VARCHAR(100),
     produccion_mensual_json TEXT,
+    modelado_electrico_json TEXT,
     FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE CASCADE
 );
 

@@ -1,7 +1,8 @@
 import { ref } from 'vue';
 import simulacionesApi, { nasaApi } from '../api/simulacionesApi';
-// Importa la nueva función de la API de IA
 import { analizarReciboConIA } from '../api/simulacionesApi'; 
+import catalogoApi from '../api/catalogoApi';
+import type { PanelSolar, InversorSolar, ModeladoElectrico } from '../interfaces/simulaciones-interface';
 import type {
     Simulacion, SimulacionNueva,
     DatosTecho, DatosGeograficos,
@@ -163,7 +164,8 @@ export const useSimulaciones = () => {
                 performance_ratio: datos.performance_ratio ?? null,
                 perdidas_json: datos.perdidas ?? null,
                 metodo_simulacion: datos.metodo_simulacion ?? null,
-                produccion_mensual_json: datos.produccion_mensual_detalle ?? null
+                produccion_mensual_json: datos.produccion_mensual_detalle ?? null,
+                modelado_electrico_json: datos.modelado_electrico ?? null,
             };
 
             const respuesta = await simulacionesApi.post('/resultados', payload);
@@ -218,6 +220,29 @@ export const useSimulaciones = () => {
         });
 
         const pvlib = respPvlib.data;
+
+        // Modelado eléctrico con datos reales del panel e inversor
+        let modeladoElectrico = null;
+        if (componentes?.panel_id && componentes?.inversor_id) {
+            try {
+                const [respPanel, respInversor] = await Promise.all([
+                    catalogoApi.get(`/paneles/${componentes.panel_id}`),
+                    catalogoApi.get(`/inversores/${componentes.inversor_id}`)
+                ]);
+                const panelData  = Array.isArray(respPanel.data)   ? respPanel.data[0]   : respPanel.data;
+                const inversorData = Array.isArray(respInversor.data) ? respInversor.data[0] : respInversor.data;
+
+                if (panelData && inversorData) {
+                    modeladoElectrico = await calcularModeladoElectrico(
+                        panelData,
+                        inversorData,
+                        cantidadPaneles
+                    );
+                }
+            } catch (err) {
+                console.error('Error obteniendo datos para modelado eléctrico:', err);
+            }
+        }
 
 
         // Datos base
@@ -295,7 +320,8 @@ export const useSimulaciones = () => {
             panel_potencia_wp:  componentes?.panel_potencia_wp  ?? undefined,
             inversor_modelo:    componentes?.inversor_modelo     ?? undefined,
             inversor_potencia_kw: componentes?.inversor_potencia_kw ?? undefined,
-            potencia_kwp:       parseFloat(potenciaKwp.toFixed(2))
+            potencia_kwp:       parseFloat(potenciaKwp.toFixed(2)),
+            modelado_electrico:  modeladoElectrico ?? undefined
         };
 
     } catch (err: any) {
@@ -303,6 +329,37 @@ export const useSimulaciones = () => {
         throw err;
     } finally {
         cargando.value = false;
+    }
+};
+
+const calcularModeladoElectrico = async (
+    panel: PanelSolar,
+    inversor: InversorSolar,
+    cantidadPaneles: number,
+    tempMinSitio: number = 5.0,
+    tempMaxCelda: number = 70.0
+): Promise<ModeladoElectrico | null> => {
+    try {
+        const resp = await simulacionesApi.post('/electrico', {
+            cantidad_paneles: cantidadPaneles,
+            voc_panel: Number(panel.voc),
+            vmp_panel: Number(panel.vmp),
+            isc_panel: Number(panel.isc),
+            imp_panel: Number(panel.imp),
+            coef_temp_voc: Number(panel.coef_temp_voc),
+            voltaje_mppt_min: Number(inversor.voltaje_mppt_min),
+            voltaje_mppt_max: Number(inversor.voltaje_mppt_max),
+            voltaje_max_entrada: Number(inversor.voltaje_max_entrada),
+            corriente_max_entrada: Number(inversor.corriente_max_entrada),
+            numero_mppt: Number(inversor.numero_mppt),
+            numero_entradas_por_mppt: Number(inversor.numero_entradas_por_mppt),
+            temp_min_sitio: tempMinSitio,
+            temp_max_celda: tempMaxCelda
+        });
+        return resp.data;
+    } catch (err) {
+        console.error('Error modelado eléctrico:', err);
+        return null;
     }
 };
 
@@ -396,6 +453,8 @@ export const useSimulaciones = () => {
         obtieneDatosGeograficos,
         obtieneConsumoElectrico,
         obtieneResultados,
-        detectaPasoActual
+        detectaPasoActual,
+        calcularModeladoElectrico
     };
 };
+
