@@ -111,5 +111,10 @@ export interface ResultadosCalculoNuevo {
     metodo_simulacion?: string | null;
     produccion_mensual_json?: object[] | null,
     modelado_electrico_json?: object | null;
+    panel_modelo?: string | null;
+    panel_potencia_wp?: number | null;
+    inversor_modelo?: string | null;
+    inversor_potencia_kw?: number | null;
+    potencia_kwp?: number | null;
 }
 

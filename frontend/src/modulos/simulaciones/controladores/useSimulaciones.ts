@@ -166,6 +166,11 @@ export const useSimulaciones = () => {
                 metodo_simulacion: datos.metodo_simulacion ?? null,
                 produccion_mensual_json: datos.produccion_mensual_detalle ?? null,
                 modelado_electrico_json: datos.modelado_electrico ?? null,
+                panel_modelo: datos.panel_modelo ?? null,
+                panel_potencia_wp: datos.panel_potencia_wp ?? null,
+                inversor_modelo: datos.inversor_modelo ?? null,
+                inversor_potencia_kw: datos.inversor_potencia_kw ?? null,
+                potencia_kwp: datos.potencia_kwp ?? null,
             };
 
             const respuesta = await simulacionesApi.post('/resultados', payload);
