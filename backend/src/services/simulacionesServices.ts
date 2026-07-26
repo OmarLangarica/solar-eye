@@ -348,8 +348,9 @@ export const agregaResultadosCalculo = async (nuevo: ResultadosCalculoNuevo) => 
             co2_evitado_vida_util_kg, arboles_equivalentes, precio_kwh_proyectado_anio5,
             precio_kwh_proyectado_anio10, tasa_incremento_tarifa_pct,
             numero_paneles, performance_ratio, perdidas_json, 
-            metodo_simulacion, produccion_mensual_json,modelado_electrico_json) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            metodo_simulacion, produccion_mensual_json,modelado_electrico_json,
+            panel_modelo, panel_potencia_wp, inversor_modelo, inversor_potencia_kw, potencia_kwp) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [nuevo.simulacion_id, nuevo.produccion_anual_kwh, nuevo.produccion_mensual_promedio_kwh,
              nuevo.porcentaje_cobertura, nuevo.excedente_kwh, nuevo.ahorro_mensual_mxn,
              nuevo.ahorro_anual_mxn, nuevo.ahorro_vida_util_mxn, nuevo.costo_total_instalacion_mxn,
@@ -361,7 +362,12 @@ export const agregaResultadosCalculo = async (nuevo: ResultadosCalculoNuevo) => 
              nuevo.perdidas_json ? JSON.stringify(nuevo.perdidas_json) : null,
              nuevo.metodo_simulacion ?? null,
              nuevo.produccion_mensual_json ? JSON.stringify(nuevo.produccion_mensual_json) : null,
-             nuevo.modelado_electrico_json ? JSON.stringify(nuevo.modelado_electrico_json) : null]
+             nuevo.modelado_electrico_json ? JSON.stringify(nuevo.modelado_electrico_json) : null,
+            nuevo.panel_modelo ?? null,
+            nuevo.panel_potencia_wp ?? null,
+            nuevo.inversor_modelo ?? null,
+            nuevo.inversor_potencia_kw ?? null,
+            nuevo.potencia_kwp ?? null]
         );
         return results;
     } catch (err) {

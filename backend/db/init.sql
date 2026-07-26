@@ -189,6 +189,11 @@ CREATE TABLE resultados_calculo (
     metodo_simulacion VARCHAR(100),
     produccion_mensual_json TEXT,
     modelado_electrico_json TEXT,
+    panel_modelo VARCHAR(200),
+    panel_potencia_wp DECIMAL(8,2),
+    inversor_modelo VARCHAR(200),
+    inversor_potencia_kw DECIMAL(8,2),
+    potencia_kwp DECIMAL(8,2),
     FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE CASCADE
 );
 

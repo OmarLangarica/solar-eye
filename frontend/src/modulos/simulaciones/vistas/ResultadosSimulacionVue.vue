@@ -633,7 +633,9 @@ const normalizaResultados = (data: Partial<ResultadosCalculo>): ResultadosCalcul
         ahorro_anual_mxn: ahorroAnual,
         ahorro_vida_util_mxn: Number(data.ahorro_vida_util_mxn || 0),
         costo_total_instalacion_mxn: costoInstalacion,
-        retorno_inversion_anios: redondeaMoneda(retornoConsistente),
+        retorno_inversion_anios: data.retorno_inversion_anios 
+          ? Number(data.retorno_inversion_anios) 
+          : redondeaMoneda(retornoConsistente),
         co2_evitado_anual_kg: Number(data.co2_evitado_anual_kg || 0),
         co2_evitado_vida_util_kg: Number(data.co2_evitado_vida_util_kg || 0),
         arboles_equivalentes: Number(data.arboles_equivalentes || 0),
@@ -857,7 +859,11 @@ const onThemeChanged = async () => {
 
 const imprimirReporte = () => window.print();
 
-const descargarPDF = async () => {
+const descargarPDF = () => {
+    window.open(`http://localhost:3001/api/pdf/${simulacion_id}`, '_blank');
+};
+
+/*const descargarPDF = async () => {
   const elemento = document.getElementById('reporte-area');
   if (!elemento) return;
   try {
@@ -875,7 +881,7 @@ const descargarPDF = async () => {
     console.error("Error al generar el PDF:", error);
     alert("Hubo un problema al generar el PDF.");
   }
-};
+};*/
 </script>
 
 <style scoped>
