@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 import traceback
 import math
 from simulador.motor import simula_sistema
+import os
 
 app = FastAPI(title="Solar Eye Simulator", version="2.0.0")
 
@@ -316,3 +317,23 @@ async def test_electrico():
         temp_max_celda=70.0
     )
     return {"ok": True, "resultado": resultado}
+
+@app.get("/ciudades-disponibles")
+async def ciudades_disponibles():
+    from simulador.pvgis import INFO_CIUDADES_DIR, CIUDADES_DISPONIBLES
+    
+    ciudades = []
+    for ciudad, rango in CIUDADES_DISPONIBLES.items():
+        carpeta = os.path.join(INFO_CIUDADES_DIR, ciudad)
+        archivos_ok = all(
+            os.path.exists(os.path.join(carpeta, f"q{i}.json"))
+            for i in range(1, 5)
+        )
+        ciudades.append({
+            "ciudad": ciudad,
+            "disponible": archivos_ok,
+            "lat_centro": round((rango["lat_min"] + rango["lat_max"]) / 2, 2),
+            "lon_centro": round((rango["lon_min"] + rango["lon_max"]) / 2, 2)
+        })
+    
+    return {"ciudades": ciudades}
