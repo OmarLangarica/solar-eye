@@ -13,6 +13,19 @@ router.get('/', async (_req: Request, res: Response) => {
     res.send(simulaciones);
 });
 
+router.get('/predecir-consumo/:consumo_kwh', async (req: Request, res: Response) => {
+    try {
+        const consumo = Number(req.params.consumo_kwh);
+        if (!consumo || consumo <= 0) {
+            return res.status(400).json({ mensaje: 'consumo_kwh debe ser mayor a 0' });
+        }
+        const resultado = await simulacionesServices.prediceConsumoMensual(consumo);
+        return res.status(200).send(resultado);
+    } catch {
+        return res.status(500).json({ mensaje: 'Error en predicción de consumo' });
+    }
+});
+
 // GET http://localhost:3001/api/simulaciones/1
 router.get('/:id', async (req: Request, res: Response) => {
     try {

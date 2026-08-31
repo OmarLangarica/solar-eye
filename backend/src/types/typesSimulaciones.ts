@@ -116,5 +116,6 @@ export interface ResultadosCalculoNuevo {
     inversor_modelo?: string | null;
     inversor_potencia_kw?: number | null;
     potencia_kwp?: number | null;
+    consumo_mensual_predicho_json?: object[] | null;
 }
 

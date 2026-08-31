@@ -82,6 +82,7 @@ export interface ResultadosCalculo {
     inversor_potencia_kw?: number;
     potencia_kwp?: number;
     modelado_electrico?: ModeladoElectrico;
+    consumo_mensual_predicho?: ConsumoMensualPredicho[];
 }
 
 export interface ProduccionMensual {
@@ -172,4 +173,11 @@ export interface ModeladoElectrico {
     resumen: string;
     error?: string;
     sugerencia?: string | null;
+}
+
+export interface ConsumoMensualPredicho {
+    mes: string;
+    numero_mes: number;
+    factor_estacionalidad: number;
+    consumo_estimado_kwh: number;
 }

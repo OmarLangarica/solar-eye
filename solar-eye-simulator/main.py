@@ -5,6 +5,7 @@ import traceback
 import math
 from simulador.motor import simula_sistema
 import os
+from simulador.red_neuronal import entrena_modelo, predice_consumo_mensual
 
 app = FastAPI(title="Solar Eye Simulator", version="2.0.0")
 
@@ -337,3 +338,33 @@ async def ciudades_disponibles():
         })
     
     return {"ciudades": ciudades}
+
+@app.post("/entrenar-modelo")
+async def entrenar_modelo():
+    """Entrena la red neuronal con el dataset del gobierno."""
+    try:
+        metricas = entrena_modelo()
+        return {
+            "ok": True,
+            "mensaje": "Modelo entrenado correctamente",
+            "metricas": metricas
+        }
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/predecir-consumo/{consumo_base_kwh}")
+async def predecir_consumo(consumo_base_kwh: float):
+    """
+    Predice consumo mensual basado en estacionalidad nacional.
+    consumo_base_kwh: consumo del recibo CFE del cliente
+    """
+    try:
+        prediccion = predice_consumo_mensual(consumo_base_kwh)
+        return {"ok": True, "prediccion": prediccion}
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

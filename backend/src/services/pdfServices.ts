@@ -639,6 +639,104 @@ export const generaReportePDF = async (datos: {
         </div>
     </div>
 </div>
+<!-- ═══ PÁGINA 3B: PREDICCIÓN DE CONSUMO IA ════════════════════ -->
+${(() => {
+    const prediccion = Array.isArray(resultados.consumo_mensual_predicho) 
+    ? resultados.consumo_mensual_predicho 
+    : resultados.consumo_mensual_predicho_json 
+        ? JSON.parse(resultados.consumo_mensual_predicho_json)
+        : null;
+    const produccionMensual = resultados.produccion_mensual_detalle ?? resultados.produccion_mensual_json ?? [];
+
+    if (!prediccion || !prediccion.length) return '';
+    
+    const filas = prediccion.map((mes: any) => {
+        const produccion = produccionMensual.find((p: any) => p.numero_mes === mes.numero_mes)?.produccion_kwh ?? 0;
+        const cobertura = Math.min((produccion / mes.consumo_estimado_kwh) * 100, 100);
+        const coberturaColor = cobertura >= 100 ? '#16a34a' : cobertura >= 70 ? '#1d4f91' : cobertura >= 40 ? '#854d0e' : '#dc2626';
+        const factorColor = mes.factor_estacionalidad > 1 ? '#dc2626' : '#16a34a';
+
+        return `
+            <tr>
+                <td>${mes.mes}</td>
+                <td style="font-weight:600;">${Number(mes.consumo_estimado_kwh).toLocaleString('es-MX')} kWh</td>
+                <td style="color:${factorColor}; font-weight:700;">${mes.factor_estacionalidad.toFixed(2)}×</td>
+                <td style="color:#16a34a; font-weight:600;">${Number(produccion).toLocaleString('es-MX')} kWh</td>
+                <td>
+                    <span style="background:${coberturaColor}20; color:${coberturaColor}; padding:2px 8px; border-radius:999px; font-weight:700; font-size:11px;">
+                        ${cobertura.toFixed(1)}%
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <div class="pagina">
+            <div class="page-header">
+                <div class="page-header-titulo">Predicción de Consumo Mensual</div>
+                <div class="page-header-badge" style="background:#7c3aed;">Red Neuronal IA</div>
+            </div>
+
+            <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:12px; color:#5b21b6;">
+                Predicción generada con red neuronal entrenada con datos de consumo eléctrico nacional 
+                de México 2016-2025 (SENER). R² = 0.96. Los factores de estacionalidad reflejan 
+                variaciones típicas por temporada: mayor consumo en verano por uso de aire acondicionado.
+            </div>
+
+            <div class="seccion">
+                <div class="seccion-titulo">Consumo estimado vs producción solar por mes</div>
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>Mes</th>
+                            <th>Consumo estimado</th>
+                            <th>Factor estacional</th>
+                            <th>Producción solar</th>
+                            <th>Cobertura real</th>
+                        </tr>
+                    </thead>
+                    <tbody>${filas}</tbody>
+                </table>
+            </div>
+
+            <div class="dos-col" style="margin-top:20px;">
+                <div style="background:#f8fafc; border-radius:10px; padding:16px; border:1px solid #e8edf2;">
+                    <div class="seccion-titulo">Meses de mayor consumo</div>
+                    ${(() => {
+                        if (!prediccion.length) return '';
+                        const sorted = [...prediccion].sort((a: any, b: any) => b.factor_estacionalidad - a.factor_estacionalidad).slice(0, 3);
+                        return sorted.map((m: any) => `
+                            <div class="info-fila">
+                                <span class="info-label">${m.mes}</span>
+                                <span class="info-valor" style="color:#dc2626;">${m.factor_estacionalidad.toFixed(2)}× — ${Number(m.consumo_estimado_kwh).toLocaleString('es-MX')} kWh</span>
+                            </div>
+                        `).join('');
+                    })()}
+                </div>
+                <div style="background:#f8fafc; border-radius:10px; padding:16px; border:1px solid #e8edf2;">
+                    <div class="seccion-titulo">Meses de menor consumo</div>
+                    ${(() => {
+                        if (!prediccion.length) return '';
+                        const sorted = [...prediccion].sort((a: any, b: any) => a.factor_estacionalidad - b.factor_estacionalidad).slice(0, 3);
+                        return sorted.map((m: any) => `
+                            <div class="info-fila">
+                                <span class="info-label">${m.mes}</span>
+                                <span class="info-valor" style="color:#16a34a;">${m.factor_estacionalidad.toFixed(2)}× — ${Number(m.consumo_estimado_kwh).toLocaleString('es-MX')} kWh</span>
+                            </div>
+                        `).join('');
+                    })()}
+                </div>
+            </div>
+
+            <div class="page-footer">
+                <span>${empresa?.nombre ?? 'Solar Eye'} — Reporte confidencial</span>
+                <span>Generado el ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            </div>
+        </div>
+    `;
+})()}
+
 
 <!-- ═══ PÁGINA 4: PERFORMANCE RATIO Y PÉRDIDAS ════════════════ -->
 <div class="pagina">

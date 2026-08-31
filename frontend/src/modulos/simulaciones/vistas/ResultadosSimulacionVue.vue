@@ -374,7 +374,55 @@
               </div>
             </div>
           </div>
+          <!-- Card predicción de consumo con IA -->
+          <div class="card card-prediccion" v-if="resultados?.consumo_mensual_predicho?.length">
+              <h3>
+                  <i class="bi bi-graph-up-arrow"></i>
+                  Predicción de consumo mensual
+                  <span class="ia-badge">Red Neuronal</span>
+              </h3>
+              <p class="prediccion-subtitulo">
+                  Estimación del consumo real por mes basada en patrones de estacionalidad
+                  del consumo eléctrico nacional (2016-2025).
+              </p>
 
+              <table class="tabla-mensual">
+                  <thead>
+                      <tr>
+                          <th>Mes</th>
+                          <th>Consumo estimado</th>
+                          <th>Factor estacional</th>
+                          <th>Producción solar</th>
+                          <th>Cobertura real</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr
+                          v-for="mes in resultados.consumo_mensual_predicho"
+                          :key="mes.numero_mes">
+                          <td>{{ mes.mes }}</td>
+                          <td class="valor-neutro">{{ mes.consumo_estimado_kwh.toLocaleString('es-MX') }} kWh</td>
+                          <td>
+                              <span class="factor-badge"
+                                  :class="mes.factor_estacionalidad > 1 ? 'factor-alto' : 'factor-bajo'">
+                                  {{ mes.factor_estacionalidad.toFixed(2) }}×
+                              </span>
+                          </td>
+                          <td class="valor-positivo">
+                              {{ (resultados.produccion_mensual_detalle?.find(
+                                  p => p.numero_mes === mes.numero_mes
+                              )?.produccion_kwh ?? 0).toLocaleString('es-MX') }} kWh
+                          </td>
+                          <td>
+                              <span class="cobertura-badge"
+                                  :class="getCoberturaClase(mes, resultados.produccion_mensual_detalle)">
+                                  {{ getCoberturaReal(mes, resultados.produccion_mensual_detalle) }}%
+                              </span>
+                          </td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
           <!-- Card componentes seleccionados -->
           <div class="card" v-if="resultados?.panel_modelo">
               <h3><i class="bi bi-cpu"></i> Componentes seleccionados</h3>
@@ -659,8 +707,8 @@ const normalizaResultados = (data: Partial<ResultadosCalculo>): ResultadosCalcul
         potencia_kwp: data.potencia_kwp
             ? Number(data.potencia_kwp)
             : componentes?.potencia_kwp ?? undefined,
-        modelado_electrico: data.modelado_electrico ?? undefined,    
-        
+        modelado_electrico: data.modelado_electrico ?? undefined, 
+        consumo_mensual_predicho: data.consumo_mensual_predicho ?? undefined,  
     };
 };
 
@@ -801,6 +849,29 @@ const renderGraficaProyeccion = () => {
   });
 };
 
+const getCoberturaReal = (
+    mes: any,
+    produccionMensual: any[] | undefined
+): string => {
+    if (!produccionMensual) return '0';
+    const produccion = produccionMensual.find(p => p.numero_mes === mes.numero_mes)?.produccion_kwh ?? 0;
+    const cobertura = Math.min((produccion / mes.consumo_estimado_kwh) * 100, 100);
+    return cobertura.toFixed(1);
+};
+
+const getCoberturaClase = (
+    mes: any,
+    produccionMensual: any[] | undefined
+): string => {
+    if (!produccionMensual) return 'cobertura-baja';
+    const produccion = produccionMensual.find(p => p.numero_mes === mes.numero_mes)?.produccion_kwh ?? 0;
+    const cobertura = (produccion / mes.consumo_estimado_kwh) * 100;
+    if (cobertura >= 100) return 'cobertura-total';
+    if (cobertura >= 70) return 'cobertura-alta';
+    if (cobertura >= 40) return 'cobertura-media';
+    return 'cobertura-baja';
+};
+
 onMounted(async () => {
   const extraer = (data: any) => {
     if (!data) return null;
@@ -836,6 +907,7 @@ onMounted(async () => {
 
   const calculados = await calcularResultadosPvlib(consumoParseado, techoParseado, geoParseado, simulacion_id);  await guardarResultados(calculados);
   resultados.value = normalizaResultados(calculados);
+  console.log('consumo_mensual_predicho:', resultados.value?.consumo_mensual_predicho);
   console.log('resultados:', resultados.value);
   console.log('panel_modelo:', resultados.value?.panel_modelo);
 });
@@ -1247,4 +1319,50 @@ const descargarPDF = () => {
   .navbar-links { gap: 0.5rem; }
   .nav-link { font-size: 0.8rem; }
 }
+.card-prediccion { border-top: 3px solid #7c3aed; }
+
+.ia-badge {
+    display: inline-block;
+    background: #7c3aed;
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+.prediccion-subtitulo {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+}
+
+.factor-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.factor-alto { background: #fef2f2; color: #dc2626; }
+.factor-bajo { background: #f0fdf4; color: #16a34a; }
+
+.valor-neutro { color: #333; font-weight: 600; }
+
+.cobertura-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.cobertura-total  { background: #dcfce7; color: #16a34a; }
+.cobertura-alta   { background: #dbeafe; color: #1d4f91; }
+.cobertura-media  { background: #fef9c3; color: #854d0e; }
+.cobertura-baja   { background: #fef2f2; color: #dc2626; }
 </style>
