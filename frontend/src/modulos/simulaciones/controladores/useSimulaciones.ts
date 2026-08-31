@@ -171,6 +171,7 @@ export const useSimulaciones = () => {
                 inversor_modelo: datos.inversor_modelo ?? null,
                 inversor_potencia_kw: datos.inversor_potencia_kw ?? null,
                 potencia_kwp: datos.potencia_kwp ?? null,
+                consumo_mensual_predicho_json: datos.consumo_mensual_predicho ?? null,
             };
 
             const respuesta = await simulacionesApi.post('/resultados', payload);
@@ -210,6 +211,7 @@ export const useSimulaciones = () => {
         const cantidadPaneles = Math.floor(Number(techo.area_util_m2) / areaPanel);
         const potenciaKwp     = (cantidadPaneles * potenciaWp) / 1000;
 
+        console.log('llamando a pvlib...');
         // Llamar al microservicio Python con specs reales
         const respPvlib = await simulacionesApi.post('/pvlib', {
             lat: Number(techo.latitud),
@@ -223,9 +225,14 @@ export const useSimulaciones = () => {
             coef_temp_panel: coefTempPanel,
             eficiencia_inversor: eficienciaInversor
         });
-
+        console.log('pvlib respondió:', respPvlib.data);
         const pvlib = respPvlib.data;
-
+        console.log('llamando predicción consumo...');
+        // Predicción de consumo mensual con red neuronal
+        const consumoMensualPredicho = await prediceConsumoMensual(
+            Number(consumo.consumo_mensual_kwh)
+        );
+        console.log('prediccion consumo:', consumoMensualPredicho);
         // Modelado eléctrico con datos reales del panel e inversor
         let modeladoElectrico = null;
         if (componentes?.panel_id && componentes?.inversor_id) {
@@ -326,7 +333,8 @@ export const useSimulaciones = () => {
             inversor_modelo:    componentes?.inversor_modelo     ?? undefined,
             inversor_potencia_kw: componentes?.inversor_potencia_kw ?? undefined,
             potencia_kwp:       parseFloat(potenciaKwp.toFixed(2)),
-            modelado_electrico:  modeladoElectrico ?? undefined
+            modelado_electrico:  modeladoElectrico ?? undefined,
+            consumo_mensual_predicho: consumoMensualPredicho ?? undefined,
         };
 
     } catch (err: any) {
@@ -437,6 +445,16 @@ const calcularModeladoElectrico = async (
     }
 };
 
+const prediceConsumoMensual = async (consumoBaseKwh: number) => {
+    try {
+        const resp = await simulacionesApi.get(`/predecir-consumo/${consumoBaseKwh}`);
+        return Array.isArray(resp.data) ? resp.data : null;
+    } catch (err) {
+        console.error('Error predicción consumo:', err);
+        return null;
+    }
+};
+
     return {
         simulaciones,
         simulacionActual,
@@ -459,7 +477,8 @@ const calcularModeladoElectrico = async (
         obtieneConsumoElectrico,
         obtieneResultados,
         detectaPasoActual,
-        calcularModeladoElectrico
+        calcularModeladoElectrico,
+        prediceConsumoMensual
     };
 };
 

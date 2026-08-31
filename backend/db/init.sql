@@ -194,6 +194,7 @@ CREATE TABLE resultados_calculo (
     inversor_modelo VARCHAR(200),
     inversor_potencia_kw DECIMAL(8,2),
     potencia_kwp DECIMAL(8,2),
+    consumo_mensual_predicho_json TEXT,
     FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE CASCADE
 );
 

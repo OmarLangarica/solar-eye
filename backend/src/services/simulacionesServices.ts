@@ -349,8 +349,8 @@ export const agregaResultadosCalculo = async (nuevo: ResultadosCalculoNuevo) => 
             precio_kwh_proyectado_anio10, tasa_incremento_tarifa_pct,
             numero_paneles, performance_ratio, perdidas_json, 
             metodo_simulacion, produccion_mensual_json,modelado_electrico_json,
-            panel_modelo, panel_potencia_wp, inversor_modelo, inversor_potencia_kw, potencia_kwp) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            panel_modelo, panel_potencia_wp, inversor_modelo, inversor_potencia_kw, potencia_kwp, consumo_mensual_predicho_json) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [nuevo.simulacion_id, nuevo.produccion_anual_kwh, nuevo.produccion_mensual_promedio_kwh,
              nuevo.porcentaje_cobertura, nuevo.excedente_kwh, nuevo.ahorro_mensual_mxn,
              nuevo.ahorro_anual_mxn, nuevo.ahorro_vida_util_mxn, nuevo.costo_total_instalacion_mxn,
@@ -367,7 +367,8 @@ export const agregaResultadosCalculo = async (nuevo: ResultadosCalculoNuevo) => 
             nuevo.panel_potencia_wp ?? null,
             nuevo.inversor_modelo ?? null,
             nuevo.inversor_potencia_kw ?? null,
-            nuevo.potencia_kwp ?? null]
+            nuevo.potencia_kwp ?? null,
+            nuevo.consumo_mensual_predicho_json ? JSON.stringify(nuevo.consumo_mensual_predicho_json) : null]
         );
         return results;
     } catch (err) {
@@ -397,6 +398,10 @@ export const obtieneResultadosCalculo = async (simulacion_id: number) => {
 
         if (fila.modelado_electrico_json && typeof fila.modelado_electrico_json === 'string') {
             try { fila.modelado_electrico = JSON.parse(fila.modelado_electrico_json); } catch {}
+        }
+
+        if (fila.consumo_mensual_predicho_json && typeof fila.consumo_mensual_predicho_json === 'string') {
+            try { fila.consumo_mensual_predicho = JSON.parse(fila.consumo_mensual_predicho_json); } catch {}
         }
 
         return [fila];
@@ -431,5 +436,18 @@ export const ejecutaModeladoElectrico = async (params: {
     } catch (err: any) {
         console.error('Error modelado eléctrico:', err.message);
         return { error: 'No se pudo calcular el modelado eléctrico' };
+    }
+};
+
+export const prediceConsumoMensual = async (consumoBaseKwh: number) => {
+    try {
+        const resp = await axios.get(
+            `http://localhost:8000/predecir-consumo/${consumoBaseKwh}`,
+            { timeout: 30000 }
+        );
+        return resp.data.prediccion;
+    } catch (err: any) {
+        console.error('Error predicción consumo:', err.message);
+        return null;
     }
 };

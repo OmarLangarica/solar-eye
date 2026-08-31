@@ -42,6 +42,10 @@ router.get('/:simulacion_id', async (req: Request, res: Response) => {
             try { resultados.modelado_electrico = JSON.parse(resultados.modelado_electrico_json); } catch {}
         }
 
+        if (resultados.consumo_mensual_predicho_json && typeof resultados.consumo_mensual_predicho_json === 'string') {
+            try { resultados.consumo_mensual_predicho = JSON.parse(resultados.consumo_mensual_predicho_json); } catch {}
+        }
+
         console.log('resultados completos:', JSON.stringify(resultados, null, 2));
 
         const pdfBuffer = await generaReportePDF({
