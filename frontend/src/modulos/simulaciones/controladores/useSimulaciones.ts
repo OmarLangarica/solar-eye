@@ -207,8 +207,19 @@ export const useSimulaciones = () => {
         const areaPanel          = componentes?.panel_area_m2       ?? 1.96;
         const potenciaWp         = componentes?.panel_potencia_wp   ?? 410;
 
-        // Cálculo correcto basado en panel real
-        const cantidadPaneles = Math.floor(Number(techo.area_util_m2) / areaPanel);
+        // Dimensionar por consumo anual sin superar la capacidad física del techo.
+        const panelesMaximos = Math.floor(Number(techo.area_util_m2 ?? 0) / areaPanel);
+        const irradiacionAnual = Number(geo?.irradiacion_anual_kwh_m2) || 0;
+        const produccionPanelEstimada = irradiacionAnual > 0
+            ? (irradiacionAnual * potenciaWp / 1000) * eficienciaInversor * Number(techo.factor_sombra ?? 1) * 0.85
+            : 0;
+        const cantidadNecesaria = produccionPanelEstimada > 0
+            ? Math.ceil(Number(consumo.consumo_anual_kwh) / produccionPanelEstimada)
+            : 0;
+        const cantidadPaneles = Math.max(
+            1,
+            Math.min(panelesMaximos || 1, cantidadNecesaria || panelesMaximos || 1)
+        );
         const potenciaKwp     = (cantidadPaneles * potenciaWp) / 1000;
 
         console.log('llamando a pvlib...');
@@ -219,7 +230,7 @@ export const useSimulaciones = () => {
             tilt: Number(techo.angulo_inclinacion_deg),
             azimut: Number(techo.azimut_deg) || 180,
             potencia_kwp: potenciaKwp,
-            area_util_m2: Number(techo.area_util_m2),
+            area_util_m2: cantidadPaneles * areaPanel,
             factor_sombra: Number(techo.factor_sombra),
             eficiencia_panel: eficienciaPanel,
             coef_temp_panel: coefTempPanel,

@@ -340,6 +340,11 @@ export const obtieneConfiguracionSistema = async (simulacion_id: number) => {
 
 export const agregaResultadosCalculo = async (nuevo: ResultadosCalculoNuevo) => {
     try {
+        await conexion.query(
+            'DELETE FROM resultados_calculo WHERE simulacion_id = ?',
+            [nuevo.simulacion_id]
+        );
+
         const [results] = await conexion.query(
             `INSERT INTO resultados_calculo 
             (simulacion_id, produccion_anual_kwh, produccion_mensual_promedio_kwh, porcentaje_cobertura,
