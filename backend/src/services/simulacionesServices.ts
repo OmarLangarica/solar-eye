@@ -428,7 +428,7 @@ export const ejecutaModeladoElectrico = async (params: {
 }) => {
     try {
         const resp = await axios.post(
-            'http://localhost:8000/electrico/strings',
+            `${process.env.SIMULADOR_PYTHON || 'http://localhost:8000'}/electrico/strings`,
             params,
             { timeout: 30000 }
         );
@@ -442,7 +442,7 @@ export const ejecutaModeladoElectrico = async (params: {
 export const prediceConsumoMensual = async (consumoBaseKwh: number) => {
     try {
         const resp = await axios.get(
-            `http://localhost:8000/predecir-consumo/${consumoBaseKwh}`,
+            `${process.env.SIMULADOR_PYTHON || 'http://localhost:8000'}/predecir-consumo/${consumoBaseKwh}`,
             { timeout: 30000 }
         );
         return resp.data.prediccion;

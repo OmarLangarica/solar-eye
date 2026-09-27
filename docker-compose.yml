@@ -19,13 +19,20 @@ services:
     container_name: solareye_backend
     depends_on:
       - mysql
+      - simulator
     environment:
       DATABASE_HOST: mysql
       DATABASE_USER: solar
       DATABASE_PASSWORD: 123456
       DATABASE_NAME: solar_eye
+      SIMULADOR_PYTHON: http://simulator:8000
     ports:
       - "3001:3001"
+  simulator:
+    build: "./solar-eye-simulator"
+    container_name: solareye_simulator
+    ports:
+      - "8000:8000"
   frontend:
     build: "./frontend"
     container_name: solareye_frontend
