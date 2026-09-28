@@ -886,10 +886,6 @@ onMounted(async () => {
   if (resultadosExistentes) {
     resultados.value = normalizaResultados(resultadosExistentes);
     console.log('modelado_electrico:', resultados.value?.modelado_electrico);
-    techo.value = extraer(await obtieneDatosTecho(simulacion_id));
-    geo.value = extraer(await obtieneDatosGeograficos(simulacion_id));
-    consumo.value = extraer(await obtieneConsumoElectrico(simulacion_id));
-    return;
   }
 
   techo.value = extraer(await obtieneDatosTecho(simulacion_id));

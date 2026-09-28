@@ -244,7 +244,7 @@ router.put('/geograficos', async (req: Request, res: Response) => {
     }
 });
 
-const SIMULADOR_PYTHON = 'http://localhost:8000';
+const SIMULADOR_PYTHON = process.env.SIMULADOR_PYTHON || 'http://localhost:8000';
 
 router.post('/pvlib', async (req: Request, res: Response) => {
     try {

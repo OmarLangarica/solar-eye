@@ -340,6 +340,11 @@ export const obtieneConfiguracionSistema = async (simulacion_id: number) => {
 
 export const agregaResultadosCalculo = async (nuevo: ResultadosCalculoNuevo) => {
     try {
+        await conexion.query(
+            'DELETE FROM resultados_calculo WHERE simulacion_id = ?',
+            [nuevo.simulacion_id]
+        );
+
         const [results] = await conexion.query(
             `INSERT INTO resultados_calculo 
             (simulacion_id, produccion_anual_kwh, produccion_mensual_promedio_kwh, porcentaje_cobertura,
@@ -428,7 +433,7 @@ export const ejecutaModeladoElectrico = async (params: {
 }) => {
     try {
         const resp = await axios.post(
-            'http://localhost:8000/electrico/strings',
+            `${process.env.SIMULADOR_PYTHON || 'http://localhost:8000'}/electrico/strings`,
             params,
             { timeout: 30000 }
         );
@@ -442,7 +447,7 @@ export const ejecutaModeladoElectrico = async (params: {
 export const prediceConsumoMensual = async (consumoBaseKwh: number) => {
     try {
         const resp = await axios.get(
-            `http://localhost:8000/predecir-consumo/${consumoBaseKwh}`,
+            `${process.env.SIMULADOR_PYTHON || 'http://localhost:8000'}/predecir-consumo/${consumoBaseKwh}`,
             { timeout: 30000 }
         );
         return resp.data.prediccion;
