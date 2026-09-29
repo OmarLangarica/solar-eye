@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import conexion from '../db/conexion.js';
 import type { UsuarioNuevo, UsuarioActualizar } from '../types/typesUsuarios.js';
 import { usuarioSchema} from '../schema/usuariosSchema.js';
@@ -9,6 +10,7 @@ export const obtieneUsuarios = async () => {
         );
         return results;
     } catch (err) {
+        console.error(">>> ERROR EXACTO EN QUERY MYSQL:", err);
         return { error: 'No se pudieron obtener los usuarios' };
     }
 };

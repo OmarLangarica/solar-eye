@@ -12,15 +12,10 @@ if (!tieneGeminiApiKey) {
 
 
 const genAI = tieneGeminiApiKey ? new GoogleGenerativeAI(geminiApiKey as string) : null;
-const modeloPreferido = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const modeloPreferido = "gemini-3.5-flash-lite";
 const modelosFallback = [
-    modeloPreferido,
-    "gemini-2.5-pro",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-001",
-    "gemini-flash-latest",
-    "gemini-pro-latest",
-    "gemini-2.5-flash-lite"
+    "gemini-3.5-flash-lite",
+    "gemini-3.5-flash"
 ];
 console.log('Modelo preferido:', modeloPreferido);
 console.log('Modelos fallback:', modelosFallback.join(', '));
@@ -211,7 +206,7 @@ Ejemplo de respuesta: {"consumoKwh": 86.5, "costoMx": 306, "tarifaCfe": "1A", "n
 
     try {
         console.log('Iniciando análisis de imagen/PDF en SolarEye... Tipo MIME:', mimeType);
-        const model = clienteGemini.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const model = clienteGemini.getGenerativeModel({ model: modeloPreferido });
         let result;
 
         if (isPdf) {

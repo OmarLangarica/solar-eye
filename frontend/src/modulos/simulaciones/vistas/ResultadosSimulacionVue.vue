@@ -928,7 +928,14 @@ const onThemeChanged = async () => {
 const imprimirReporte = () => window.print();
 
 const descargarPDF = () => {
-    window.open(`http://localhost:3001/api/pdf/${simulacion_id}`, '_blank');
+    console.log(">>> RESULTADOS EN VUE:", resultados.value);
+    const idReal = (resultados.value as any)?.simulacion_id 
+                || (resultados.value as any)?.id 
+                || (resultados.value as any)?.resultados?.simulacion_id
+                || simulacion_id;
+
+    console.log(">>> ID USADO PARA PDF:", idReal);
+    window.open(`http://localhost:3001/api/pdf/${idReal}`, '_blank');
 };
 
 /*const descargarPDF = async () => {
