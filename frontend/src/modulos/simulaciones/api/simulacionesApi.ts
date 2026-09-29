@@ -1,17 +1,17 @@
 import axios from 'axios';
 
 const simulacionesApi = axios.create({
-    baseURL: 'https://solar-eye-backend.onrender.com/api/simulaciones'
+    baseURL: 'http://localhost:3001/api/simulaciones'
 });
 
 export const nasaApi = axios.create({
-    baseURL: 'https://solar-eye-backend.onrender.com/api/nasa'
+    baseURL: 'http://localhost:3001/api/nasa'
 });
 
 export default simulacionesApi;
 
 const iaApi = axios.create({
-    baseURL: 'https://solar-eye-backend.onrender.com/api/ia'
+    baseURL: 'http://localhost:3001/api/ia'
 });
 
 export const analizarReciboConIA = async (imagenBase64: string) => {
@@ -23,3 +23,4 @@ export const analizarReciboConIA = async (imagenBase64: string) => {
         throw error;
     }
 };
+

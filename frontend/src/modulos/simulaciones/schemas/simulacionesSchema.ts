@@ -17,3 +17,4 @@ export const paso3Schema = toTypedSchema(
         numero_recibo: zod.string().optional()
     })
 );
+

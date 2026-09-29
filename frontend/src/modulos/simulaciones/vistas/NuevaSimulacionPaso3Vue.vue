@@ -301,3 +301,4 @@ onMounted(async () => {
 .btn-siguiente:hover { background-color: #163d72; }
 .btn-siguiente:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>
+

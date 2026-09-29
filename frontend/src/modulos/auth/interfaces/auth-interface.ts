@@ -26,3 +26,4 @@ export interface RegistroData {
     password_hash: string;
     telefono?: string | null;
 }
+

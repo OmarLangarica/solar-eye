@@ -374,3 +374,4 @@ onMounted(async () => {
     .btn-principal, .btn-secundario { width: 100%; text-align: center; }
 }
 </style>
+

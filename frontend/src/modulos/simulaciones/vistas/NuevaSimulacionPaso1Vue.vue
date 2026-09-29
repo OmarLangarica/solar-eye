@@ -399,3 +399,4 @@ const onSubmit = handleSubmit(async (values) => {
 .btn-siguiente:hover { background-color: #2563eb; }
 .btn-siguiente:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>
+

@@ -14,3 +14,4 @@ export interface Cliente {
 }
 
 export type ClienteNuevo = Omit<Cliente, 'id'>;
+

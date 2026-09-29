@@ -94,3 +94,4 @@ export const useAuth = () => {
 
     return { error, cargando, login, registrar, limpiarError, cerrarSesion };
 };
+

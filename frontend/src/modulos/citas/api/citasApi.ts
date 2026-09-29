@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 const citasApi = axios.create({
-    baseURL: 'https://solar-eye-backend.onrender.com/api/citas'
+    baseURL: 'http://localhost:3001/api/citas'
 });
 
 export default citasApi;
+
 

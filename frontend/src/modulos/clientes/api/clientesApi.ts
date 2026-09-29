@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const clientesApi = axios.create({
-    baseURL: 'https://solar-eye-backend.onrender.com/api/clientes'
+    baseURL: 'http://localhost:3001/api/clientes'
 });
 
 export default clientesApi;
+

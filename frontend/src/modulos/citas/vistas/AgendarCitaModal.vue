@@ -247,3 +247,4 @@ const guardar = async () => {
     .fila-doble { grid-template-columns: 1fr; }
 }
 </style>
+

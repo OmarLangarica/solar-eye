@@ -498,3 +498,4 @@ tr:hover td { background-color: #fafafa; }
     .input-busqueda, .select-filtro { width: 100%; }
 }
 </style>
+

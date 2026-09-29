@@ -181,3 +181,4 @@ export interface ConsumoMensualPredicho {
     factor_estacionalidad: number;
     consumo_estimado_kwh: number;
 }
+

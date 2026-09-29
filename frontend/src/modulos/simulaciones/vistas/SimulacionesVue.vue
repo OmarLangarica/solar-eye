@@ -512,3 +512,4 @@ tr:hover td { background-color: #fafafa; }
 .btn-confirmar-eliminar:disabled { opacity: 0.6; cursor: not-allowed; }
 
 </style>
+

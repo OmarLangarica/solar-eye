@@ -20,3 +20,4 @@ export const clienteSchema = toTypedSchema(
         notas: zod.string().optional()
     })
 );
+

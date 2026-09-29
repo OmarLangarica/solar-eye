@@ -441,3 +441,4 @@ tr:hover td { background-color: #fafafa; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
+

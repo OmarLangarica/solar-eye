@@ -524,3 +524,4 @@ onMounted(async () => {
     .lista-componentes { grid-template-columns: 1fr; max-height: 280px; }
 }
 </style>
+

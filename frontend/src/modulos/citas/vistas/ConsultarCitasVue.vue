@@ -160,3 +160,4 @@ onMounted(() => traeCitas());
 .btn-peligro { background:#f87171; border:none; padding:0.3rem 0.5rem; border-radius:6px; color:white }
 </style>
 
+

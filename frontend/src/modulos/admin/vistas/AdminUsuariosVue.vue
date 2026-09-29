@@ -340,3 +340,4 @@ tr:hover td { background-color: #fafafa; }
     th:nth-child(3), td:nth-child(3) { display: none; }
 }
 </style>
+

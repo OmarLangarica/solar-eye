@@ -176,3 +176,4 @@ const crearEmpresa = async () => {
     .fila-doble { grid-template-columns: 1fr; }
 }
 </style>
+

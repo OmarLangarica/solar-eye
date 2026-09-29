@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 const iaApi = axios.create({
-    baseURL: 'https://solar-eye-backend.onrender.com/api/ia'
+    baseURL: 'http://localhost:3001/api/ia'
 });
 
 export const useIaStore = defineStore('ia', () => {
@@ -27,3 +27,4 @@ export const useIaStore = defineStore('ia', () => {
         cargarDisponibilidad
     };
 });
+

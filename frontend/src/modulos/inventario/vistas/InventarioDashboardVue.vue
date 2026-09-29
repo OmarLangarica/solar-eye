@@ -567,3 +567,4 @@ td { padding: 0.6rem 0.5rem; border-bottom: 1px solid #f9f9f9; font-size: 0.875r
     .grid-principal { grid-template-columns: 1fr; }
 }
 </style>
+

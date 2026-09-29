@@ -50,3 +50,4 @@ export const useAuthStore = defineStore('auth', () => {
         tieneEmpresa
     };
 }, { persist: true } as any);
+

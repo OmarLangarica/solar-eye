@@ -23,3 +23,4 @@ export const registroSchema = toTypedSchema(
         password: zod.string({ message: 'Contraseña requerida' }).min(6, { message: 'Mínimo 6 caracteres' })
     })
 );
+
