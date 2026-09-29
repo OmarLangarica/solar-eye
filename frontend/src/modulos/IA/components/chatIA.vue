@@ -68,7 +68,7 @@ const enviar = async () => {
   if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight;
 
   try {
-    const res = await axios.post('http://localhost:3001/api/ia/chat', { 
+    const res = await axios.post('https://solar-eye-backend.onrender.com/api/ia/chat', { 
       mensaje: texto 
     });
     historial.value.push({ role: 'ia', content: res.data.respuesta });

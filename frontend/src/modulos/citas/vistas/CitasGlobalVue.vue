@@ -270,8 +270,8 @@ const { cerrarSesion } = useAuth();
 const empresa_id = authStore.usuario?.empresa_id;
 const empresaNombre = authStore.usuario?.empresa_nombre ?? '';
 
-const citasApi = axios.create({ baseURL: 'http://localhost:3001/api/citas' });
-const clientesApi = axios.create({ baseURL: 'http://localhost:3001/api/clientes' });
+const citasApi = axios.create({ baseURL: 'https://solar-eye-backend.onrender.com/api/citas' });
+const clientesApi = axios.create({ baseURL: 'https://solar-eye-backend.onrender.com/api/clientes' });
 
 const citas = ref<any[]>([]);
 const clientes = ref<any[]>([]);

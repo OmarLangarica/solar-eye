@@ -935,7 +935,7 @@ const descargarPDF = () => {
                 || simulacion_id;
 
     console.log(">>> ID USADO PARA PDF:", idReal);
-    window.open(`http://localhost:3001/api/pdf/${idReal}`, '_blank');
+    window.open(`https://solar-eye-backend.onrender.com/api/pdf/${idReal}`, '_blank');
 };
 
 /*const descargarPDF = async () => {
