@@ -495,3 +495,4 @@ const prediceConsumoMensual = async (consumoBaseKwh: number) => {
 
 
 
+

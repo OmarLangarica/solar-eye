@@ -68,7 +68,7 @@ const enviar = async () => {
   if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight;
 
   try {
-    const res = await axios.post('http://localhost:3001/api/ia/chat', { 
+    const res = await axios.post('https://solar-eye-backend.onrender.com/api/ia/chat', { 
       mensaje: texto 
     });
     historial.value.push({ role: 'ia', content: res.data.respuesta });
@@ -174,4 +174,5 @@ html.theme-dark .input-chat input { border-color: #334155; }
 .fade-enter-active, .fade-leave-active { transition: all 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(20px); }
 </style>
+
 

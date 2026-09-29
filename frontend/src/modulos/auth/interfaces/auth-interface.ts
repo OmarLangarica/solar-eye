@@ -27,3 +27,4 @@ export interface RegistroData {
     telefono?: string | null;
 }
 
+

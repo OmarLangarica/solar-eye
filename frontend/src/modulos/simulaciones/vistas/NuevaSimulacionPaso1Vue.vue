@@ -400,3 +400,4 @@ const onSubmit = handleSubmit(async (values) => {
 .btn-siguiente:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>
 
+

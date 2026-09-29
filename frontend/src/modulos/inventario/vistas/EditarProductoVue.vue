@@ -359,3 +359,4 @@ onMounted(async () => {
 @media (max-width: 640px) { .contenedor { padding: 1rem; } .fila-doble { grid-template-columns: 1fr; } .botones { flex-direction: column; } }
 </style>
 
+

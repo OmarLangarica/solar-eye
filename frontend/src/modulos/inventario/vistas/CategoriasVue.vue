@@ -328,3 +328,4 @@ tr:hover td { background-color: #fafafa; }
 @media (max-width: 640px) { .contenedor { padding: 1rem; } .form-inline { flex-direction: column; } .input-nombre, .input-desc { width: 100%; } }
 </style>
 
+

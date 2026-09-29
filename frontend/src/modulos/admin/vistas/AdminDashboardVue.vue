@@ -551,3 +551,4 @@ onMounted(() => traeEstadisticas());
 }
 </style>
 
+

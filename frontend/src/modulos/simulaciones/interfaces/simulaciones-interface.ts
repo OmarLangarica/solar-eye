@@ -182,3 +182,4 @@ export interface ConsumoMensualPredicho {
     consumo_estimado_kwh: number;
 }
 
+
