@@ -135,9 +135,11 @@ const exitoRegistro = ref(false);
 import logoSolarEye from '../../../assets/images/LogoSolarEye.png';
 
 // Login
-const { handleSubmit: handleLogin } = useForm({ validationSchema: loginSchema });
-const { value: emailValue, errorMessage: emailError } = useField<string>('email');
-const { value: passwordValue, errorMessage: passwordError } = useField<string>('password');
+const { handleSubmit: handleLogin } = useForm({
+    validationSchema: loginSchema,
+});
+const { value: emailValue, errorMessage: emailError } = useField<string>('email', undefined, { validateOnValueUpdate: false });
+const { value: passwordValue, errorMessage: passwordError } = useField<string>('password', undefined, { validateOnValueUpdate: false });
 
 const onSubmitLogin = handleLogin(async (values) => {
     const ok = await login({ email: values.email, password: values.password });
@@ -158,12 +160,14 @@ const cambiarModo = (nuevoModo: 'signin' | 'signup') => {
 };
 
 // Registro
-const { handleSubmit: handleRegistro, resetForm: resetRegistro } = useForm({ validationSchema: registroSchema });
-const { value: regNombre, errorMessage: regNombreError } = useField<string>('nombre');
-const { value: regApellido, errorMessage: regApellidoError } = useField<string>('apellido');
-const { value: regEmail, errorMessage: regEmailError } = useField<string>('email');
-const { value: regTelefono, errorMessage: regTelefonoError } = useField<string>('telefono');
-const { value: regPassword, errorMessage: regPasswordError } = useField<string>('password');
+const { handleSubmit: handleRegistro, resetForm: resetRegistro } = useForm({
+    validationSchema: registroSchema,
+});
+const { value: regNombre, errorMessage: regNombreError } = useField<string>('nombre', undefined, { validateOnValueUpdate: false });
+const { value: regApellido, errorMessage: regApellidoError } = useField<string>('apellido', undefined, { validateOnValueUpdate: false });
+const { value: regEmail, errorMessage: regEmailError } = useField<string>('email', undefined, { validateOnValueUpdate: false });
+const { value: regTelefono, errorMessage: regTelefonoError } = useField<string>('telefono', undefined, { validateOnValueUpdate: false });
+const { value: regPassword, errorMessage: regPasswordError } = useField<string>('password', undefined, { validateOnValueUpdate: false });
 
 const onSubmitRegistro = handleRegistro(async (values) => {
     const ok = await registrar({
@@ -308,7 +312,7 @@ const onSubmitRegistro = handleRegistro(async (values) => {
 }
 
 .grupo input:focus {
-    border-color: #FF7043;
+    border-color: #ddd;
 }
 
 .input-error {
