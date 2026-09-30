@@ -65,6 +65,23 @@
         </div>
     </div>
 
+    <div class="filtro-resultados" role="tablist" aria-label="Filtrar resultados">
+        <span class="filtro-label">Ver apartado:</span>
+        <button
+          v-for="filtro in filtrosResultados"
+          :key="filtro.id"
+          type="button"
+          class="filtro-opcion"
+          :class="{ activo: filtroActivo === filtro.id }"
+          :aria-selected="filtroActivo === filtro.id"
+          role="tab"
+          @click="filtroActivo = filtro.id"
+        >
+          <i :class="filtro.icono" aria-hidden="true"></i>
+          {{ filtro.nombre }}
+        </button>
+    </div>
+
     <div v-if="cargando" class="cargando">
       <div class="spinner"></div>
       <span>Calculando simulación...</span>
@@ -74,7 +91,7 @@
 
       <AgendarCitaModal v-if="mostrarModal" :clienteId="Number(route.query.cliente_id)" :simulacionId="simulacion_id" @close="mostrarModal=false" @saved="onCitaGuardada" />
 
-      <div class="tarjetas-resumen">
+      <div v-show="mostrarSeccion('resumen')" class="tarjetas-resumen">
         <div class="tarjeta tarjeta-produccion">
           <div class="tarjeta-icono"><i class="bi bi-lightning-charge"></i></div>
           <div class="tarjeta-info">
@@ -105,7 +122,7 @@
         </div>
       </div>
 
-      <div class="graficas-grid" v-if="resultados && consumo">
+      <div v-show="mostrarSeccion('resumen')" class="graficas-grid" v-if="resultados && consumo">
         <div class="card card-grafica">
           <h3><i class="bi bi-bar-chart-line"></i> Comparativa de consumo vs generación</h3>
           <p class="card-subtitulo">Consumo mensual del cliente frente a la producción mensual estimada del sistema.</p>
@@ -129,9 +146,9 @@
         </div>
       </div>
 
-      <div class="grid-resultados">
+      <div class="grid-resultados" :class="`filtro-${filtroActivo}`">
         <!-- Card Performance Ratio y Pérdidas -->
-      <div class="card card-perdidas" v-if="resultados?.perdidas">
+      <div v-show="mostrarSeccion('tecnico')" class="card card-perdidas" v-if="resultados?.perdidas">
           <h3><i class="bi bi-speedometer2"></i> Performance Ratio y pérdidas</h3>
           <div class="pr-display">
               <div class="pr-valor">{{ ((resultados.performance_ratio ?? 0) * 100).toFixed(1) }}%</div>
@@ -214,7 +231,7 @@
       </div>
 
       <!-- Card producción mensual detallada -->
-      <div class="card" v-if="resultados?.produccion_mensual_detalle">
+      <div v-show="mostrarSeccion('energia')" class="card card-produccion-detalle" v-if="resultados?.produccion_mensual_detalle">
           <h3><i class="bi bi-sun"></i> Producción mensual detallada (pvlib)</h3>
           <table class="tabla-mensual">
               <thead>
@@ -235,8 +252,8 @@
               </tbody>
           </table>
       </div>
-        <div class="columna">
-          <div class="card">
+        <div class="columna columna-economica">
+          <div v-show="mostrarSeccion('finanzas')" class="card card-finanzas">
             <h3><i class="bi bi-cash-coin"></i> Análisis económico</h3>
             <div class="tabla-datos">
               <div class="fila-dato">
@@ -262,7 +279,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div v-show="mostrarSeccion('finanzas')" class="card card-finanzas">
             <h3><i class="bi bi-bar-chart"></i> Proyección tarifaria CFE</h3>
             <p class="card-subtitulo">Con un incremento estimado del {{ resultados.tasa_incremento_tarifa_pct }}% anual:</p>
             <div class="tabla-datos">
@@ -282,8 +299,8 @@
           </div>
         </div>
 
-        <div class="columna">
-          <div class="card">
+        <div class="columna columna-energia">
+          <div v-show="mostrarSeccion('energia')" class="card card-energia">
             <h3><i class="bi bi-lightning-charge"></i> Producción energética</h3>
             <div class="tabla-datos">
               <div class="fila-dato">
@@ -324,7 +341,7 @@
             </div>
           </div>
 
-          <div class="card card-verde">
+          <div v-show="mostrarSeccion('impacto')" class="card card-verde card-impacto">
             <h3><i class="bi bi-leaf"></i> Impacto ambiental</h3>
             <div class="impacto-grid">
               <div class="impacto-item">
@@ -345,7 +362,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div v-show="mostrarSeccion('sistema')" class="card card-sistema">
             <h3><i class="bi bi-wrench"></i> Sistema propuesto</h3>
             <div class="tabla-datos">
               <div class="fila-dato">
@@ -375,7 +392,7 @@
             </div>
           </div>
           <!-- Card predicción de consumo con IA -->
-          <div class="card card-prediccion" v-if="resultados?.consumo_mensual_predicho?.length">
+          <div v-show="mostrarSeccion('energia')" class="card card-prediccion" v-if="resultados?.consumo_mensual_predicho?.length">
               <h3>
                   <i class="bi bi-graph-up-arrow"></i>
                   Predicción de consumo mensual
@@ -424,38 +441,37 @@
               </table>
           </div>
           <!-- Card componentes seleccionados -->
-          <div class="card" v-if="resultados?.panel_modelo">
-              <h3><i class="bi bi-cpu"></i> Componentes seleccionados</h3>
-              <div class="info-grid">
-                  <div class="info-fila">
-                      <span class="info-label">Panel solar</span>
-                      <span class="info-valor">{{ resultados.panel_modelo }}</span>
+          <div v-show="mostrarSeccion('sistema')" class="card card-componentes" v-if="resultados?.panel_modelo">
+              <div class="componentes-heading">
+                <div class="componentes-heading-icon"><i class="bi bi-cpu"></i></div>
+                <div>
+                  <h3>Componentes seleccionados</h3>
+                  <p>Configuración propuesta para tu sistema solar.</p>
+                </div>
+              </div>
+              <div class="componentes-grid">
+                <section class="componente-bloque componente-panel">
+                  <div class="componente-bloque-heading"><i class="bi bi-sun"></i><span>Panel solar</span></div>
+                  <div class="componente-principal">{{ resultados.panel_modelo }}</div>
+                  <div class="componente-dato"><span>Potencia del panel</span><strong>{{ resultados.panel_potencia_wp }} W</strong></div>
+                </section>
+                <section class="componente-bloque componente-inversor">
+                  <div class="componente-bloque-heading"><i class="bi bi-lightning-charge"></i><span>Inversor</span></div>
+                  <div class="componente-principal">{{ resultados.inversor_modelo }}</div>
+                  <div class="componente-dato"><span>Potencia inversor</span><strong>{{ resultados.inversor_potencia_kw }} kW</strong></div>
+                </section>
+                <section class="componente-bloque componente-configuracion">
+                  <div class="componente-bloque-heading"><i class="bi bi-grid-3x3-gap"></i><span>Configuración del sistema</span></div>
+                  <div class="componente-configuracion-grid">
+                    <div class="componente-dato"><span>Potencia instalada</span><strong>{{ resultados.potencia_kwp }} kWp</strong></div>
+                    <div class="componente-dato"><span>Paneles instalados</span><strong>{{ resultados.numero_paneles }} módulos</strong></div>
                   </div>
-                  <div class="info-fila">
-                      <span class="info-label">Potencia del panel</span>
-                      <span class="info-valor">{{ resultados.panel_potencia_wp }} W</span>
-                  </div>
-                  <div class="info-fila">
-                      <span class="info-label">Inversor</span>
-                      <span class="info-valor">{{ resultados.inversor_modelo }}</span>
-                  </div>
-                  <div class="info-fila">
-                      <span class="info-label">Potencia inversor</span>
-                      <span class="info-valor">{{ resultados.inversor_potencia_kw }} kW</span>
-                  </div>
-                  <div class="info-fila">
-                      <span class="info-label">Potencia instalada</span>
-                      <span class="info-valor">{{ resultados.potencia_kwp }} kWp</span>
-                  </div>
-                  <div class="info-fila">
-                      <span class="info-label">Paneles instalados</span>
-                      <span class="info-valor">{{ resultados.numero_paneles }} módulos</span>
-                  </div>
+                </section>
               </div>
           </div>
 
           <!-- Card Modelado Eléctrico -->
-          <div class="card card-electrico" v-if="resultados?.modelado_electrico && !resultados.modelado_electrico.error">
+          <div v-show="mostrarSeccion('tecnico')" class="card card-electrico" v-if="resultados?.modelado_electrico && !resultados.modelado_electrico.error">
               <h3>
                   <i class="bi bi-lightning-charge"></i>
                   Modelado eléctrico del sistema
@@ -638,6 +654,21 @@ const comparativaChart = ref<Chart<'bar'> | null>(null);
 const proyeccionChart = ref<Chart<'line'> | null>(null);
 const authStore = useAuthStore();
 const mostrarModal = ref(false);
+
+type FiltroResultado = 'todo' | 'resumen' | 'finanzas' | 'energia' | 'sistema' | 'tecnico' | 'impacto';
+
+const filtroActivo = ref<FiltroResultado>('todo');
+const filtrosResultados: { id: FiltroResultado; nombre: string; icono: string }[] = [
+  { id: 'todo', nombre: 'Todo', icono: 'bi bi-grid-1x2' },
+  { id: 'resumen', nombre: 'Resumen', icono: 'bi bi-speedometer2' },
+  { id: 'finanzas', nombre: 'Finanzas', icono: 'bi bi-cash-coin' },
+  { id: 'energia', nombre: 'Energía', icono: 'bi bi-lightning-charge' },
+  { id: 'sistema', nombre: 'Sistema', icono: 'bi bi-cpu' },
+  { id: 'tecnico', nombre: 'Técnico', icono: 'bi bi-tools' },
+  { id: 'impacto', nombre: 'Impacto', icono: 'bi bi-leaf' }
+];
+
+const mostrarSeccion = (seccion: FiltroResultado) => filtroActivo.value === 'todo' || filtroActivo.value === seccion;
 
 const TOTAL_ANIOS_PROYECCION = 25;
 
@@ -1037,38 +1068,92 @@ const descargarPDF = () => {
 .paso-linea { flex: 1; height: 2px; background-color: #e0e0e0; margin-bottom: 1.2rem; }
 .paso-linea.completado { background-color: #4ade80; }
 
+/* Filtro de apartados */
+.filtro-resultados {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.65rem;
+  background: #f8fafc;
+  border: 1px solid #dbe5f0;
+  border-radius: 10px;
+}
+.filtro-label {
+  margin: 0 0.35rem 0 0.25rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.filtro-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 34px;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #47617f;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.filtro-opcion:hover { background: #e7eff8; color: #123b6d; }
+.filtro-opcion.activo { background: #123b6d; border-color: #123b6d; color: #fff; }
+
 /* Cargando */
 .cargando { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 4rem; color: #666; }
 .spinner { width: 40px; height: 40px; border: 4px solid #f0f0f0; border-top-color: #1e3a8a; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Tarjetas resumen */
-.tarjetas-resumen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-.tarjeta { background: white; border-radius: 8px; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 1rem; border-left: 4px solid transparent; }
-.tarjeta-produccion { border-left-color: #3b82f6; }
-.tarjeta-ahorro { border-left-color: #22c55e; }
-.tarjeta-cobertura { border-left-color: #1e3a8a; }
-.tarjeta-retorno { border-left-color: #a855f7; }
-.tarjeta-icono { font-size: 2rem; }
+.tarjetas-resumen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.tarjeta { min-width: 0; background: white; border: 1px solid #dbe5f0; border-top: 3px solid #1e3a8a; border-radius: 10px; padding: 1.15rem; box-shadow: 0 4px 14px rgba(15, 47, 99, 0.07); display: flex; align-items: center; gap: 0.9rem; }
+.tarjeta-produccion,
+.tarjeta-ahorro,
+.tarjeta-cobertura,
+.tarjeta-retorno { border-top-color: #123b6d; }
+.tarjeta-icono { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 auto; border-radius: 9px; background: #edf4fb; color: #1d4f91; font-size: 1.35rem; }
 .tarjeta-info { display: flex; flex-direction: column; gap: 0.2rem; }
 .tarjeta-label { font-size: 0.75rem; color: #999; }
-.tarjeta-valor { font-size: 1.1rem; font-weight: 700; color: #333; }
+.tarjeta-valor { font-size: 1.05rem; font-weight: 750; color: #123b6d; white-space: nowrap; }
 
 /* Gráficas */
-.graficas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-.card-grafica { min-height: 380px; }
-.canvas-wrap { position: relative; height: 290px; margin-top: 0.8rem; }
+.graficas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+.card-grafica { min-height: 340px; }
+.canvas-wrap { position: relative; height: 250px; margin-top: 0.8rem; }
 .payback-banner { margin-top: 0.5rem; padding: 0.55rem 0.75rem; border-radius: 6px; background: #ecfdf5; color: #166534; font-size: 0.82rem; font-weight: 600; }
 .payback-banner.sin-retorno { background: #fff7ed; color: #9a3412; }
 
-/* Grid resultados */
-.grid-resultados { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-.columna { display: flex; flex-direction: column; gap: 1.5rem; }
+/* Flujo masonry: cada card ocupa el siguiente espacio disponible sin heredar la altura de otra. */
+.grid-resultados { column-count: 2; column-gap: 1.25rem; column-fill: balance; }
+.columna { display: contents; }
+.grid-resultados .card { display: inline-block; width: 100%; margin: 0 0 1.25rem; vertical-align: top; break-inside: avoid; }
+.card-produccion-detalle { min-width: 0; overflow-x: auto; }
 
-.card { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-.card h3 { font-size: 1rem; color: #333; margin: 0 0 1rem; }
+.card { min-width: 0; background: white; border: 1px solid #dbe5f0; border-radius: 10px; padding: 1.35rem; box-shadow: 0 4px 14px rgba(15, 47, 99, 0.07); }
+.card h3 { font-size: 1rem; color: #123b6d; margin: 0 0 1rem; line-height: 1.35; }
 .card-subtitulo { font-size: 0.82rem; color: #666; margin: -0.5rem 0 1rem; }
 .card-verde { border-top: 3px solid #22c55e; }
+
+/* Componentes seleccionados */
+.card-componentes { border-top: 3px solid #2563eb; }
+.componentes-heading { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.2rem; }
+.componentes-heading-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; border-radius: 11px; background: #e7f0fb; color: #1d4f91; font-size: 1.25rem; }
+.componentes-heading h3 { margin: 0; }
+.componentes-heading p { margin: 0.2rem 0 0; color: #64748b; font-size: 0.78rem; }
+.componentes-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.85rem; }
+.componente-bloque { min-width: 0; padding: 1rem; border: 1px solid #dbe7f3; border-radius: 9px; background: #f8fbff; }
+.componente-bloque-heading { display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.75rem; color: #31527e; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+.componente-bloque-heading i { color: #2563eb; font-size: 1rem; }
+.componente-principal { min-height: 2.6rem; color: #123b6d; font-size: 1rem; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+.componente-dato { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; padding-top: 0.7rem; border-top: 1px solid #e2eaf3; color: #64748b; font-size: 0.78rem; }
+.componente-dato strong { color: #1d4f91; font-size: 0.9rem; white-space: nowrap; }
+.componente-configuracion-grid { display: grid; gap: 0.7rem; }
+.componente-configuracion-grid .componente-dato { padding-top: 0.55rem; }
 
 /* Tabla datos */
 .tabla-datos { display: flex; flex-direction: column; }
@@ -1097,6 +1182,16 @@ const descargarPDF = () => {
 .sin-datos { text-align: center; padding: 4rem; color: #999; }
 
 /* Performance Ratio */
+.filtro-energia { column-count: 1; }
+.filtro-finanzas,
+.filtro-sistema,
+.filtro-tecnico { column-count: 1; }
+.filtro-impacto { column-count: 1; }
+.filtro-impacto .card-impacto { width: min(100%, 720px); margin-left: auto; margin-right: auto; }
+.grid-resultados .card-impacto { display: block; width: 100%; column-span: all; }
+.filtro-impacto .card-impacto { width: min(100%, 720px); margin-left: auto; margin-right: auto; }
+.filtro-todo .card-impacto { display: inline-block; width: 100%; column-span: none; }
+
 .card-perdidas { border-top: 3px solid #1d4f91; }
 
 .pr-display { text-align: center; margin-bottom: 1.5rem; }
@@ -1294,6 +1389,10 @@ const descargarPDF = () => {
 }
 
 /* Responsive */
+@media (max-width: 1050px) {
+  .tarjetas-resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 780px) {
   .contenedor { padding: 0 1rem 1rem; }
   .encabezado { flex-direction: column; align-items: flex-start; gap: 1rem; }
@@ -1301,14 +1400,18 @@ const descargarPDF = () => {
   .pasos { overflow-x: auto; padding: 1rem; gap: .5rem; }
   .paso span { font-size: .7rem; text-align: center; }
   .paso-linea { min-width: 30px; }
-  .tarjetas-resumen { grid-template-columns: repeat(2, 1fr); }
-  .grid-resultados { grid-template-columns: 1fr; }
+  .filtro-resultados { align-items: stretch; overflow-x: auto; flex-wrap: nowrap; padding: 0.55rem; }
+  .filtro-label { display: none; }
+  .filtro-opcion { flex: 0 0 auto; }
+  .tarjetas-resumen { grid-template-columns: 1fr; }
+  .grid-resultados { column-count: 1; }
   .graficas-grid { grid-template-columns: 1fr; }
   .card { padding: 1.2rem; }
   .card-grafica { min-height: 340px; }
   .canvas-wrap { height: 250px; }
   .fila-dato { font-size: .82rem; }
   .impacto-grid { grid-template-columns: 1fr; }
+  .componentes-grid { grid-template-columns: 1fr; }
   .tarjeta-icono { font-size: 1.6rem; }
   .tarjeta-valor { font-size: 1rem; }
   .navbar { gap: 0.5rem; }
