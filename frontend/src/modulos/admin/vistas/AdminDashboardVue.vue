@@ -29,48 +29,23 @@
 
         <template v-else>
 
-            <!-- KPIs globales -->
-            <section class="kpis">
-                <article class="kpi-card trabajadores">
-                    <h2>Trabajadores</h2>
-                    <p class="kpi-valor">{{ stats.totalTrabajadores }}</p>
-                    <p class="kpi-detalle">Usuarios activos</p>
-                </article>
-                <article class="kpi-card clients">
-                    <h2>Clientes totales</h2>
-                    <p class="kpi-valor">{{ stats.totalClientes }}</p>
-                    <p class="kpi-detalle">En todo el sistema</p>
-                </article>
-                <article class="kpi-card sims">
-                    <h2>Simulaciones</h2>
-                    <p class="kpi-valor">{{ stats.totalSimulaciones }}</p>
-                    <p class="kpi-detalle">Registradas en total</p>
-                </article>
-                <article class="kpi-card completed">
-                    <h2>Completadas</h2>
-                    <p class="kpi-valor">{{ simulacionesPorEstado('completada') }}</p>
-                    <p class="kpi-detalle">Con resultados listos</p>
-                </article>
-                <article class="kpi-card draft">
-                    <h2>Borrador</h2>
-                    <p class="kpi-valor">{{ simulacionesPorEstado('borrador') }}</p>
-                    <p class="kpi-detalle">Pendientes de terminar</p>
-                </article>
-                <article class="kpi-card savings">
-                    <h2>Ahorro total generado</h2>
-                    <p class="kpi-valor">${{ formatearNumero(stats.ahorroTotal) }}</p>
-                    <p class="kpi-detalle">MXN en vida útil</p>
-                </article>
-                <article class="kpi-card energy">
-                    <h2>Producción proyectada</h2>
-                    <p class="kpi-valor">{{ formatearNumero(stats.produccionTotal) }}</p>
-                    <p class="kpi-detalle">kWh anuales totales</p>
-                </article>
-                <article class="kpi-card average">
-                    <h2>Promedio / trabajador</h2>
-                    <p class="kpi-valor">{{ promedioClientesPorTrabajador }}</p>
-                    <p class="kpi-detalle">Clientes por trabajador</p>
-                </article>
+            <section class="kpi-groups">
+                <div class="kpi-group">
+                    <div class="section-kicker">Impacto del negocio</div>
+                    <div class="kpis">
+                        <article class="kpi-card"><h2>Clientes totales</h2><p class="kpi-valor">{{ stats.totalClientes }}</p><p class="kpi-detalle">En todo el sistema</p></article>
+                        <article class="kpi-card"><h2>Ahorro total generado</h2><p class="kpi-valor">${{ formatearNumero(stats.ahorroTotal) }}</p><p class="kpi-detalle">MXN en vida útil</p></article>
+                        <article class="kpi-card"><h2>Producción proyectada</h2><p class="kpi-valor">{{ formatearNumero(stats.produccionTotal) }}</p><p class="kpi-detalle">kWh anuales totales</p></article>
+                    </div>
+                </div>
+                <div class="kpi-group">
+                    <div class="section-kicker">Operación</div>
+                    <div class="kpis">
+                        <article class="kpi-card"><h2>Trabajadores activos</h2><p class="kpi-valor">{{ stats.totalTrabajadores }}</p><p class="kpi-detalle">Usuarios activos</p></article>
+                        <article class="kpi-card"><h2>Simulaciones</h2><p class="kpi-valor">{{ stats.totalSimulaciones }}</p><p class="kpi-detalle">Registradas en total</p></article>
+                        <article class="kpi-card"><h2>Borradores</h2><p class="kpi-valor">{{ simulacionesPorEstado('borrador') }}</p><p class="kpi-detalle">Pendientes de terminar</p></article>
+                    </div>
+                </div>
             </section>
 
             <section class="paneles-info">
@@ -78,31 +53,12 @@
                 <!-- Distribución de estados -->
                 <article class="panel card-resumen">
                     <h3>Distribución de estados</h3>
-                    <div class="barra-grupo">
-                        <div class="barra-item">
-                            <span>Completadas</span>
-                            <strong>{{ porcentaje('completada') }}%</strong>
-                        </div>
-                        <div class="barra-track">
-                            <div class="barra-fill completada" :style="{ width: `${porcentaje('completada')}%` }"></div>
-                        </div>
-                    </div>
-                    <div class="barra-grupo">
-                        <div class="barra-item">
-                            <span>Borrador</span>
-                            <strong>{{ porcentaje('borrador') }}%</strong>
-                        </div>
-                        <div class="barra-track">
-                            <div class="barra-fill borrador" :style="{ width: `${porcentaje('borrador')}%` }"></div>
-                        </div>
-                    </div>
-                    <div class="barra-grupo">
-                        <div class="barra-item">
-                            <span>Cotizadas</span>
-                            <strong>{{ porcentaje('cotizada') }}%</strong>
-                        </div>
-                        <div class="barra-track">
-                            <div class="barra-fill cotizada" :style="{ width: `${porcentaje('cotizada')}%` }"></div>
+                    <div class="donut-layout">
+                        <div class="donut" :style="{ background: gradienteEstados }" aria-label="Distribución porcentual de estados"><span>{{ stats.totalSimulaciones }}</span><small>total</small></div>
+                        <div class="donut-legend">
+                            <div><i class="legend-dot completada"></i><span>Completadas</span><strong>{{ porcentaje('completada') }}%</strong></div>
+                            <div><i class="legend-dot borrador"></i><span>Borradores</span><strong>{{ porcentaje('borrador') }}%</strong></div>
+                            <div><i class="legend-dot cotizada"></i><span>Cotizadas</span><strong>{{ porcentaje('cotizada') }}%</strong></div>
                         </div>
                     </div>
                 </article>
@@ -110,22 +66,11 @@
                 <!-- Simulaciones por mes -->
                 <article class="panel card-meses">
                     <h3>Simulaciones últimos 6 meses</h3>
-                    <div class="grafica-barras">
-                        <div
-                            v-for="mes in stats.simulacionesPorMes"
-                            :key="mes.mes"
-                            class="barra-mes-grupo"
-                        >
-                            <div class="barra-mes-wrap">
-                                <div
-                                    class="barra-mes"
-                                    :style="{ height: `${alturaBarra(mes.total)}%` }"
-                                ></div>
-                            </div>
-                            <span class="barra-mes-label">{{ formatearMes(mes.mes) }}</span>
-                            <span class="barra-mes-valor">{{ mes.total }}</span>
-                        </div>
+                    <div class="grafica-area" v-if="stats.simulacionesPorMes.length">
+                        <svg viewBox="0 0 600 180" role="img" aria-label="Tendencia de simulaciones mensuales" preserveAspectRatio="none"><path class="area-fill" :d="areaPath" /><polyline class="area-line" :points="linePoints" /><circle v-for="punto in puntosGrafica" :key="punto.mes" class="area-point" :cx="punto.x" :cy="punto.y" r="4" /></svg>
+                        <div class="area-labels"><span v-for="mes in stats.simulacionesPorMes" :key="mes.mes">{{ formatearMes(mes.mes) }} <strong>{{ mes.total }}</strong></span></div>
                     </div>
+                    <p v-else class="sin-datos">Sin simulaciones mensuales todavía.</p>
                 </article>
 
                 <!-- Rendimiento por trabajador -->
@@ -147,7 +92,7 @@
                                     <span class="badge" :class="t.rol">{{ t.rol }}</span>
                                 </td>
                                 <td><span class="badge-blue">{{ t.total_clientes }}</span></td>
-                                <td><span class="badge-orange">{{ t.total_simulaciones }}</span></td>
+                                <td><div class="simulaciones-cell"><span class="mini-bar"><i :style="{ width: `${anchoBarraTrabajador(t.total_simulaciones)}%` }"></i></span><span class="badge-blue">{{ t.total_simulaciones }}</span></div></td>
                             </tr>
                             <tr v-if="stats.clientesPorTrabajador.length === 0">
                                 <td colspan="4" class="sin-datos">Sin usuarios registrados</td>
@@ -165,7 +110,7 @@
                                 <p class="nombre-cliente">{{ cliente.nombre }} {{ cliente.apellido }}</p>
                                 <p class="subtexto">{{ cliente.trabajador_nombre }} {{ cliente.trabajador_apellido }}</p>
                             </div>
-                            <span class="badge">{{ cliente.total_simulaciones }}</span>
+                            <span class="count-badge"><strong>{{ cliente.total_simulaciones }}</strong><small>simulaciones</small></span>
                         </li>
                     </ul>
                     <p v-else class="sin-datos">No hay clientes con simulaciones aún.</p>
@@ -220,6 +165,30 @@ const promedioClientesPorTrabajador = computed(() => {
     return (stats.value.totalClientes / stats.value.totalTrabajadores).toFixed(1);
 });
 
+const gradienteEstados = computed(() => {
+    const completadas = porcentaje('completada');
+    const borradores = completadas + porcentaje('borrador');
+    return `conic-gradient(#16a34a 0 ${completadas}%, #f59e0b ${completadas}% ${borradores}%, #3b82f6 ${borradores}% 100%)`;
+});
+
+const puntosGrafica = computed(() => {
+    const meses = stats.value.simulacionesPorMes;
+    const maximo = Math.max(...meses.map(mes => mes.total), 1);
+    return meses.map((mes, indice) => ({
+        mes: mes.mes,
+        x: meses.length === 1 ? 300 : (indice / (meses.length - 1)) * 560 + 20,
+        y: 150 - (mes.total / maximo) * 120
+    }));
+});
+
+const linePoints = computed(() => puntosGrafica.value.map(punto => `${punto.x},${punto.y}`).join(' '));
+const areaPath = computed(() => {
+    if (!puntosGrafica.value.length) return '';
+    const primero = puntosGrafica.value[0]!;
+    const ultimo = puntosGrafica.value[puntosGrafica.value.length - 1]!;
+    return `M ${primero.x} 150 L ${puntosGrafica.value.map(punto => `${punto.x} ${punto.y}`).join(' L ')} L ${ultimo.x} 150 Z`;
+});
+
 const cambiarEmpresa = () => {
     router.push('/seleccionar-empresa');
 };
@@ -232,6 +201,11 @@ const maxSimulacionesMes = computed(() => {
 const alturaBarra = (total: number) => {
     if (maxSimulacionesMes.value === 0) return 0;
     return Math.round((total / maxSimulacionesMes.value) * 100);
+};
+
+const anchoBarraTrabajador = (total: number) => {
+    const maximo = Math.max(...stats.value.clientesPorTrabajador.map(trabajador => trabajador.total_simulaciones), 1);
+    return (total / maximo) * 100;
 };
 
 const formatearMes = (mes: string) => {
@@ -425,27 +399,21 @@ onMounted(() => traeEstadisticas());
 
 .kpis {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
-    margin-bottom: 1rem;
 }
+
+.kpi-groups { display: grid; gap: 1.35rem; margin-bottom: 1.5rem; }
+.section-kicker { margin: 0 0 0.55rem 0.15rem; color: #31527e; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 
 .kpi-card {
     background: #fff;
     border-radius: 12px;
     padding: 1rem;
     box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    border-top: 4px solid transparent;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #123b6d;
 }
-
-.kpi-card.trabajadores { border-top-color: #8b5cf6; }
-.kpi-card.clients { border-top-color: #2563eb; }
-.kpi-card.sims { border-top-color: #06b6d4; }
-.kpi-card.completed { border-top-color: #16a34a; }
-.kpi-card.draft { border-top-color: #f59e0b; }
-.kpi-card.savings { border-top-color: #FF7043; }
-.kpi-card.energy { border-top-color: #10b981; }
-.kpi-card.average { border-top-color: #ef4444; }
 
 .kpi-card h2 { margin: 0; color: #6b7280; font-size: 0.9rem; font-weight: 600; }
 .kpi-valor { margin: 0.45rem 0; color: #111827; font-size: 1.8rem; font-weight: 700; }
@@ -454,7 +422,7 @@ onMounted(() => traeEstadisticas());
 .paneles-info {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 1.35rem;
 }
 
 .panel {
@@ -466,49 +434,27 @@ onMounted(() => traeEstadisticas());
 
 .panel h3 { margin: 0 0 1rem; color: #1f2937; font-size: 1.05rem; }
 
-.barra-grupo + .barra-grupo { margin-top: 1rem; }
-.barra-item { display: flex; justify-content: space-between; font-size: 0.9rem; color: #374151; margin-bottom: 0.4rem; }
-.barra-track { width: 100%; height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
-.barra-fill { height: 100%; border-radius: 999px; }
-.barra-fill.completada { background: #16a34a; }
-.barra-fill.borrador { background: #f59e0b; }
-.barra-fill.cotizada { background: #3b82f6; }
+.donut-layout { display: flex; align-items: center; gap: 1.5rem; min-height: 150px; }
+.donut { width: 132px; height: 132px; flex: 0 0 auto; display: grid; place-content: center; text-align: center; border-radius: 50%; position: relative; }
+.donut::after { content: ''; position: absolute; inset: 18px; background: #fff; border-radius: 50%; }
+.donut span, .donut small { position: relative; z-index: 1; }
+.donut span { color: #082951; font-size: 1.35rem; font-weight: 800; }
+.donut small { color: #64748b; font-size: 0.72rem; }
+.donut-legend { display: grid; gap: 0.75rem; width: 100%; }
+.donut-legend div { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.5rem; color: #475569; font-size: 0.85rem; }
+.donut-legend strong { color: #0f2747; }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+.legend-dot.completada { background: #16a34a; }
+.legend-dot.borrador { background: #f59e0b; }
+.legend-dot.cotizada { background: #3b82f6; }
 
-/* Gráfica de barras por mes */
-.grafica-barras {
-    display: flex;
-    align-items: flex-end;
-    gap: 0.5rem;
-    height: 140px;
-    padding-top: 1rem;
-}
-
-.barra-mes-grupo {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    height: 100%;
-}
-
-.barra-mes-wrap {
-    flex: 1;
-    width: 100%;
-    display: flex;
-    align-items: flex-end;
-}
-
-.barra-mes {
-    width: 100%;
-    background: #FF7043;
-    border-radius: 4px 4px 0 0;
-    min-height: 4px;
-    transition: height 0.3s;
-}
-
-.barra-mes-label { font-size: 0.7rem; color: #6b7280; }
-.barra-mes-valor { font-size: 0.75rem; font-weight: 700; color: #374151; }
+.grafica-area { height: 165px; }
+.grafica-area svg { width: 100%; height: 132px; overflow: visible; }
+.area-fill { fill: rgba(37, 99, 235, 0.12); }
+.area-line { fill: none; stroke: #1d5fa7; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.area-point { fill: #fff; stroke: #1d5fa7; stroke-width: 3; }
+.area-labels { display: flex; justify-content: space-between; color: #64748b; font-size: 0.72rem; }
+.area-labels strong { display: block; color: #0f2747; font-size: 0.75rem; text-align: center; }
 
 /* Tabla trabajadores */
 .tabla-trabajadores { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
@@ -518,6 +464,9 @@ onMounted(() => traeEstadisticas());
 
 .badge-blue { background: #dbeafe; color: #1e40af; border-radius: 999px; padding: 0.2rem 0.7rem; font-weight: 700; font-size: 0.85rem; }
 .badge-orange { background: #fff7ed; color: #c2410c; border-radius: 999px; padding: 0.2rem 0.7rem; font-weight: 700; font-size: 0.85rem; }
+.simulaciones-cell { display: flex; align-items: center; gap: 0.5rem; min-width: 130px; }
+.mini-bar { height: 6px; width: 70px; background: #e5edf7; border-radius: 999px; overflow: hidden; }
+.mini-bar i { display: block; height: 100%; background: #1d5fa7; border-radius: inherit; }
 
 /* Top clientes */
 .card-top-clientes ul { list-style: none; padding: 0; margin: 0; }
@@ -531,11 +480,14 @@ onMounted(() => traeEstadisticas());
 .card-top-clientes li:last-child { border-bottom: none; padding-bottom: 0; }
 .nombre-cliente { margin: 0; color: #111827; font-weight: 600; }
 .subtexto { margin: 0.2rem 0 0; color: #6b7280; font-size: 0.85rem; }
-.badge { background: #fff7ed; color: #c2410c; border-radius: 999px; padding: 0.2rem 0.7rem; font-weight: 700; }
+.badge { background: #e0e7ff; color: #3730a3; border-radius: 999px; padding: 0.2rem 0.7rem; font-weight: 700; }
+.count-badge { display: grid; justify-items: center; min-width: 66px; padding: 0.3rem 0.5rem; border-radius: 10px; background: #edf4fb; color: #123b6d; }
+.count-badge strong { font-size: 1rem; line-height: 1; }
+.count-badge small { margin-top: 0.15rem; font-size: 0.62rem; }
 .sin-datos { color: #6b7280; font-size: 0.9rem; }
 
 @media (max-width: 1100px) {
-    .kpis { grid-template-columns: repeat(4, 1fr); }
+    .kpis { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 960px) {
@@ -548,6 +500,7 @@ onMounted(() => traeEstadisticas());
     .encabezado { flex-direction: column; align-items: flex-start; }
     .acciones-header { width: 100%; }
     .btn-principal, .btn-secundario { flex: 1; text-align: center; }
-    .kpis { grid-template-columns: 1fr 1fr; }
+    .kpis { grid-template-columns: 1fr; }
+    .donut-layout { gap: 1rem; }
 }
 </style>

@@ -30,74 +30,34 @@
         <div v-if="cargando" class="estado-carga">Cargando dashboard...</div>
 
         <template v-else>
-            <section class="kpis">
-                <article class="kpi-card clients">
-                    <h2>Clientes</h2>
-                    <p class="kpi-valor">{{ resumen.totalClientes }}</p>
-                    <p class="kpi-detalle">Activos en tu cuenta</p>
-                </article>
-
-                <article class="kpi-card sims">
-                    <h2>Simulaciones</h2>
-                    <p class="kpi-valor">{{ resumen.totalSimulaciones }}</p>
-                    <p class="kpi-detalle">Registradas en total</p>
-                </article>
-
-                <article class="kpi-card completed">
-                    <h2>Completadas</h2>
-                    <p class="kpi-valor">{{ resumen.simulacionesCompletadas }}</p>
-                    <p class="kpi-detalle">Con resultados listos</p>
-                </article>
-
-                <article class="kpi-card draft">
-                    <h2>Borrador</h2>
-                    <p class="kpi-valor">{{ resumen.simulacionesBorrador }}</p>
-                    <p class="kpi-detalle">Pendientes de terminar</p>
-                </article>
-
-                <article class="kpi-card quote">
-                    <h2>Cotizadas</h2>
-                    <p class="kpi-valor">{{ resumen.simulacionesCotizadas }}</p>
-                    <p class="kpi-detalle">Listas para propuesta</p>
-                </article>
-
-                <article class="kpi-card average">
-                    <h2>Promedio / cliente</h2>
-                    <p class="kpi-valor">{{ promedioSimulaciones }}</p>
-                    <p class="kpi-detalle">Simulaciones por cliente</p>
-                </article>
+            <section class="kpi-groups">
+                <div class="kpi-group">
+                    <div class="section-kicker">Impacto del negocio</div>
+                    <div class="kpis">
+                        <article class="kpi-card"><h2>Clientes activos</h2><p class="kpi-valor">{{ resumen.totalClientes }}</p><p class="kpi-detalle">Activos en tu cuenta</p></article>
+                        <article class="kpi-card"><h2>Simulaciones</h2><p class="kpi-valor">{{ resumen.totalSimulaciones }}</p><p class="kpi-detalle">Registradas en total</p></article>
+                        <article class="kpi-card"><h2>Promedio / cliente</h2><p class="kpi-valor">{{ promedioSimulaciones }}</p><p class="kpi-detalle">Simulaciones por cliente</p></article>
+                    </div>
+                </div>
+                <div class="kpi-group">
+                    <div class="section-kicker">Estado de propuestas</div>
+                    <div class="kpis">
+                        <article class="kpi-card"><h2>Completadas</h2><p class="kpi-valor">{{ resumen.simulacionesCompletadas }}</p><p class="kpi-detalle">Con resultados listos</p></article>
+                        <article class="kpi-card"><h2>Borradores</h2><p class="kpi-valor">{{ resumen.simulacionesBorrador }}</p><p class="kpi-detalle">Pendientes de terminar</p></article>
+                        <article class="kpi-card"><h2>Cotizadas</h2><p class="kpi-valor">{{ resumen.simulacionesCotizadas }}</p><p class="kpi-detalle">Listas para propuesta</p></article>
+                    </div>
+                </div>
             </section>
 
             <section class="paneles-info">
                 <article class="panel card-resumen">
-                    <h3>Distribucion de estados</h3>
-                    <div class="barra-grupo">
-                        <div class="barra-item">
-                            <span>Completadas</span>
-                            <strong>{{ porcentaje('completada') }}%</strong>
-                        </div>
-                        <div class="barra-track">
-                            <div class="barra-fill completada" :style="{ width: `${porcentaje('completada')}%` }"></div>
-                        </div>
-                    </div>
-
-                    <div class="barra-grupo">
-                        <div class="barra-item">
-                            <span>Borrador</span>
-                            <strong>{{ porcentaje('borrador') }}%</strong>
-                        </div>
-                        <div class="barra-track">
-                            <div class="barra-fill borrador" :style="{ width: `${porcentaje('borrador')}%` }"></div>
-                        </div>
-                    </div>
-
-                    <div class="barra-grupo">
-                        <div class="barra-item">
-                            <span>Cotizadas</span>
-                            <strong>{{ porcentaje('cotizada') }}%</strong>
-                        </div>
-                        <div class="barra-track">
-                            <div class="barra-fill cotizada" :style="{ width: `${porcentaje('cotizada')}%` }"></div>
+                    <h3>Distribución de estados</h3>
+                    <div class="donut-layout">
+                        <div class="donut" :style="{ background: gradienteEstados }" aria-label="Distribución porcentual de estados"><span>{{ resumen.totalSimulaciones }}</span><small>total</small></div>
+                        <div class="donut-legend">
+                            <div><i class="legend-dot completada"></i><span>Completadas</span><strong>{{ porcentaje('completada') }}%</strong></div>
+                            <div><i class="legend-dot borrador"></i><span>Borradores</span><strong>{{ porcentaje('borrador') }}%</strong></div>
+                            <div><i class="legend-dot cotizada"></i><span>Cotizadas</span><strong>{{ porcentaje('cotizada') }}%</strong></div>
                         </div>
                     </div>
                 </article>
@@ -110,7 +70,7 @@
                                 <p class="nombre-cliente">{{ cliente.nombreCompleto }}</p>
                                 <p class="subtexto">{{ cliente.ciudad || 'Sin ciudad registrada' }}</p>
                             </div>
-                            <span class="badge">{{ cliente.totalSimulaciones }}</span>
+                            <span class="count-badge"><strong>{{ cliente.totalSimulaciones }}</strong><small>simulaciones</small></span>
                         </li>
                     </ul>
                     <p v-else class="sin-datos">Todavia no hay simulaciones para mostrar ranking.</p>
@@ -158,6 +118,12 @@ const clientesConConteo = ref<ClienteConTotal[]>([]);
 const promedioSimulaciones = computed(() => {
     if (resumen.value.totalClientes === 0) return '0.0';
     return (resumen.value.totalSimulaciones / resumen.value.totalClientes).toFixed(1);
+});
+
+const gradienteEstados = computed(() => {
+    const completadas = porcentaje('completada');
+    const borradores = completadas + porcentaje('borrador');
+    return `conic-gradient(#16a34a 0 ${completadas}%, #f59e0b ${completadas}% ${borradores}%, #3b82f6 ${borradores}% 100%)`;
 });
 
 const topClientes = computed(() => {
@@ -434,20 +400,17 @@ onMounted(() => {
     gap: 1rem;
 }
 
+.kpi-groups { display: grid; gap: 1.35rem; }
+.section-kicker { margin: 0 0 0.55rem 0.15rem; color: #31527e; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+
 .kpi-card {
     background: #fff;
     border-radius: 12px;
     padding: 1rem;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    border-top: 4px solid transparent;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #123b6d;
 }
-
-.kpi-card.clients { border-top-color: #2563eb; }
-.kpi-card.sims { border-top-color: #06b6d4; }
-.kpi-card.completed { border-top-color: #16a34a; }
-.kpi-card.draft { border-top-color: #f59e0b; }
-.kpi-card.quote { border-top-color: #8b5cf6; }
-.kpi-card.average { border-top-color: #ef4444; }
 
 .kpi-card h2 {
     margin: 0;
@@ -473,7 +436,8 @@ onMounted(() => {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    margin-top: 1rem;
+    margin-top: 1.35rem;
+    gap: 1.35rem;
 }
 
 .panel {
@@ -489,34 +453,19 @@ onMounted(() => {
     font-size: 1.05rem;
 }
 
-.barra-grupo + .barra-grupo {
-    margin-top: 1rem;
-}
-
-.barra-item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9rem;
-    color: #374151;
-    margin-bottom: 0.4rem;
-}
-
-.barra-track {
-    width: 100%;
-    height: 8px;
-    background: #e5e7eb;
-    border-radius: 999px;
-    overflow: hidden;
-}
-
-.barra-fill {
-    height: 100%;
-    border-radius: 999px;
-}
-
-.barra-fill.completada { background: #16a34a; }
-.barra-fill.borrador { background: #f59e0b; }
-.barra-fill.cotizada { background: #3b82f6; }
+.donut-layout { display: flex; align-items: center; gap: 1.5rem; min-height: 150px; }
+.donut { width: 132px; height: 132px; flex: 0 0 auto; display: grid; place-content: center; text-align: center; border-radius: 50%; position: relative; }
+.donut::after { content: ''; position: absolute; inset: 18px; background: #fff; border-radius: 50%; }
+.donut span, .donut small { position: relative; z-index: 1; }
+.donut span { color: #082951; font-size: 1.35rem; font-weight: 800; }
+.donut small { color: #64748b; font-size: 0.72rem; }
+.donut-legend { display: grid; gap: 0.75rem; width: 100%; }
+.donut-legend div { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.5rem; color: #475569; font-size: 0.85rem; }
+.donut-legend strong { color: #0f2747; }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+.legend-dot.completada { background: #16a34a; }
+.legend-dot.borrador { background: #f59e0b; }
+.legend-dot.cotizada { background: #3b82f6; }
 
 .card-top-clientes ul {
     list-style: none;
@@ -550,12 +499,16 @@ onMounted(() => {
 }
 
 .badge {
-    background: #fff7ed;
-    color: #c2410c;
+    background: #e0e7ff;
+    color: #3730a3;
     border-radius: 999px;
     padding: 0.2rem 0.7rem;
     font-weight: 700;
 }
+
+.count-badge { display: grid; justify-items: center; min-width: 66px; padding: 0.3rem 0.5rem; border-radius: 10px; background: #edf4fb; color: #123b6d; }
+.count-badge strong { font-size: 1rem; line-height: 1; }
+.count-badge small { margin-top: 0.15rem; font-size: 0.62rem; }
 
 .sin-datos {
     color: #6b7280;
@@ -594,5 +547,7 @@ onMounted(() => {
     .kpis {
         grid-template-columns: 1fr;
     }
+
+    .donut-layout { gap: 1rem; }
 }
 </style>
