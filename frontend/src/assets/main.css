@@ -252,3 +252,754 @@ html.theme-dark .promedio-item,
 html.theme-dark .card-top-clientes li {
 	border-color: var(--se-border) !important;
 }
+
+
+:root {
+	--se-primary: #f97316;
+}
+
+html.theme-dark {
+	--se-primary: #fb923c;
+}
+
+/* Dashboards: modo oscuro */
+html.theme-dark .kpi-valor,
+html.theme-dark .donut span,
+html.theme-dark .donut-legend strong,
+html.theme-dark .area-labels strong {
+	color: var(--se-text) !important;
+}
+
+html.theme-dark .donut-legend div {
+	color: var(--se-text-soft) !important;
+}
+
+html.theme-dark .donut::after {
+	background: var(--se-panel) !important;
+}
+
+html.theme-dark .count-badge {
+	background: var(--se-panel-soft) !important;
+	color: #93c5fd !important;
+}
+
+html.theme-dark .badge,
+html.theme-dark .badge.admin,
+html.theme-dark .badge.trabajador,
+html.theme-dark .badge-estado,
+html.theme-dark .card-badge,
+html.theme-dark .label-chip,
+html.theme-dark .tag,
+html.theme-dark .count-badge {
+	background: #1e3a8a !important;
+	color: #dbeafe !important;
+	border: 1px solid rgba(148, 163, 184, 0.18) !important;
+	box-shadow: none !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+}
+
+html.theme-dark .badge-blue {
+	background: #1e3a8a !important;
+	color: #bfdbfe !important;
+}
+
+html.theme-dark .mini-bar {
+	background: var(--se-panel-soft) !important;
+}
+
+html.theme-dark .area-point {
+	fill: var(--se-panel) !important;
+}
+
+/* Refinamiento global del modo oscuro */
+html.theme-dark {
+	color-scheme: dark;
+}
+
+html.theme-dark body,
+html.theme-dark .app-main {
+	background: #020d1f !important;
+}
+
+html.theme-dark .dashboard-container,
+html.theme-dark .contenedor,
+html.theme-dark .clientes-container,
+html.theme-dark .landing-wrapper,
+html.theme-dark .tabla-container,
+html.theme-dark .panel,
+html.theme-dark .kpi-card,
+html.theme-dark .card,
+html.theme-dark .tarjeta,
+html.theme-dark .modal-eliminar,
+html.theme-dark .feature-card,
+html.theme-dark .empresa-card,
+html.theme-dark .modal-empresa,
+html.theme-dark .vista-dia,
+html.theme-dark .vista-semana,
+html.theme-dark .vista-mes,
+html.theme-dark .nav-fecha,
+html.theme-dark .mes-celda,
+html.theme-dark .dia-header,
+html.theme-dark .dia-column,
+html.theme-dark .tarjeta-dia,
+html.theme-dark .card-cita,
+html.theme-dark .agenda-modal {
+	background: #0b1323 !important;
+	border-color: rgba(148, 163, 184, 0.2) !important;
+	color: #e2e8f0 !important;
+	box-shadow: none !important;
+}
+
+html.theme-dark .dashboard-container .section-kicker,
+html.theme-dark .dashboard-container .kpi-card,
+html.theme-dark .dashboard-container .panel,
+html.theme-dark .dashboard-container .tabla-trabajadores,
+html.theme-dark .dashboard-container .card-top-clientes li,
+html.theme-dark .dashboard-container .count-badge {
+	background: #0f172a !important;
+	border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+html.theme-dark .dashboard-container .section-kicker {
+	background: transparent !important;
+	color: #dfeafc !important;
+	letter-spacing: 0.12em;
+	padding: 0 !important;
+	box-shadow: none !important;
+}
+
+html.theme-dark .dashboard-container .kpi-card,
+html.theme-dark .dashboard-container .panel {
+	border: 1px solid rgba(148, 163, 184, 0.18) !important;
+}
+
+html.theme-dark .dashboard-container .kpi-card h2,
+html.theme-dark .dashboard-container .kpi-detalle,
+html.theme-dark .dashboard-container .subtexto,
+html.theme-dark .dashboard-container .sin-datos,
+html.theme-dark .dashboard-container .donut-legend div,
+html.theme-dark .dashboard-container .area-labels,
+html.theme-dark .dashboard-container .tabla-trabajadores th,
+html.theme-dark .dashboard-container .nombre-cliente,
+html.theme-dark .dashboard-container .count-badge small,
+html.theme-dark .dashboard-container .donut small,
+html.theme-dark .dashboard-container .donut-legend strong,
+html.theme-dark .dashboard-container .area-labels strong {
+	color: #dfeafc !important;
+}
+
+html.theme-dark .dashboard-container .kpi-valor,
+html.theme-dark .dashboard-container .donut span,
+html.theme-dark .dashboard-container .encabezado h1,
+html.theme-dark .dashboard-container .encabezado p,
+html.theme-dark .dashboard-container .navbar-user-name,
+html.theme-dark .dashboard-container .nav-link,
+html.theme-dark .dashboard-container .panel h3 {
+	color: #ffffff !important;
+}
+
+html.theme-dark .dashboard-container .area-fill {
+	fill: rgba(96, 165, 250, 0.14) !important;
+}
+
+html.theme-dark .dashboard-container .area-line,
+html.theme-dark .dashboard-container .area-point,
+html.theme-dark .dashboard-container .mini-bar i {
+	stroke: #60a5fa !important;
+	background: #60a5fa !important;
+}
+
+html.theme-dark .dashboard-container .donut::after {
+	background: #0f172a !important;
+}
+
+html.theme-dark .dashboard-container .count-badge {
+	background: rgba(30, 41, 59, 0.95) !important;
+}
+
+html.theme-dark .dashboard-container .badge,
+html.theme-dark .dashboard-container .badge-blue,
+html.theme-dark .dashboard-container .badge.admin,
+html.theme-dark .dashboard-container .badge.trabajador {
+	background: rgba(96, 165, 250, 0.18) !important;
+	color: #dbeafe !important;
+	border: 1px solid rgba(96, 165, 250, 0.2) !important;
+}
+
+html.theme-dark .kpi-card h2,
+html.theme-dark .kpi-card p,
+html.theme-dark .panel h3,
+html.theme-dark .feature-card h3,
+html.theme-dark .feature-card p,
+html.theme-dark .empresa-nombre,
+html.theme-dark .empresa-desc,
+html.theme-dark .formulario label,
+html.theme-dark .grupo label,
+html.theme-dark .btn-nav,
+html.theme-dark .btn-hoy,
+html.theme-dark .vista-toggle button,
+html.theme-dark .nav-link,
+html.theme-dark .btn-principal,
+html.theme-dark .btn-secondary,
+html.theme-dark .btn-secundario,
+html.theme-dark .btn-cancelar,
+html.theme-dark .btn-confirmar,
+html.theme-dark .btn-estado,
+html.theme-dark .badge-estado,
+html.theme-dark .mes-dia-nombre,
+html.theme-dark .mes-numero,
+html.theme-dark .card-title,
+html.theme-dark .card-meta,
+html.theme-dark .card-usuario,
+html.theme-dark .detalle-fila,
+html.theme-dark .detalle-label,
+html.theme-dark .evento-nombre,
+html.theme-dark .evento-tipo,
+html.theme-dark .evento-hora,
+html.theme-dark .leyenda-item,
+html.theme-dark .fecha-titulo,
+html.theme-dark .encabezado h1,
+html.theme-dark .encabezado p,
+html.theme-dark .dia-numero,
+html.theme-dark .dia-nombre,
+html.theme-dark .card-badge,
+html.theme-dark .placeholder-dia,
+html.theme-dark .nombre-cliente,
+html.theme-dark .subtexto,
+html.theme-dark .sin-datos,
+html.theme-dark .empresa-ubicacion,
+html.theme-dark .modal-empresa-desc,
+html.theme-dark .modal-empresa-slogan {
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark .btn-principal,
+html.theme-dark .btn-confirmar,
+html.theme-dark .btn-nav-cta,
+html.theme-dark .btn-primary,
+html.theme-dark .empresa-btn-contactar {
+	background: #1d4f91 !important;
+	color: white !important;
+	border-color: #1d4f91 !important;
+}
+
+html.theme-dark .btn-secondary,
+html.theme-dark .btn-secundario,
+html.theme-dark .btn-cancelar,
+html.theme-dark .btn-estado,
+html.theme-dark .vista-toggle button,
+html.theme-dark .btn-nav,
+html.theme-dark .btn-hoy,
+html.theme-dark .nav-link {
+	background: #1f2937 !important;
+	color: #e5e7eb !important;
+	border-color: #334155 !important;
+}
+
+html.theme-dark input,
+html.theme-dark select,
+html.theme-dark textarea,
+html.theme-dark .grupo input,
+html.theme-dark .grupo select,
+html.theme-dark .grupo textarea,
+html.theme-dark .buscador input,
+html.theme-dark .theme-input {
+	background: #0f172a !important;
+	color: #e2e8f0 !important;
+	border-color: #334155 !important;
+}
+
+html.theme-dark .table thead,
+html.theme-dark thead,
+html.theme-dark .tabla-container thead {
+	background: #0f172a !important;
+}
+
+html.theme-dark .tabla-container tbody tr:hover td,
+html.theme-dark .card-top-clientes li:hover {
+	background: #1e293b !important;
+}
+
+html.theme-dark .badge,
+html.theme-dark .count-badge,
+html.theme-dark .badge-blue,
+html.theme-dark .badge-estado {
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark .area-point {
+	fill: #e2e8f0 !important;
+}
+
+html.theme-dark .mini-bar {
+	background: #334155 !important;
+}
+
+/* Agenda / calendario y paneles en modo oscuro */
+html.theme-dark .contenedor,
+html.theme-dark .vista-dia,
+html.theme-dark .vista-semana,
+html.theme-dark .vista-mes,
+html.theme-dark .nav-fecha,
+html.theme-dark .leyenda,
+html.theme-dark .semana-header,
+html.theme-dark .semana-body,
+html.theme-dark .mes-header,
+html.theme-dark .mes-grid,
+html.theme-dark .agenda-overlay {
+	background-color: #0f172a !important;
+}
+
+html.theme-dark .navbar,
+html.theme-dark .nav-fecha,
+html.theme-dark .vista-toggle button,
+html.theme-dark .btn-nav,
+html.theme-dark .btn-hoy,
+html.theme-dark .btn-principal,
+html.theme-dark .btn-cancelar,
+html.theme-dark .btn-confirmar,
+html.theme-dark .btn-estado,
+html.theme-dark .agenda-modal,
+html.theme-dark .mes-celda,
+html.theme-dark .dia-header,
+html.theme-dark .dia-column,
+html.theme-dark .card-cita,
+html.theme-dark .tarjeta-dia,
+html.theme-dark .agenda-detalle-header,
+html.theme-dark .agenda-modal .grupo input,
+html.theme-dark .agenda-modal .grupo select,
+html.theme-dark .agenda-modal .grupo textarea {
+	border-color: #334155 !important;
+}
+
+html.theme-dark .navbar,
+html.theme-dark .nav-fecha,
+html.theme-dark .vista-toggle button,
+html.theme-dark .btn-nav,
+html.theme-dark .btn-hoy,
+html.theme-dark .btn-principal,
+html.theme-dark .agenda-modal,
+html.theme-dark .mes-celda,
+html.theme-dark .dia-header,
+html.theme-dark .dia-column,
+html.theme-dark .tarjeta-dia,
+html.theme-dark .agenda-detalle-header,
+html.theme-dark .card-cita,
+html.theme-dark .grupo input,
+html.theme-dark .grupo select,
+html.theme-dark .grupo textarea {
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark .nav-fecha,
+html.theme-dark .dia-header,
+html.theme-dark .semana-header,
+html.theme-dark .mes-header,
+html.theme-dark .tarjeta-dia,
+html.theme-dark .dia-column,
+html.theme-dark .mes-celda,
+html.theme-dark .agenda-modal,
+html.theme-dark .card-cita,
+html.theme-dark .vista-semana,
+html.theme-dark .vista-mes,
+html.theme-dark .agenda-detalle-header {
+	background-color: #111827 !important;
+}
+
+html.theme-dark .fecha-titulo,
+html.theme-dark .encabezado h1,
+html.theme-dark .encabezado p,
+html.theme-dark .dia-nombre,
+html.theme-dark .dia-numero,
+html.theme-dark .card-title,
+html.theme-dark .card-time,
+html.theme-dark .mes-dia-nombre,
+html.theme-dark .mes-numero,
+html.theme-dark .agenda-modal h2,
+html.theme-dark .leyenda-item,
+html.theme-dark .detalle-label,
+html.theme-dark .detalle-fila,
+html.theme-dark .evento-nombre,
+html.theme-dark .evento-tipo,
+html.theme-dark .evento-hora,
+html.theme-dark .detalle-tipo,
+html.theme-dark .card-meta,
+html.theme-dark .card-usuario,
+html.theme-dark .placeholder-dia,
+html.theme-dark .gruop label,
+html.theme-dark .grupo label {
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark .nav-fecha,
+html.theme-dark .btn-nav,
+html.theme-dark .btn-hoy,
+html.theme-dark .vista-toggle button,
+html.theme-dark .card-cita,
+html.theme-dark .btn-cancelar,
+html.theme-dark .btn-confirmar,
+html.theme-dark .btn-estado,
+html.theme-dark .group input,
+html.theme-dark .grupo input,
+html.theme-dark .grupo select,
+html.theme-dark .grupo textarea {
+	box-shadow: none !important;
+}
+
+html.theme-dark .btn-nav,
+html.theme-dark .btn-hoy,
+html.theme-dark .vista-toggle button,
+html.theme-dark .btn-cancelar,
+html.theme-dark .btn-estado {
+	background: #1e293b !important;
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark .btn-principal,
+html.theme-dark .btn-confirmar {
+	background: #1d4f91 !important;
+	color: white !important;
+}
+
+html.theme-dark .agenda-modal .grupo input,
+html.theme-dark .agenda-modal .grupo select,
+html.theme-dark .agenda-modal .grupo textarea {
+	background: #0f172a !important;
+}
+
+html.theme-dark .agenda-modal .btn-cancelar {
+	background: #1f2937 !important;
+	color: #e5e7eb !important;
+}
+
+html.theme-dark .agenda-detalle-header.visita_tecnica,
+html.theme-dark .agenda-detalle-header.llamada,
+html.theme-dark .evento.visita_tecnica,
+html.theme-dark .evento.llamada,
+html.theme-dark .card-cita.visita_tecnica,
+html.theme-dark .card-cita.llamada {
+	background: rgba(30, 64, 175, 0.18) !important;
+}
+
+html.theme-dark .agenda-detalle-header.videollamada,
+html.theme-dark .evento.videollamada,
+html.theme-dark .card-cita.videollamada {
+	background: rgba(139, 92, 246, 0.18) !important;
+}
+
+html.theme-dark .evento-tipo,
+html.theme-dark .card-badge,
+html.theme-dark .detail-tipo,
+html.theme-dark .detalle-label,
+html.theme-dark .card-meta,
+html.theme-dark .card-usuario,
+html.theme-dark .mes-mas,
+html.theme-dark .placeholder-dia,
+html.theme-dark .badge-estado {
+	color: #cbd5e1 !important;
+}
+
+html.theme-dark .badge-estado.pendiente {
+	background: rgba(234, 179, 8, 0.18) !important;
+	color: #fcd34d !important;
+}
+
+html.theme-dark .badge-estado.confirmada {
+	background: rgba(34, 197, 94, 0.18) !important;
+	color: #86efac !important;
+}
+
+html.theme-dark .badge-estado.realizada {
+	background: rgba(59, 130, 246, 0.18) !important;
+	color: #bfdbfe !important;
+}
+
+html.theme-dark .badge-estado.cancelada {
+	background: rgba(239, 68, 68, 0.18) !important;
+	color: #fca5a5 !important;
+}
+
+html.theme-dark button,
+html.theme-dark .btn,
+html.theme-dark .nav-link,
+html.theme-dark .vista-toggle button,
+html.theme-dark .btn-nav,
+html.theme-dark .btn-hoy,
+html.theme-dark .btn-principal,
+html.theme-dark .btn-secundario,
+html.theme-dark .btn-cancelar,
+html.theme-dark .btn-confirmar,
+html.theme-dark .btn-estado,
+html.theme-dark .btn-primary,
+html.theme-dark .btn-secondary {
+	transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+html.theme-dark table,
+html.theme-dark .table,
+html.theme-dark thead,
+html.theme-dark tbody,
+html.theme-dark td,
+html.theme-dark th {
+	border-color: #334155 !important;
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark table td,
+html.theme-dark table th,
+html.theme-dark .table td,
+html.theme-dark .table th {
+	background: transparent !important;
+}
+
+html.theme-dark .modal-content,
+html.theme-dark .modal,
+html.theme-dark .dropdown-menu,
+html.theme-dark .popover,
+html.theme-dark .toast {
+	background: #111827 !important;
+	color: #e2e8f0 !important;
+	border-color: #334155 !important;
+}
+
+/* Base responsive para todas las pantallas */
+html.theme-dark {
+	color-scheme: dark;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+	max-width: 100%;
+}
+
+.leaflet-container {
+	max-width: 100%;
+}
+
+.tabla-scroll,
+.table-responsive {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+	input,
+	select,
+	textarea {
+		font-size: 16px !important;
+	}
+}
+
+/* Inventario y catalogo en modo oscuro */
+html.theme-dark .nav-link {
+	background: transparent !important;
+	border: 0 !important;
+	box-shadow: none !important;
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark .nav-link:hover {
+	background: transparent !important;
+	color: #ffffff !important;
+}
+
+html.theme-dark .contenedor .encabezado h1,
+html.theme-dark .contenedor .card-header h3,
+html.theme-dark .contenedor .kpi-valor,
+html.theme-dark .contenedor .mov-producto,
+html.theme-dark .contenedor .producto-nombre {
+	color: #f8fafc !important;
+}
+
+html.theme-dark .contenedor .encabezado p,
+html.theme-dark .contenedor .kpi-label,
+html.theme-dark .contenedor .mov-detalle,
+html.theme-dark .contenedor .producto-marca,
+html.theme-dark .contenedor .texto-gris {
+	color: #aab8cc !important;
+}
+
+html.theme-dark .contenedor .btn-link {
+	color: #93c5fd !important;
+}
+
+html.theme-dark .contenedor .kpi-icono {
+	color: #93c5fd !important;
+}
+
+html.theme-dark .contenedor .movimiento-item {
+	background: #111c2e !important;
+	border: 1px solid #26354b !important;
+	box-shadow: none !important;
+}
+
+html.theme-dark .contenedor .mov-icono {
+	color: #93c5fd !important;
+}
+
+html.theme-dark .contenedor .mov-tipo-badge.entrada,
+html.theme-dark .contenedor .mov-tipo-badge.devolucion {
+	background: #14532d !important;
+	color: #bbf7d0 !important;
+}
+
+html.theme-dark .contenedor .mov-tipo-badge.salida,
+html.theme-dark .contenedor .mov-tipo-badge.venta {
+	background: #7f1d1d !important;
+	color: #fecaca !important;
+}
+
+html.theme-dark .contenedor .mov-tipo-badge.reserva {
+	background: #1e3a8a !important;
+	color: #dbeafe !important;
+}
+
+html.theme-dark .contenedor .mov-tipo-badge.ajuste {
+	background: #78350f !important;
+	color: #fde68a !important;
+}
+
+html.theme-dark .tabs {
+	background: #0b1323 !important;
+	border-bottom-color: #26354b !important;
+}
+
+html.theme-dark .tab-btn {
+	background: transparent !important;
+	color: #b7c4d8 !important;
+	border-bottom-color: transparent !important;
+}
+
+html.theme-dark .tab-btn:hover {
+	background: #111c2e !important;
+	color: #f8fafc !important;
+}
+
+html.theme-dark .tab-btn.activo {
+	background: transparent !important;
+	color: #bfdbfe !important;
+	border-bottom-color: #60a5fa !important;
+}
+
+html.theme-dark .vacio {
+	color: #aab8cc !important;
+}
+
+html.theme-dark .tabla,
+html.theme-dark .tabla-wrap {
+	background: #0b1323 !important;
+}
+
+html.theme-dark .tabla td {
+	color: #dbe5f2 !important;
+	border-bottom-color: #26354b !important;
+}
+
+html.theme-dark .tabla tr:hover td {
+	background: #111c2e !important;
+}
+
+html.theme-dark .modelo-col {
+	color: #f8fafc !important;
+}
+
+html.theme-dark .badge-potencia {
+	background: #1e3a5f !important;
+	color: #bfdbfe !important;
+}
+
+html.theme-dark .card-form {
+	background: #0f172a !important;
+	color: #e2e8f0 !important;
+	border: 1px solid #26354b !important;
+	box-shadow: none !important;
+}
+
+html.theme-dark .card-form h3,
+html.theme-dark .tabla-container td,
+html.theme-dark .tabla-container td strong,
+html.theme-dark .modal h2,
+html.theme-dark .modal p {
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark .tabla-container td .texto-gris {
+	color: #aab8cc !important;
+}
+
+html.theme-dark .tabla-container .sin-datos {
+	color: #aab8cc !important;
+}
+
+html.theme-dark .badge-cat {
+	background: #26364c !important;
+	color: #dbeafe !important;
+	border: 1px solid #364b66 !important;
+}
+
+html.theme-dark .badge.activo {
+	background: #14532d !important;
+	color: #bbf7d0 !important;
+}
+
+html.theme-dark .badge.inactivo {
+	background: #7f1d1d !important;
+	color: #fecaca !important;
+}
+
+html.theme-dark .btn-accion.verde,
+html.theme-dark .btn-accion.verde:hover {
+	background: #14532d !important;
+	color: #bbf7d0 !important;
+}
+
+html.theme-dark .btn-accion.rojo,
+html.theme-dark .btn-accion.rojo:hover {
+	background: #7f1d1d !important;
+	color: #fecaca !important;
+}
+
+html.theme-dark .btn-accion.azul,
+html.theme-dark .btn-accion.azul:hover {
+	background: #1e3a8a !important;
+	color: #dbeafe !important;
+}
+
+html.theme-dark .btn-accion.amarillo,
+html.theme-dark .btn-accion.amarillo:hover {
+	background: #713f12 !important;
+	color: #fde68a !important;
+}
+
+html.theme-dark .btn-accion.gris,
+html.theme-dark .btn-accion.gris:hover,
+html.theme-dark .btn-cancelar-edit {
+	background: #334155 !important;
+	color: #e2e8f0 !important;
+	border-color: #475569 !important;
+}
+
+html.theme-dark .stock-barra {
+	background: #334155 !important;
+}
+
+html.theme-dark .mensaje.exito {
+	background: #123322 !important;
+	color: #bbf7d0 !important;
+}
+
+html.theme-dark .mensaje.error-msg {
+	background: #3b171b !important;
+	color: #fecaca !important;
+}
