@@ -360,6 +360,39 @@ CREATE TABLE inversores (
     FOREIGN KEY (fabricante_id) REFERENCES fabricantes(id)
 );
 
+CREATE TABLE componentes_empresa (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    empresa_id INT NOT NULL,
+    tipo ENUM('panel', 'inversor') NOT NULL,
+    fabricante VARCHAR(150),
+    modelo VARCHAR(150) NOT NULL,
+    -- Campos panel
+    potencia_wp DECIMAL(8,2),
+    eficiencia DECIMAL(5,4),
+    voc DECIMAL(6,2),
+    isc DECIMAL(6,2),
+    vmp DECIMAL(6,2),
+    imp DECIMAL(6,2),
+    coef_temp_potencia DECIMAL(7,5),
+    coef_temp_voc DECIMAL(7,5),
+    area_m2 DECIMAL(5,3),
+    tecnologia VARCHAR(50),
+    -- Campos inversor
+    potencia_nominal_kw DECIMAL(8,2),
+    eficiencia_maxima DECIMAL(5,4),
+    voltaje_mppt_min DECIMAL(6,2),
+    voltaje_mppt_max DECIMAL(6,2),
+    voltaje_max_entrada DECIMAL(6,2),
+    corriente_max_entrada DECIMAL(6,2),
+    numero_mppt INT,
+    numero_entradas_por_mppt INT,
+    fases ENUM('monofasico','trifasico'),
+    -- Control
+    activo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (empresa_id) REFERENCES empresas(id)
+);
+
 -- ─── Datos de prueba ──────────────────────────────────────────
 
 INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol, activo)

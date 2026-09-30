@@ -33,6 +33,8 @@ import MovimientosProductoVue from '@/modulos/inventario/vistas/MovimientosProdu
 import CategoriasVue from '@/modulos/inventario/vistas/CategoriasVue.vue';
 import CitasGlobalVue from '@/modulos/citas/vistas/CitasGlobalVue.vue';
 import PerfilEmpresaVue from '@/modulos/superadmin/vistas/PerfilEmpresaVue.vue';
+import AdminCatalogoVue from '@/modulos/admin/vistas/AdminCatalogoVue.vue';
+import AgregarComponenteVue from '@/modulos/admin/vistas/AgregarComponenteVue.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -216,6 +218,24 @@ const router = createRouter({
     path: '/citas',
     name: 'citas-global',
     component: CitasGlobalVue
+},
+{
+    path: '/admin/catalogo',
+    name: 'admin-catalogo',
+    component: AdminCatalogoVue,
+    meta: { soloAdmin: true }
+},
+{
+    path: '/admin/catalogo/agregar/:tipo',
+    name: 'admin-catalogo-agregar',
+    component: AgregarComponenteVue,
+    meta: { soloAdmin: true }
+},
+{
+    path: '/admin/catalogo/editar/:tipo/:id',
+    name: 'admin-catalogo-editar',
+    component: AgregarComponenteVue,
+    meta: { soloAdmin: true }
 },
     ]
 });

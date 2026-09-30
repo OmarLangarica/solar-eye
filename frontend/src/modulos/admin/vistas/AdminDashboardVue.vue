@@ -10,6 +10,7 @@
                 <button class="nav-link" @click="router.push('/clientes')">Clientes</button>
                 <button class="nav-link" @click="router.push('/admin/usuarios')">Empleados</button>
                 <button class="nav-link" @click="router.push('/inventario')">Inventario</button>
+                <button class="nav-link" @click="router.push('/admin/catalogo')">Componentes</button>
                 <button class="nav-link" @click="router.push('/citas')">Citas</button>
                 <button class="nav-link" @click="router.push('/admin/perfil')">Perfil</button>
             </div>

@@ -59,7 +59,7 @@
 
             <!-- Formulario consumo -->
             <div class="card">
-                <h2>Paso 3 — Consumo eléctrico</h2>
+                <h2>Paso 4 — Consumo eléctrico</h2>
                 <p class="subtitulo">Ingresa los datos del recibo de luz del cliente.</p>
 
                 

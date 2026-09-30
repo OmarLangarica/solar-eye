@@ -108,6 +108,7 @@ export interface PanelSolar {
     id: number;
     fabricante_id: number;
     fabricante_nombre: string;
+    es_empresa?: boolean;
     modelo: string;
     potencia_wp: number;
     eficiencia: number;
@@ -130,6 +131,7 @@ export interface InversorSolar {
     id: number;
     fabricante_id: number;
     fabricante_nombre: string;
+    es_empresa?: boolean;
     modelo: string;
     potencia_nominal_kw: number;
     potencia_maxima_kw: number;

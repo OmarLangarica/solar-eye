@@ -1,6 +1,25 @@
 <template>
     <div class="selector-componentes">
-
+         <!-- Filtro origen -->
+            <div class="filtro-origen">
+                <button
+                    :class="{ activo: filtroOrigen === 'todos' }"
+                    @click="filtroOrigen = 'todos'; fabricantePanelSel = null; fabricanteInversorSel = null">
+                    Todos
+                </button>
+                <button
+                    :class="{ activo: filtroOrigen === 'empresa' }"
+                    @click="filtroOrigen = 'empresa'; fabricantePanelSel = null; fabricanteInversorSel = null">
+                    <i class="bi bi-building"></i>
+                    Mis componentes
+                    <span class="count-badge" v-if="panelesEmpresa.length > 0">{{ panelesEmpresa.length }}</span>
+                </button>
+                <button
+                    :class="{ activo: filtroOrigen === 'catalogo' }"
+                    @click="filtroOrigen = 'catalogo'; fabricantePanelSel = null; fabricanteInversorSel = null">
+                    Catálogo global
+                </button>
+            </div>
         <!-- PANEL SOLAR -->
         <div class="selector-grupo">
             <h3>
@@ -11,7 +30,7 @@
                 Panel solar
             </h3>
 
-            <div class="filtro-fabricante">
+            <div class="filtro-fabricante" v-if="filtroOrigen === 'catalogo'">
                 <button
                     :class="{ activo: fabricantePanelSel === null }"
                     @click="fabricantePanelSel = null">
@@ -35,7 +54,10 @@
                     @click="seleccionarPanel(panel)">
                     <div class="componente-header">
                         <span class="componente-potencia">{{ panel.potencia_wp }} W</span>
-                        <span class="componente-badge">{{ (panel.eficiencia * 100).toFixed(1) }}%</span>
+                        <div style="display:flex; gap:0.3rem; align-items:center;">
+                            <span class="badge-empresa" v-if="panel.es_empresa">Mi empresa</span>
+                            <span class="componente-badge">{{ (panel.eficiencia * 100).toFixed(1) }}%</span>
+                        </div>
                     </div>
                     <div class="componente-modelo">{{ panel.modelo }}</div>
                     <div class="componente-fabricante">{{ panel.fabricante_nombre }}</div>
@@ -64,8 +86,7 @@
                 </svg>
                 Recomendado para tu sistema: {{ inversorRecomendado.fabricante_nombre }} {{ inversorRecomendado.modelo }}
             </div>
-
-            <div class="filtro-fabricante">
+            <div class="filtro-fabricante" v-if="filtroOrigen === 'catalogo'">
                 <button
                     :class="{ activo: fabricanteInversorSel === null }"
                     @click="fabricanteInversorSel = null">
@@ -92,7 +113,10 @@
                     @click="seleccionarInversor(inversor)">
                     <div class="componente-header">
                         <span class="componente-potencia">{{ inversor.potencia_nominal_kw }} kW</span>
-                        <span class="componente-badge">{{ (inversor.eficiencia_maxima * 100).toFixed(1) }}%</span>
+                        <div style="display:flex; gap:0.3rem; align-items:center;">
+                            <span class="badge-empresa" v-if="inversor.es_empresa">Mi empresa</span>
+                            <span class="componente-badge">{{ (inversor.eficiencia_maxima * 100).toFixed(1) }}%</span>
+                        </div>
                     </div>
                     <div class="componente-modelo">{{ inversor.modelo }}</div>
                     <div class="componente-fabricante">{{ inversor.fabricante_nombre }}</div>
@@ -146,6 +170,9 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import catalogoApi from '../api/catalogoApi';
 import type { PanelSolar, InversorSolar } from '../interfaces/simulaciones-interface';
+import { useAuthStore } from '../../../stores/authStore';
+
+const authStore = useAuthStore();
 
 const props = defineProps<{
     areaUtilM2: number;
@@ -162,6 +189,9 @@ const emit = defineEmits<{
 
 const paneles = ref<PanelSolar[]>([]);
 const inversores = ref<InversorSolar[]>([]);
+const panelesEmpresa = ref<PanelSolar[]>([]);
+const inversoresEmpresa = ref<InversorSolar[]>([]);
+const filtroOrigen = ref<'todos' | 'empresa' | 'catalogo'>('todos');
 const fabricantesPanel = ref<{ id: number; nombre: string }[]>([]);
 const fabricantesInversor = ref<{ id: number; nombre: string }[]>([]);
 
@@ -171,18 +201,89 @@ const inversorRecomendado = ref<InversorSolar | null>(null);
 const fabricantePanelSel = ref<number | null>(null);
 const fabricanteInversorSel = ref<number | null>(null);
 
-// ─── Filtros ──────────────────────────────────────────────────
-const panelesFiltrados = computed(() =>
-    fabricantePanelSel.value !== null
-        ? paneles.value.filter(p => p.fabricante_id === fabricantePanelSel.value)
-        : paneles.value
-);
+// ─── Componentes de la empresa ──────────────────────────────
+const cargarComponentesEmpresa = async () => {
+    try {
+        const empresa_id = authStore.usuario?.empresa_id;
+        if (!empresa_id) return;
 
-const inversoresFiltrados = computed(() =>
-    fabricanteInversorSel.value !== null
-        ? inversores.value.filter(i => i.fabricante_id === fabricanteInversorSel.value)
-        : inversores.value
-);
+        const [respPaneles, respInversores] = await Promise.all([
+            catalogoApi.get(`/empresa/${empresa_id}/componentes?tipo=panel`),
+            catalogoApi.get(`/empresa/${empresa_id}/componentes?tipo=inversor`)
+        ]);
+
+        panelesEmpresa.value = (Array.isArray(respPaneles.data) ? respPaneles.data : []).map((p: any) => ({
+            ...p,
+            fabricante_nombre: p.fabricante ?? 'Mi empresa',
+            potencia_wp: Number(p.potencia_wp),
+            eficiencia: Number(p.eficiencia),
+            voc: Number(p.voc),
+            isc: Number(p.isc),
+            vmp: Number(p.vmp),
+            imp: Number(p.imp),
+            coef_temp_potencia: Number(p.coef_temp_potencia),
+            coef_temp_voc: Number(p.coef_temp_voc),
+            area_m2: Number(p.area_m2),
+            es_empresa: true
+        }));
+
+        inversoresEmpresa.value = (Array.isArray(respInversores.data) ? respInversores.data : []).map((i: any) => ({
+            ...i,
+            fabricante_nombre: i.fabricante ?? 'Mi empresa',
+            potencia_nominal_kw: Number(i.potencia_nominal_kw),
+            eficiencia_maxima: Number(i.eficiencia_maxima),
+            voltaje_mppt_min: Number(i.voltaje_mppt_min),
+            voltaje_mppt_max: Number(i.voltaje_mppt_max),
+            voltaje_max_entrada: Number(i.voltaje_max_entrada),
+            corriente_max_entrada: Number(i.corriente_max_entrada),
+            numero_mppt: Number(i.numero_mppt),
+            numero_entradas_por_mppt: Number(i.numero_entradas_por_mppt),
+            es_empresa: true
+        }));
+    } catch (err) {
+        console.error('Error cargando componentes empresa:', err);
+    }
+};
+
+// ─── Filtros ──────────────────────────────────────────────────
+const panelesFiltrados = computed(() => {
+    let lista: PanelSolar[] = [];
+
+    if (filtroOrigen.value === 'empresa') {
+        lista = panelesEmpresa.value;
+    } else if (filtroOrigen.value === 'catalogo') {
+        lista = paneles.value;
+    } else {
+        // Todos: empresa primero, luego catálogo global
+        lista = [...panelesEmpresa.value, ...paneles.value];
+    }
+
+    if (filtroOrigen.value === 'catalogo' && fabricantePanelSel.value !== null) {
+        lista = lista.filter(p => p.fabricante_id === fabricantePanelSel.value ||
+            (p.es_empresa && fabricantePanelSel.value === -1));
+    }
+
+    return lista;
+});
+
+const inversoresFiltrados = computed(() => {
+    let lista: InversorSolar[] = [];
+
+    if (filtroOrigen.value === 'empresa') {
+        lista = inversoresEmpresa.value;
+    } else if (filtroOrigen.value === 'catalogo') {
+        lista = inversores.value;
+    } else {
+        lista = [...inversoresEmpresa.value, ...inversores.value];
+    }
+
+    if (filtroOrigen.value === 'catalogo' && fabricanteInversorSel.value !== null) {
+        lista = lista.filter(i => i.fabricante_id === fabricanteInversorSel.value ||
+            (i.es_empresa && fabricanteInversorSel.value === -1));
+    }
+
+    return lista;
+});
 
 // ─── Cálculos del sistema ─────────────────────────────────────
 const cantidadPaneles = computed(() => {
@@ -268,6 +369,8 @@ watch([panelSeleccionado, inversorSeleccionado], () => {
 // ─── Carga inicial ────────────────────────────────────────────
 onMounted(async () => {
     try {
+        await cargarComponentesEmpresa();
+
         const [respPaneles, respInversores] = await Promise.all([
             catalogoApi.get('/paneles'),
             catalogoApi.get('/inversores')
@@ -517,6 +620,58 @@ onMounted(async () => {
 .compatibilidad.incompatible {
     background: #fef9c3;
     color: #854d0e;
+}
+
+.filtro-origen {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding: 0.25rem;
+    background: #f0f4f8;
+    border-radius: 8px;
+    width: fit-content;
+}
+
+.filtro-origen button {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 1rem;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    color: #555;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.filtro-origen button:hover { background: white; color: #04142c; }
+.filtro-origen button.activo {
+    background: white;
+    color: #1d4f91;
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.count-badge {
+    background: #1d4f91;
+    color: white;
+    font-size: 0.68rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.badge-empresa {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    font-weight: 700;
 }
 
 @media (max-width: 768px) {
