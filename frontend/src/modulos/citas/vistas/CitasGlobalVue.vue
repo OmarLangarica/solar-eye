@@ -1005,6 +1005,120 @@ onMounted(async () => {
 .btn-estado.rojo { background: #fee2e2; color: #991b1b; }
 .btn-estado.rojo:hover { background: #fecaca; }
 
+html.theme-dark .contenedor {
+    background: #020d1f !important;
+    color: #e2e8f0 !important;
+}
+
+html.theme-dark .navbar {
+    background: rgba(10, 16, 29, 0.95) !important;
+    border-bottom-color: #23324b !important;
+}
+
+html.theme-dark .navbar-brand,
+html.theme-dark .navbar-user-name,
+html.theme-dark .nav-link,
+html.theme-dark .btn-nav,
+html.theme-dark .btn-hoy,
+html.theme-dark .vista-toggle button,
+html.theme-dark .fecha-titulo,
+html.theme-dark .dia-nombre,
+html.theme-dark .dia-numero,
+html.theme-dark .mes-dia-nombre,
+html.theme-dark .mes-numero,
+html.theme-dark .card-title,
+html.theme-dark .card-meta,
+html.theme-dark .detalle-label,
+html.theme-dark .detalle-fila,
+html.theme-dark .agenda-modal h2,
+html.theme-dark .grupo label,
+html.theme-dark .leyenda-item,
+html.theme-dark .evento-nombre,
+html.theme-dark .evento-tipo,
+html.theme-dark .evento-hora {
+    color: #e2e8f0 !important;
+}
+
+html.theme-dark .nav-link,
+html.theme-dark .btn-nav,
+html.theme-dark .btn-hoy,
+html.theme-dark .vista-toggle button,
+html.theme-dark .btn-cancelar,
+html.theme-dark .btn-estado {
+    background: transparent !important;
+    border-color: #334155 !important;
+}
+
+html.theme-dark .vista-dia,
+html.theme-dark .vista-semana,
+html.theme-dark .vista-mes,
+html.theme-dark .nav-fecha,
+html.theme-dark .dia-header,
+html.theme-dark .dia-column,
+html.theme-dark .mes-celda,
+html.theme-dark .tarjeta-dia,
+html.theme-dark .agenda-modal,
+html.theme-dark .agenda-detalle-header,
+html.theme-dark .card-cita,
+html.theme-dark .mes-evento,
+html.theme-dark .evento {
+    border-color: #334155 !important;
+}
+
+html.theme-dark .evento.visita_tecnica,
+html.theme-dark .card-cita.visita_tecnica,
+html.theme-dark .mes-evento.visita_tecnica {
+    background: rgba(59, 130, 246, 0.18) !important;
+    color: #dbeafe !important;
+}
+
+html.theme-dark .evento.llamada,
+html.theme-dark .card-cita.llamada,
+html.theme-dark .mes-evento.llamada {
+    background: rgba(30, 64, 175, 0.18) !important;
+    color: #dbeafe !important;
+}
+
+html.theme-dark .evento.videollamada,
+html.theme-dark .card-cita.videollamada,
+html.theme-dark .mes-evento.videollamada {
+    background: rgba(139, 92, 246, 0.18) !important;
+    color: #e9d5ff !important;
+}
+
+html.theme-dark .leyenda-dot.visita_tecnica,
+html.theme-dark .agenda-detalle-header.visita_tecnica,
+html.theme-dark .evento.visita_tecnica,
+html.theme-dark .card-cita.visita_tecnica {
+    border-left-color: #60a5fa !important;
+}
+
+html.theme-dark .leyenda-dot.llamada,
+html.theme-dark .agenda-detalle-header.llamada,
+html.theme-dark .evento.llamada,
+html.theme-dark .card-cita.llamada {
+    border-left-color: #93c5fd !important;
+}
+
+html.theme-dark .leyenda-dot.videollamada,
+html.theme-dark .agenda-detalle-header.videollamada,
+html.theme-dark .evento.videollamada,
+html.theme-dark .card-cita.videollamada {
+    border-left-color: #c4b5fd !important;
+}
+
+html.theme-dark .grupo input,
+html.theme-dark .grupo select,
+html.theme-dark .grupo textarea {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+html.theme-dark .btn-confirmar {
+    box-shadow: 0 8px 18px rgba(29, 79, 145, 0.35) !important;
+}
+
 @media (max-width: 768px) {
     .contenedor { padding: 1rem; }
     .encabezado { flex-direction: column; align-items: flex-start; }

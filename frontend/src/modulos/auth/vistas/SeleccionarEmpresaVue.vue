@@ -150,12 +150,13 @@ onMounted(() => traeEmpresas());
 }
 
 .card {
-    background: white;
+    background: #0f172a;
+    border: 1px solid rgba(148, 163, 184, 0.22);
     border-radius: 12px;
     padding: 0 2rem 2rem;
     width: 100%;
     max-width: 500px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: none;
     overflow: hidden;
 }
 
@@ -175,7 +176,7 @@ onMounted(() => traeEmpresas());
 .navbar-logo { height: 36px; width: auto; object-fit: contain; }
 
 .header { text-align: center; margin-bottom: 2rem; }
-.header p { color: #666; font-size: 0.9rem; margin: 0; }
+.header p { color: #dbeafe; font-size: 0.9rem; margin: 0; }
 
 .cargando { text-align: center; color: #999; padding: 2rem; }
 
@@ -200,30 +201,35 @@ onMounted(() => traeEmpresas());
     display: flex;
     align-items: center;
     gap: 1rem;
-    border: 2px solid #e0e0e0;
+    background: #111f33;
+    border: 1px solid rgba(148, 163, 184, 0.18);
     border-radius: 8px;
     padding: 1rem;
     cursor: pointer;
     transition: all 0.2s;
     overflow: hidden;
+    box-shadow: none;
 }
 
-.empresa-card:hover { border-color: #1e3a8a; background: #eef2ff; }
-.empresa-seleccionada { background: #eef2ff; border-color: #1e3a8a; }
+.empresa-card:hover { border-color: rgba(96, 165, 250, 0.6); background: #172a45; }
+.empresa-seleccionada { background: #11223d; border-color: rgba(96, 165, 250, 0.9); box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.35); }
 
 .empresa-color-strip { width: 6px; height: 40px; border-radius: 3px; flex-shrink: 0; }
 
 .empresa-info { flex: 1; }
-.empresa-info h3 { margin: 0 0 0.25rem; font-size: 1rem; color: #333; }
+.empresa-info h3 { margin: 0 0 0.25rem; font-size: 1rem; color: #f8fafc; }
 
 .badge {
     font-size: 0.75rem;
     font-weight: 600;
     padding: 0.15rem 0.6rem;
     border-radius: 999px;
+    border: 1px solid transparent;
+    background: #1d4f91;
+    color: #dbeafe;
 }
-.badge.admin { background: #ede9fe; color: #6d28d9; }
-.badge.trabajador { background: #dbeafe; color: #1e40af; }
+.badge.admin { background: #1d4f91; color: #dbeafe; }
+.badge.trabajador { background: #1e3a8a; color: #bfdbfe; }
 
 .acciones {
     display: flex;

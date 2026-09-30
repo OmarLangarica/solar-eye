@@ -1,29 +1,42 @@
 <template>
     <div class="dashboard-container">
-        <nav class="navbar">
-            <div class="navbar-brand">
-                <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
-            </div>
+    <nav class="navbar">
+    <div class="navbar-brand">
+        <img class="navbar-logo" :src="logoSolarEye" alt="Solar Eye" />
+    </div>
 
-            <div class="navbar-links">
-                <button class="nav-link" @click="router.push('/inventario')">Inventario</button>
-                <button class="nav-link" @click="router.push('/clientes')">Clientes</button>
-                <button class="nav-link" @click="router.push('/citas')">Citas</button>
-                <button
-                    v-if="authStore.usuario?.rol_empresa === 'admin'"
-                    class="nav-link"
-                    @click="router.push('/admin/dashboard')"
-                >← Volver</button>
-            </div>
+    <button
+        type="button"
+        class="navbar-toggle"
+        :aria-expanded="menuAbierto"
+        aria-controls="navbar-panel"
+        :aria-label="menuAbierto ? 'Cerrar menú' : 'Abrir menú'"
+        @click="menuAbierto = !menuAbierto"
+    >
+        <i class="bi" :class="menuAbierto ? 'bi-x-lg' : 'bi-list'" aria-hidden="true"></i>
+    </button>
 
-            <div class="navbar-user">
-                <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
-                <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
-                <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
-                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                </button>
-            </div>
-        </nav>
+    <div id="navbar-panel" class="navbar-panel" :class="{ 'navbar-panel--abierto': menuAbierto }">
+        <div class="navbar-links">
+            <button class="nav-link" @click="ir('/inventario')">Inventario</button>
+            <button class="nav-link" @click="ir('/clientes')">Clientes</button>
+            <button class="nav-link" @click="ir('/citas')">Citas</button>
+            <button
+                v-if="authStore.usuario?.rol_empresa === 'admin'"
+                class="nav-link"
+                @click="ir('/admin/dashboard')"
+            >← Volver</button>
+        </div>
+
+        <div class="navbar-user">
+            <span class="navbar-user-name">{{ authStore.usuario?.nombre }} {{ authStore.usuario?.apellido }}</span>
+            <button class="nav-link" @click="cambiarEmpresa" aria-label="Cambiar de Empresa" title="Cambiar de Empresa"><i class="bi bi-building-down"></i></button>
+            <button class="nav-link nav-link--logout" @click="cerrarSesion" aria-label="Cerrar sesión" title="Cerrar sesión">
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+</nav>
 
         <div class="mensaje error-msg" v-if="error">{{ error }}</div>
 
@@ -105,6 +118,11 @@ const authStore = useAuthStore();
 const { cerrarSesion } = useAuth();
 
 const cargando = ref(false);
+const menuAbierto = ref(false);
+const ir = (ruta: string) => {
+    menuAbierto.value = false;
+    router.push(ruta);
+};
 const error = ref<string | null>(null);
 const resumen = ref({
     totalClientes: 0,
@@ -260,7 +278,27 @@ onMounted(() => {
     width: auto;
     object-fit: contain;
 }
+.navbar-panel {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
 
+.navbar-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+    color: #fff;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    cursor: pointer;
+}
 .navbar-links,
 .navbar-user {
     display: flex;
@@ -549,5 +587,57 @@ onMounted(() => {
     }
 
     .donut-layout { gap: 1rem; }
+}
+@media (max-width: 768px) {
+    .navbar-toggle {
+        display: inline-flex;
+        margin-left: auto;
+    }
+
+    .navbar-panel {
+        display: none;
+        flex-basis: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .navbar-panel--abierto {
+        display: flex;
+    }
+
+    .navbar-links {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+    }
+
+    .navbar-links .nav-link {
+        text-align: left;
+        padding: 0.9rem 0;
+        font-size: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .navbar-user {
+        flex-wrap: nowrap;
+        margin-left: 0;
+        padding-top: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .navbar-user-name {
+        margin-right: auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .navbar-user .nav-link {
+        padding: 0.5rem;
+        font-size: 1.25rem;
+    }
 }
 </style>
