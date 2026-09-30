@@ -54,9 +54,16 @@ router.get('/:simulacion_id', async (req: Request, res: Response) => {
 
         const nombreArchivo = `Solar_Eye_${cliente?.nombre ?? 'cliente'}_${simulacion?.nombre_proyecto ?? 'reporte'}.pdf`
             .replace(/\s+/g, '_');
+        const nombreArchivoFallback = nombreArchivo
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\x20-\x7E]/g, '_');
 
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${nombreArchivo}"`);
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${nombreArchivoFallback}"; filename*=UTF-8''${encodeURIComponent(nombreArchivo)}`
+        );
         return res.send(pdfBuffer);
 
     } catch (err: any) {
