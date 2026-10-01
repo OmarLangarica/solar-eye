@@ -5,18 +5,8 @@ import { citaSchema, citaActualizarSchema } from '../schema/citasSchema.js';
 const normalizaFechaMySQL = (valor?: string | null) => {
     if (!valor) return null;
 
-    const fecha = new Date(valor);
-    if (Number.isNaN(fecha.getTime())) return valor;
-
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const anio = fecha.getFullYear();
-    const mes = pad(fecha.getMonth() + 1);
-    const dia = pad(fecha.getDate());
-    const horas = pad(fecha.getHours());
-    const minutos = pad(fecha.getMinutes());
-    const segundos = pad(fecha.getSeconds());
-
-    return `${anio}-${mes}-${dia} ${horas}:${minutos}:${segundos}`;
+    const fechaLocal = valor.trim().replace('T', ' ');
+    return fechaLocal.length === 16 ? `${fechaLocal}:00` : fechaLocal;
 };
 
 export const agregarCita = async (nuevo: CitaNueva) => {

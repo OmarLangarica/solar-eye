@@ -311,23 +311,42 @@ const horas = Array.from({ length: 14 }, (_, i) => {
     return `${h.toString().padStart(2, '0')}:00`;
 });
 
+const minutosDelDia = (fecha: string) => {
+    const match = fecha.match(/T(\d{2}):(\d{2})| (\d{2}):(\d{2})/);
+    if (!match) return 0;
+    return Number(match[1] ?? match[3]) * 60 + Number(match[2] ?? match[4]);
+};
+
 const formatHora = (fecha: string) => {
     if (!fecha) return '';
-    return new Date(fecha).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    const totalMinutos = minutosDelDia(fecha);
+    const horas = Math.floor(totalMinutos / 60);
+    const minutos = totalMinutos % 60;
+    const periodo = horas >= 12 ? 'p.m.' : 'a.m.';
+    const horas12 = horas % 12 || 12;
+    return `${horas12}:${String(minutos).padStart(2, '0')} ${periodo}`;
 };
 
 const formatFechaCompleta = (fecha?: string) => {
     if (!fecha) return '—';
-    return new Date(fecha).toLocaleString('es-MX', {
-        weekday: 'long', day: '2-digit', month: 'long',
-        hour: '2-digit', minute: '2-digit'
-    });
+    const fechaLocal = fecha.replace(' ', 'T');
+    const fechaParte = fechaLocal.slice(0, 10);
+    const [anio = 0, mes = 1, dia = 1] = fechaParte.split('-').map(Number);
+    const fechaCalendario = new Date(anio, mes - 1, dia, 12);
+    return `${fechaCalendario.toLocaleDateString('es-MX', {
+        weekday: 'long', day: '2-digit', month: 'long'
+    })}, ${formatHora(fechaLocal)}`;
 };
 
-const isoFecha = (d: Date) => d.toISOString().split('T')[0];
+const isoFecha = (d: Date) => {
+    const pad = (valor: number) => String(valor).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+const fechaCita = (fecha?: string | null) => fecha?.slice(0, 10) ?? '';
 
 const labelVista = computed(() => {
-    if (vista.value === 'dia') return formatFechaCompleta(fechaActual.value.toISOString()).split(',').slice(0, 2).join(',');
+    if (vista.value === 'dia') return formatFechaCompleta(`${isoFecha(fechaActual.value)}T12:00:00`).split(',').slice(0, 2).join(',');
     if (vista.value === 'semana') return `Semana del ${diasSemana.value[0]?.numero} al ${diasSemana.value[6]?.numero}`;
     return tituloFecha.value;
 });
@@ -355,15 +374,14 @@ const esHoy = (fecha: string) => fecha === isoFecha(new Date());
 
 const citasDelDia = computed(() => {
     const hoy = isoFecha(fechaActual.value);
-    return citas.value.filter(c => c.fecha_inicio?.startsWith(hoy));
+    return citas.value.filter(c => fechaCita(c.fecha_inicio) === hoy);
 });
 
 const posicionEvento = (cita: any) => {
-    const inicio = new Date(cita.fecha_inicio);
-    const horaInicio = inicio.getHours() + inicio.getMinutes() / 60;
+    const horaInicio = minutosDelDia(cita.fecha_inicio) / 60;
     const top = (horaInicio - 7) * 60;
     const altura = cita.fecha_fin
-        ? Math.max((new Date(cita.fecha_fin).getTime() - inicio.getTime()) / 60000, 30)
+        ? Math.max(minutosDelDia(cita.fecha_fin) - minutosDelDia(cita.fecha_inicio), 30)
         : 60;
     return { top: `${top}px`, height: `${altura}px` };
 };
@@ -384,7 +402,7 @@ const diasSemana = computed(() => {
 });
 
 const citasPorDia = (fecha: string) =>
-    citas.value.filter(c => c.fecha_inicio?.startsWith(fecha));
+    citas.value.filter(c => fechaCita(c.fecha_inicio) === fecha);
 
 const celdasMes = computed(() => {
     const anio = fechaActual.value.getFullYear();
@@ -407,7 +425,7 @@ const celdasMes = computed(() => {
             fecha: fechaStr,
             esEsteMes: d.getMonth() === mes,
             esHoy: fechaStr === hoy,
-            citas: citas.value.filter(c => c.fecha_inicio?.startsWith(fechaStr))
+            citas: citas.value.filter(c => fechaCita(c.fecha_inicio) === fechaStr)
         });
     }
     return celdas;
@@ -422,9 +440,10 @@ const abrirModalNueva = () => {
     console.log('abrirModalNueva ejecutado');
     const ahora = new Date();
     ahora.setMinutes(0, 0, 0);
+    const pad = (valor: number) => String(valor).padStart(2, '0');
     formNueva.cliente_id = '';
     formNueva.tipo = 'visita_tecnica';
-    formNueva.fecha_inicio = ahora.toISOString().slice(0, 16);
+    formNueva.fecha_inicio = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
     formNueva.fecha_fin = '';
     formNueva.notas = '';
     modalNueva.value = true;

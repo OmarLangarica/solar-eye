@@ -48,7 +48,7 @@ import { useAuthStore } from '../../../stores/authStore';
 const authStore = useAuthStore();
 const abierto = ref(false);
 const historial = ref([
-  { role: 'ia', content: '¡Hola! Soy el experto en paneles de SolarEye. ¿En qué te ayudo hoy?' }
+  { role: 'ia', content: '¡Hola! Soy el experto en paneles de Solar Eye. ¿En qué te ayudo hoy?' }
 ]);
 
 const estaAutenticado = computed(() => authStore.estaAutenticado());
