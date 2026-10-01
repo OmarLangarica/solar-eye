@@ -438,7 +438,10 @@ onMounted(() => {
 
         cargandoNasa.value = true;
         const geo = await consultarNasa(datosTecho.latitud, datosTecho.longitud);
-        if (geo) datosGeo.value = geo;
+        if (geo) {
+            datosGeo.value = geo;
+            calcularConfiguracionAutomatica(geo, datosTecho.latitud);
+        }
         cargandoNasa.value = false;
     });
 
