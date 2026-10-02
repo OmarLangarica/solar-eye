@@ -1003,3 +1003,155 @@ html.theme-dark .mensaje.error-msg {
 	background: #3b171b !important;
 	color: #fecaca !important;
 }
+
+/* Simulaciones: superficies y contraste del tema oscuro */
+html.theme-dark .panel-mapa,
+html.theme-dark .card-datos,
+html.theme-dark .card-ayuda,
+html.theme-dark .resumen-sistema,
+html.theme-dark .filtro-resultados {
+	background: #111c2e !important;
+	border-color: #2b3b52 !important;
+	color: #e2e8f0 !important;
+	box-shadow: none !important;
+}
+
+html.theme-dark .panel-header,
+html.theme-dark .instrucciones {
+	background: #0f172a !important;
+	border-color: #2b3b52 !important;
+}
+
+html.theme-dark .panel-header h2,
+html.theme-dark .card-datos h3,
+html.theme-dark .card-ayuda h3,
+html.theme-dark .contenedor .card h3,
+html.theme-dark .selector-grupo h3,
+html.theme-dark .resumen-sistema h4,
+html.theme-dark .electrico-seccion h4 {
+	color: #f8fafc !important;
+}
+
+html.theme-dark .panel-header p,
+html.theme-dark .instrucciones span,
+html.theme-dark .card-datos .dato-label,
+html.theme-dark .card-datos .sin-datos-card,
+html.theme-dark .card-ayuda .ayuda-item p,
+html.theme-dark .card-ayuda .promedio-item,
+html.theme-dark .contenedor .subtitulo,
+html.theme-dark .contenedor .card-subtitulo,
+html.theme-dark .filtro-label,
+html.theme-dark .pr-label,
+html.theme-dark .perdida-nombre,
+html.theme-dark .electrico-label {
+	color: #b7c4d8 !important;
+}
+
+html.theme-dark .card-datos .dato-valor,
+html.theme-dark .card-ayuda .ayuda-item strong,
+html.theme-dark .grupo label,
+html.theme-dark .contenedor .card h2,
+html.theme-dark .contenedor .encabezado h1,
+html.theme-dark .contenedor .encabezado p {
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark .card-ayuda .promedio-item {
+	border-bottom-color: #2b3b52 !important;
+}
+
+html.theme-dark .promedio-valor,
+html.theme-dark .componente-potencia,
+html.theme-dark .componente-dato strong,
+html.theme-dark .pr-valor {
+	color: #93c5fd !important;
+}
+
+html.theme-dark .componente-card {
+	background: #111c2e !important;
+	border-color: #2b3b52 !important;
+}
+
+html.theme-dark .componente-card:hover,
+html.theme-dark .componente-card.seleccionado {
+	background: #172a45 !important;
+	border-color: #60a5fa !important;
+}
+
+html.theme-dark .componente-bloque {
+	background: #172235 !important;
+	border-color: #334155 !important;
+}
+
+html.theme-dark .componente-modelo,
+html.theme-dark .componente-principal,
+html.theme-dark .componente-bloque-heading {
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark .componente-fabricante,
+html.theme-dark .componente-specs,
+html.theme-dark .resumen-label,
+html.theme-dark .componente-dato {
+	color: #b7c4d8 !important;
+}
+
+html.theme-dark .componente-specs span,
+html.theme-dark .filtro-origen,
+html.theme-dark .filtro-fabricante button {
+	background: #1e293b !important;
+	color: #dbe5f2 !important;
+	border-color: #334155 !important;
+}
+
+html.theme-dark .filtro-origen button.activo,
+html.theme-dark .filtro-fabricante button.activo,
+html.theme-dark .filtro-opcion.activo {
+	background: #1d4f91 !important;
+	color: #ffffff !important;
+	border-color: #3b82f6 !important;
+}
+
+html.theme-dark .filtro-opcion {
+	color: #dbe5f2 !important;
+}
+
+html.theme-dark .filtro-opcion:hover {
+	background: #1e293b !important;
+	color: #ffffff !important;
+}
+
+html.theme-dark .componente-dato,
+html.theme-dark .electrico-fila {
+	border-color: #2b3b52 !important;
+}
+
+html.theme-dark .componente-dato strong {
+	color: #93c5fd !important;
+}
+
+html.theme-dark .electrico-valor:not(.ok):not(.error):not(.advertencia),
+html.theme-dark .perdida-valor,
+html.theme-dark .tarjeta-valor,
+html.theme-dark .resumen-valor:not(.ratio-ok):not(.ratio-bajo):not(.ratio-alto) {
+	color: #f8fafc !important;
+}
+
+html.theme-dark input::placeholder,
+html.theme-dark textarea::placeholder {
+	color: #94a3b8 !important;
+	opacity: 1;
+}
+
+html.theme-dark .fila-ahorro-25 {
+	background: #12324f !important;
+	border: 1px solid #2f6aa3 !important;
+}
+
+html.theme-dark .fila-ahorro-25 > span:first-child {
+	color: #e2e8f0 !important;
+}
+
+html.theme-dark .fila-ahorro-25 .valor-ahorro-25 {
+	color: #67e8f9 !important;
+}

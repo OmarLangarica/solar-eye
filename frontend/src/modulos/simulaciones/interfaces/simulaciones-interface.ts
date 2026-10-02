@@ -75,6 +75,12 @@ export interface ResultadosCalculo {
     produccion_mensual_detalle?: ProduccionMensual[];
     perdidas?: PorcentajePerdidas;
     metodo_simulacion?: string;
+    suciedad_pct_anual?: number;
+    modelo_usado?: ModeloSuciedad;
+    fuente_datos_suciedad?: string;
+    perdida_kwh_anual?: number;
+    perdida_mxn_anual?: number;
+    mantenimiento_optimo?: MantenimientoOptimo;
     // Campos componentes ← AGREGA AQUÍ
     panel_modelo?: string;
     panel_potencia_wp?: number;
@@ -91,6 +97,31 @@ export interface ProduccionMensual {
     produccion_kwh: number;
     irradiancia_poa_kwh_m2: number;
     temp_celda_promedio_c: number;
+    produccion_ideal_kwh?: number;
+    produccion_real_kwh?: number;
+    perdida_suciedad_pct?: number;
+}
+
+export type ModeloSuciedad = 'HSU' | 'TASA_POR_NIVEL';
+
+export interface EscenarioMantenimiento {
+    intervalo_dias: number | null;
+    limpiezas_anuales: number;
+    suciedad_pct_anual: number;
+    costo_perdida_mxn: number;
+    costo_anual_limpiezas_mxn: number;
+    costo_total_mxn: number;
+    ahorro_neto_mxn: number;
+}
+
+export interface MantenimientoOptimo {
+    intervalo_dias: number | null;
+    fechas_limpieza_recomendadas: string[];
+    limpiezas_anuales: number;
+    costo_limpieza_por_visita_mxn: number;
+    costo_anual_limpiezas_mxn: number;
+    ahorro_neto_mxn: number;
+    escenarios: EscenarioMantenimiento[];
 }
 
 export interface PorcentajePerdidas {
@@ -102,6 +133,12 @@ export interface PorcentajePerdidas {
     sombra_pct: number;
     total_pct: number;
     performance_ratio: number;
+    suciedad_pct_anual?: number;
+    modelo_usado?: ModeloSuciedad;
+    fuente_datos_suciedad?: string;
+    perdida_kwh_anual?: number;
+    perdida_mxn_anual?: number;
+    mantenimiento_optimo?: MantenimientoOptimo;
 }
 
 export interface PanelSolar {

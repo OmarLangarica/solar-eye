@@ -6,7 +6,7 @@ import type { PanelSolar, InversorSolar, ModeladoElectrico } from '../interfaces
 import type {
     Simulacion, SimulacionNueva,
     DatosTecho, DatosGeograficos,
-    ConsumoElectrico, ResultadosCalculo
+    ConsumoElectrico, ResultadosCalculo, ProduccionMensual
 } from '../interfaces/simulaciones-interface';
 
 export const useSimulaciones = () => {
@@ -162,7 +162,15 @@ export const useSimulaciones = () => {
                 // Campos pvlib — mapeo correcto de nombres
                 numero_paneles: datos.numero_paneles ?? null,
                 performance_ratio: datos.performance_ratio ?? null,
-                perdidas_json: datos.perdidas ?? null,
+                perdidas_json: datos.perdidas ? {
+                    ...datos.perdidas,
+                    suciedad_pct_anual: datos.suciedad_pct_anual,
+                    modelo_usado: datos.modelo_usado,
+                    fuente_datos_suciedad: datos.fuente_datos_suciedad,
+                    perdida_kwh_anual: datos.perdida_kwh_anual,
+                    perdida_mxn_anual: datos.perdida_mxn_anual,
+                    mantenimiento_optimo: datos.mantenimiento_optimo
+                } : null,
                 metodo_simulacion: datos.metodo_simulacion ?? null,
                 produccion_mensual_json: datos.produccion_mensual_detalle ?? null,
                 modelado_electrico_json: datos.modelado_electrico ?? null,
@@ -238,6 +246,33 @@ export const useSimulaciones = () => {
         });
         console.log('pvlib respondió:', respPvlib.data);
         const pvlib = respPvlib.data;
+
+        let analisisSuciedad: {
+            suciedad_pct_anual: number;
+            modelo_usado: 'HSU' | 'TASA_POR_NIVEL';
+            fuente_datos_suciedad: string;
+            perdida_kwh_anual: number;
+            perdida_mxn_anual: number;
+            mantenimiento_optimo: ResultadosCalculo['mantenimiento_optimo'];
+            produccion_mensual_detalle: ProduccionMensual[];
+        } | null = null;
+        try {
+            const anioLluvia = new Date().getFullYear() - 1;
+            const respuestaSuciedad = await nasaApi.post('/suciedad', {
+                latitud: Number(techo.latitud),
+                longitud: Number(techo.longitud),
+                inicio: `${anioLluvia}0101`,
+                fin: `${anioLluvia}1231`,
+                inclinacionGrados: Number(techo.angulo_inclinacion_deg),
+                tarifaKwh: Number(consumo.tarifa_kwh_mxn),
+                costoLimpiezaMxn: 300,
+                produccionMensual: pvlib.produccion_mensual
+            });
+            analisisSuciedad = respuestaSuciedad.data;
+        } catch (err) {
+            console.error('No se pudo obtener el análisis de suciedad NASA POWER:', err);
+        }
+
         console.log('llamando predicción consumo...');
         // Predicción de consumo mensual con red neuronal
         const consumoMensualPredicho = await prediceConsumoMensual(
@@ -269,7 +304,10 @@ export const useSimulaciones = () => {
 
 
         // Datos base
-        const produccionAnual  = pvlib.produccion_anual_kwh;
+        const produccionMensualDetalle: ProduccionMensual[] = analisisSuciedad?.produccion_mensual_detalle ?? pvlib.produccion_mensual;
+        const produccionAnual  = analisisSuciedad
+            ? produccionMensualDetalle.reduce((total, mes) => total + Number(mes.produccion_real_kwh ?? mes.produccion_kwh), 0)
+            : pvlib.produccion_anual_kwh;
         const consumoAnual     = Number(consumo.consumo_anual_kwh);
         const consumoMensual   = Number(consumo.consumo_mensual_kwh);
         const tarifaKwh        = Number(consumo.tarifa_kwh_mxn);
@@ -319,7 +357,7 @@ export const useSimulaciones = () => {
             simulacion_id,
             numero_paneles:                 cantidadPaneles,
             produccion_anual_kwh:           produccionAnual,
-            produccion_mensual_promedio_kwh: pvlib.produccion_mensual_promedio_kwh,
+            produccion_mensual_promedio_kwh: produccionAnual / 12,
             porcentaje_cobertura:           parseFloat(porcentajeCobertura.toFixed(2)),
             excedente_kwh:                  parseFloat(excedente.toFixed(2)),
             ahorro_mensual_mxn:             parseFloat(ahorroMensual.toFixed(2)),
@@ -335,8 +373,20 @@ export const useSimulaciones = () => {
             tasa_incremento_tarifa_pct:     5.00,
             // Campos pvlib
             performance_ratio:          pvlib.performance_ratio,
-            produccion_mensual_detalle: pvlib.produccion_mensual,
-            perdidas:                   pvlib.perdidas,
+            produccion_mensual_detalle: produccionMensualDetalle,
+            perdidas: pvlib.perdidas && analisisSuciedad ? {
+                ...pvlib.perdidas,
+                suciedad_pct: analisisSuciedad.suciedad_pct_anual,
+                total_pct: Number(pvlib.perdidas.total_pct ?? 0)
+                    - Number(pvlib.perdidas.suciedad_pct ?? 0)
+                    + analisisSuciedad.suciedad_pct_anual
+            } : pvlib.perdidas,
+            suciedad_pct_anual: analisisSuciedad?.suciedad_pct_anual,
+            modelo_usado: analisisSuciedad?.modelo_usado,
+            fuente_datos_suciedad: analisisSuciedad?.fuente_datos_suciedad,
+            perdida_kwh_anual: analisisSuciedad?.perdida_kwh_anual,
+            perdida_mxn_anual: analisisSuciedad?.perdida_mxn_anual,
+            mantenimiento_optimo: analisisSuciedad?.mantenimiento_optimo,
             metodo_simulacion:          pvlib.metodo,
             // Campos componentes
             panel_modelo:       componentes?.panel_modelo       ?? undefined,

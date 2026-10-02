@@ -124,8 +124,8 @@
 
       <div v-show="mostrarSeccion('resumen')" class="graficas-grid" v-if="resultados && consumo">
         <div class="card card-grafica">
-          <h3><i class="bi bi-bar-chart-line"></i> Comparativa de consumo vs generación</h3>
-          <p class="card-subtitulo">Consumo mensual del cliente frente a la producción mensual estimada del sistema.</p>
+          <h3><i class="bi bi-bar-chart-line"></i> Producción ideal vs. real por suciedad</h3>
+          <p class="card-subtitulo">Comparación mensual con la pérdida estimada por lluvia y suciedad.</p>
           <div class="canvas-wrap">
             <canvas ref="comparativaCanvas"></canvas>
           </div>
@@ -149,7 +149,10 @@
       <div class="grid-resultados" :class="`filtro-${filtroActivo}`">
         <!-- Card Performance Ratio y Pérdidas -->
       <div v-show="mostrarSeccion('tecnico')" class="card card-perdidas" v-if="resultados?.perdidas">
-          <h3><i class="bi bi-speedometer2"></i> Performance Ratio y pérdidas</h3>
+          <h3>
+            <i class="bi bi-speedometer2"></i> Performance Ratio y pérdidas
+            <span v-if="resultados.modelo_usado" class="modelo-suciedad">Modelo {{ resultados.modelo_usado }}</span>
+          </h3>
           <div class="pr-display">
               <div class="pr-valor">{{ ((resultados.performance_ratio ?? 0) * 100).toFixed(1) }}%</div>
               <div class="pr-label">Performance Ratio</div>
@@ -181,10 +184,10 @@
               <div class="perdida-item">
                   <div class="perdida-barra-wrap">
                       <div class="perdida-barra"
-                          :style="{ height: `${resultados.perdidas.suciedad_pct * 4}px` }">
+                      :style="{ height: `${(resultados.suciedad_pct_anual ?? resultados.perdidas.suciedad_pct) * 4}px` }">
                       </div>
                   </div>
-                  <span class="perdida-valor">{{ resultados.perdidas.suciedad_pct }}%</span>
+                  <span class="perdida-valor">{{ resultados.suciedad_pct_anual ?? resultados.perdidas.suciedad_pct }}%</span>
                   <span class="perdida-nombre">Suciedad</span>
               </div>
               <div class="perdida-item">
@@ -230,6 +233,61 @@
           </div>
       </div>
 
+          <div v-if="resultados.mantenimiento_optimo" class="card card-mantenimiento">
+            <h3><i class="bi bi-droplet-half"></i> Plan de limpieza recomendado</h3>
+            <p class="card-subtitulo">
+              Estimación con un costo de {{ resultados.mantenimiento_optimo.costo_limpieza_por_visita_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }} por visita.
+            </p>
+            <p v-if="resultados.fuente_datos_suciedad?.includes('Open-Meteo')" class="fuente-suciedad">
+              Partículas CAMS Global consultadas mediante
+              <a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.
+            </p>
+            <div class="mantenimiento-resumen">
+              <div>
+                <span>Frecuencia óptima</span>
+                <strong>{{ resultados.mantenimiento_optimo.intervalo_dias === null ? 'Sin limpieza manual' : `Cada ${resultados.mantenimiento_optimo.intervalo_dias} días` }}</strong>
+              </div>
+              <div>
+                <span>Limpiezas al año</span>
+                <strong>{{ resultados.mantenimiento_optimo.limpiezas_anuales }}</strong>
+              </div>
+              <div>
+                <span>Costo anual</span>
+                <strong>{{ resultados.mantenimiento_optimo.costo_anual_limpiezas_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</strong>
+              </div>
+              <div>
+                <span>Ahorro neto estimado</span>
+                <strong class="ahorro-neto">{{ resultados.mantenimiento_optimo.ahorro_neto_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</strong>
+              </div>
+            </div>
+            <div class="calendario-limpieza">
+              <strong>Calendario sugerido</strong>
+              <p>Fechas aproximadas según el intervalo calculado; una lluvia suficiente puede adelantar la limpieza natural.</p>
+              <div v-if="resultados.mantenimiento_optimo.fechas_limpieza_recomendadas.length" class="fechas-limpieza">
+                <span v-for="fecha in resultados.mantenimiento_optimo.fechas_limpieza_recomendadas" :key="fecha">
+                  {{ formateaFecha(fecha) }}
+                </span>
+              </div>
+              <p v-else>No se recomiendan limpiezas manuales para este costo y tarifa.</p>
+            </div>
+            <div class="tabla-scroll">
+              <table class="tabla-mensual tabla-escenarios">
+                <thead>
+                  <tr><th>Frecuencia</th><th>Limpiezas/año</th><th>Pérdida</th><th>Costo total</th><th>Ahorro neto</th></tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(escenario, indice) in resultados.mantenimiento_optimo.escenarios" :key="`${escenario.intervalo_dias ?? 'sin-limpieza'}-${indice}`">
+                    <td>{{ escenario.intervalo_dias === null ? 'Sin limpieza manual' : `Cada ${escenario.intervalo_dias} días` }}</td>
+                    <td>{{ escenario.limpiezas_anuales }}</td>
+                    <td>{{ escenario.suciedad_pct_anual }}%</td>
+                    <td>{{ escenario.costo_total_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</td>
+                    <td class="ahorro-neto">{{ escenario.ahorro_neto_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
       <!-- Card producción mensual detallada -->
       <div v-show="mostrarSeccion('energia')" class="card card-produccion-detalle" v-if="resultados?.produccion_mensual_detalle">
           <h3><i class="bi bi-sun"></i> Producción mensual detallada (pvlib)</h3>
@@ -237,7 +295,9 @@
               <thead>
                   <tr>
                       <th>Mes</th>
-                      <th>Producción (kWh)</th>
+                      <th>Producción ideal (kWh)</th>
+                      <th>Producción real (kWh)</th>
+                      <th>Suciedad estimada</th>
                       <th>Irradiancia POA (kWh/m²)</th>
                       <th>Temp. Celda (°C)</th>
                   </tr>
@@ -245,7 +305,9 @@
               <tbody>
                   <tr v-for="m in resultados.produccion_mensual_detalle" :key="m.numero_mes">
                       <td>{{ m.mes }}</td>
-                      <td class="valor-positivo">{{ m.produccion_kwh.toLocaleString('es-MX') }}</td>
+                      <td>{{ (m.produccion_ideal_kwh ?? m.produccion_kwh).toLocaleString('es-MX') }}</td>
+                      <td class="valor-positivo">{{ (m.produccion_real_kwh ?? m.produccion_kwh).toLocaleString('es-MX') }}</td>
+                      <td>{{ typeof m.perdida_suciedad_pct === 'number' ? `${m.perdida_suciedad_pct.toFixed(2)}%` : 'Sin datos' }}</td>
                       <td>{{ m.irradiancia_poa_kwh_m2 }}</td>
                       <td>{{ m.temp_celda_promedio_c }}°C</td>
                   </tr>
@@ -674,6 +736,13 @@ const TOTAL_ANIOS_PROYECCION = 25;
 
 const redondeaMoneda = (valor: number) => Number(valor.toFixed(2));
 
+const formateaFecha = (fecha: string) => new Intl.DateTimeFormat('es-MX', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC'
+}).format(new Date(`${fecha}T00:00:00Z`));
+
 const obtienePaletaGrafica = () => {
   const oscuro = document.documentElement.classList.contains('theme-dark');
   return oscuro
@@ -724,6 +793,12 @@ const normalizaResultados = (data: Partial<ResultadosCalculo>): ResultadosCalcul
         // Campos pvlib
         performance_ratio: data.performance_ratio ? Number(data.performance_ratio) : undefined,
         perdidas,
+        suciedad_pct_anual: data.suciedad_pct_anual ?? perdidas?.suciedad_pct_anual ?? perdidas?.suciedad_pct,
+        modelo_usado: data.modelo_usado ?? perdidas?.modelo_usado,
+        fuente_datos_suciedad: data.fuente_datos_suciedad ?? perdidas?.fuente_datos_suciedad,
+        perdida_kwh_anual: data.perdida_kwh_anual ?? perdidas?.perdida_kwh_anual,
+        perdida_mxn_anual: data.perdida_mxn_anual ?? perdidas?.perdida_mxn_anual,
+        mantenimiento_optimo: data.mantenimiento_optimo ?? perdidas?.mantenimiento_optimo,
         produccion_mensual_detalle,
         metodo_simulacion: data.metodo_simulacion ?? undefined,
         // Campos componentes — primero desde data, fallback a sessionStorage
@@ -818,16 +893,18 @@ const limpiarGraficas = () => {
 };
 
 const renderGraficaComparativa = () => {
-  if (!comparativaCanvas.value || !resultados.value || !consumo.value) return;
+  if (!comparativaCanvas.value || !resultados.value) return;
+  const produccionMensual = resultados.value.produccion_mensual_detalle ?? [];
+  if (produccionMensual.length === 0) return;
   const paleta = obtienePaletaGrafica();
   comparativaChart.value?.destroy();
   comparativaChart.value = new Chart(comparativaCanvas.value, {
     type: 'bar',
     data: {
-      labels: ['Mensual'],
+      labels: produccionMensual.map((mes) => mes.mes),
       datasets: [
-        { label: 'Consumo (kWh)', data: [Number(consumo.value.consumo_mensual_kwh || 0)], backgroundColor: '#ef4444', borderRadius: 8, maxBarThickness: 58 },
-        { label: 'Generación solar (kWh)', data: [Number(resultados.value.produccion_mensual_promedio_kwh || 0)], backgroundColor: '#22c55e', borderRadius: 8, maxBarThickness: 58 }
+        { label: 'Producción ideal (sin suciedad)', data: produccionMensual.map((mes) => Number(mes.produccion_ideal_kwh ?? mes.produccion_kwh)), backgroundColor: '#64748b', borderRadius: 5, maxBarThickness: 30 },
+        { label: 'Producción real estimada', data: produccionMensual.map((mes) => Number(mes.produccion_real_kwh ?? mes.produccion_kwh)), backgroundColor: '#22c55e', borderRadius: 5, maxBarThickness: 30 }
       ]
     },
     options: {
@@ -885,7 +962,8 @@ const getCoberturaReal = (
     produccionMensual: any[] | undefined
 ): string => {
     if (!produccionMensual) return '0';
-    const produccion = produccionMensual.find(p => p.numero_mes === mes.numero_mes)?.produccion_kwh ?? 0;
+    const produccionMes = produccionMensual.find(p => p.numero_mes === mes.numero_mes);
+    const produccion = produccionMes?.produccion_real_kwh ?? produccionMes?.produccion_kwh ?? 0;
     const cobertura = Math.min((produccion / mes.consumo_estimado_kwh) * 100, 100);
     return cobertura.toFixed(1);
 };
@@ -895,7 +973,8 @@ const getCoberturaClase = (
     produccionMensual: any[] | undefined
 ): string => {
     if (!produccionMensual) return 'cobertura-baja';
-    const produccion = produccionMensual.find(p => p.numero_mes === mes.numero_mes)?.produccion_kwh ?? 0;
+    const produccionMes = produccionMensual.find(p => p.numero_mes === mes.numero_mes);
+    const produccion = produccionMes?.produccion_real_kwh ?? produccionMes?.produccion_kwh ?? 0;
     const cobertura = (produccion / mes.consumo_estimado_kwh) * 100;
     if (cobertura >= 100) return 'cobertura-total';
     if (cobertura >= 70) return 'cobertura-alta';
@@ -1464,4 +1543,36 @@ const descargarPDF = () => {
 .cobertura-alta   { background: #dbeafe; color: #1d4f91; }
 .cobertura-media  { background: #fef9c3; color: #854d0e; }
 .cobertura-baja   { background: #fef2f2; color: #dc2626; }
+
+.modelo-suciedad { display: inline-block; margin-left: 0.5rem; padding: 0.2rem 0.55rem; border-radius: 999px; background: #e0f2fe; color: #075985; font-size: 0.7rem; font-weight: 700; vertical-align: middle; }
+.card-mantenimiento { margin: 0 0 1.25rem; }
+.mantenimiento-resumen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; margin: 0 0 1rem; }
+.mantenimiento-resumen > div { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.75rem; border: 1px solid #dbe5f0; border-radius: 7px; }
+.mantenimiento-resumen span { color: #64748b; font-size: 0.75rem; }
+.mantenimiento-resumen strong { color: #123b6d; font-size: 0.9rem; }
+.ahorro-neto { color: #16a34a !important; font-weight: 700; }
+.tabla-escenarios { min-width: 600px; }
+.fuente-suciedad { margin: -0.55rem 0 1rem; color: #64748b; font-size: 0.75rem; }
+.fuente-suciedad a { color: #1d4f91; }
+.calendario-limpieza { margin: 0 0 1rem; padding: 0.75rem; border: 1px solid #dbe5f0; border-radius: 7px; }
+.calendario-limpieza > strong { color: #123b6d; font-size: 0.85rem; }
+.calendario-limpieza > p { margin: 0.25rem 0 0.6rem; color: #64748b; font-size: 0.75rem; }
+.fechas-limpieza { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.fechas-limpieza span { padding: 0.25rem 0.5rem; border-radius: 5px; background: #e0f2fe; color: #075985; font-size: 0.75rem; font-weight: 600; }
+
+:global(html.theme-dark) .contenedor .modelo-suciedad { background: #164e63; color: #cffafe; }
+:global(html.theme-dark) .contenedor .mantenimiento-resumen > div { background: #111c2e; border-color: #2b3b52; }
+:global(html.theme-dark) .contenedor .mantenimiento-resumen span { color: #b7c4d8; }
+:global(html.theme-dark) .contenedor .mantenimiento-resumen strong { color: #f8fafc; }
+:global(html.theme-dark) .contenedor .ahorro-neto { color: #86efac !important; }
+:global(html.theme-dark) .contenedor .fuente-suciedad { color: #b7c4d8; }
+:global(html.theme-dark) .contenedor .fuente-suciedad a { color: #93c5fd; }
+:global(html.theme-dark) .contenedor .calendario-limpieza { border-color: #2b3b52; }
+:global(html.theme-dark) .contenedor .calendario-limpieza > strong { color: #f8fafc; }
+:global(html.theme-dark) .contenedor .calendario-limpieza > p { color: #b7c4d8; }
+:global(html.theme-dark) .contenedor .fechas-limpieza span { background: #164e63; color: #cffafe; }
+
+@media (max-width: 780px) {
+  .mantenimiento-resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 </style>
