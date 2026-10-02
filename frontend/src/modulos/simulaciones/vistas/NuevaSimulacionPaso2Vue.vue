@@ -64,9 +64,23 @@
                     <h2>Traza el área del techo</h2>
                     <p>Usa las herramientas del mapa para dibujar el polígono del techo de la propiedad.</p>
                 </div>
+                <div class="mapa-toolbar" aria-label="Modo de visualización del mapa">
+                    <button type="button" class="mapa-modo" :class="{ activo: modoMapa === 'satellite' }" @click="cambiarModoMapa('satellite')">Satélite 2D</button>
+                    <button type="button" class="mapa-modo" :class="{ activo: modoMapa === '3d' }" @click="cambiarModoMapa('3d')">Vista 3D</button>
+                    <button
+                        v-if="modoMapa === '3d'"
+                        type="button"
+                        class="mapa-modo"
+                        :class="{ activo: modoSeleccion === 'edificio' }"
+                        @click="activarSeleccionEdificio"
+                    >
+                        Seleccionar edificio
+                    </button>
+                </div>
                 <div id="mapa" ref="mapaRef"></div>
                 <div class="instrucciones">
-                    <span>Haz clic en el ícono de polígono para comenzar a trazar</span>
+                    <span v-if="modoSeleccion === 'edificio'">Haz clic sobre un edificio 3D para seleccionar su huella</span>
+                    <span v-else>Haz clic en el ícono de polígono para comenzar a trazar</span>
                     <span>Cierra el polígono haciendo clic en el primer punto</span>
                     <span>Usa el ícono de papelera para borrar y volver a trazar</span>
                 </div>
@@ -221,10 +235,10 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-draw/dist/leaflet.draw.css';
-import 'leaflet-draw';
+import mapboxgl from 'mapbox-gl';
+import MapboxDraw from '@mapbox/mapbox-gl-draw';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { useSimulaciones } from '../controladores/useSimulaciones';
 import type { DatosTecho, DatosGeograficos } from '../interfaces/simulaciones-interface';
 import simulacionesApi from '../api/simulacionesApi';
@@ -262,8 +276,11 @@ const cambiarEmpresa = () => {
 };
 
 const mapaRef = ref<HTMLElement | null>(null);
+const modoMapa = ref<'satellite' | '3d'>('satellite');
+const modoSeleccion = ref<'manual' | 'edificio'>('manual');
 const cargandoNasa = ref(false);
 const datosGeo = ref<DatosGeograficos | null>(null);
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 // ─── Buscador ──────────────────────────────────────────────────
 const busqueda = reactive({
@@ -307,7 +324,7 @@ const buscarUbicacion = async () => {
 
         const lat = parseFloat(datos[0].lat);
         const lng = parseFloat(datos[0].lon);
-        mapa?.setView([lat, lng], 18);
+        mapa?.flyTo({ center: [lng, lat], zoom: 18 });
 
     } catch (err) {
         errorBusqueda.value = 'Error al buscar la ubicación';
@@ -330,8 +347,8 @@ const datosTecho = reactive<DatosTecho>({
     area_util_m2: null
 });
 
-let mapa: L.Map | null = null;
-let capaEdicion: L.FeatureGroup | null = null;
+let mapa: mapboxgl.Map | null = null;
+let controlesDibujo: MapboxDraw | null = null;
 
 const calcularAreaM2 = (coordenadas: [number, number][]): number => {
     const R = 6371000;
@@ -355,9 +372,14 @@ const calcularPerimetroM = (coordenadas: [number, number][]): number => {
         const actual = coordenadas[i];
         const siguiente = coordenadas[(i + 1) % coordenadas.length];
         if (!actual || !siguiente) continue;
-        const p1 = L.latLng(actual[0], actual[1]);
-        const p2 = L.latLng(siguiente[0], siguiente[1]);
-        perimetro += p1.distanceTo(p2);
+        const [lat1, lng1] = actual;
+        const [lat2, lng2] = siguiente;
+        const toRad = (deg: number) => deg * Math.PI / 180;
+        const dLat = toRad(lat2 - lat1);
+        const dLng = toRad(lng2 - lng1);
+        const a = Math.sin(dLat / 2) ** 2
+            + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+        perimetro += 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
     return parseFloat(perimetro.toFixed(2));
 };
@@ -368,89 +390,175 @@ const puedeAvanzar = computed(() =>
     datosGeo.value !== null
 );
 
-onMounted(() => {
-    mapa = L.map(mapaRef.value!, {
-        center: [23.6345, -102.5528],
-        zoom: 5,
-        doubleClickZoom: false
-    });
-
-    if (!mapa) return;
-
-    // Capas
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles © Esri',
-        maxNativeZoom: 18,
-        maxZoom: 22
-    }).addTo(mapa);
-
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '',
-        maxNativeZoom: 18,
-        maxZoom: 22
-    }).addTo(mapa);
-
-    capaEdicion = new L.FeatureGroup();
-    mapa.addLayer(capaEdicion);
-
-    // Controles de dibujo
-    const controles = new (L as any).Control.Draw({
-        edit: { featureGroup: capaEdicion },
-        draw: {
-            polygon: {
-                allowIntersection: false,
-                showArea: true,
-                shapeOptions: {
-                    color: '#1e3a8a',
-                    fillOpacity: 0.3
-                },
-                maxPoints: 4,
-            },
-            polyline: false,
-            circle: false,
-            marker: false,
-            circlemarker: false,
-            rectangle: false
+const aplicarModo3D = () => {
+    if (!mapa || !mapa.getSource('mapbox-dem')) return;
+    if (modoMapa.value === '3d') {
+        mapa.setTerrain({ source: 'mapbox-dem', exaggeration: 1.15 });
+        mapa.easeTo({ pitch: 55, bearing: -15, duration: 900 });
+        if (mapa.getLayer('edificios-3d')) {
+            mapa.setLayoutProperty('edificios-3d', 'visibility', 'visible');
         }
+    } else {
+        mapa.setTerrain(null);
+        mapa.easeTo({ pitch: 0, bearing: 0, duration: 900 });
+        if (mapa.getLayer('edificios-3d')) {
+            mapa.setLayoutProperty('edificios-3d', 'visibility', 'none');
+        }
+    }
+};
+
+const cambiarModoMapa = (modo: 'satellite' | '3d') => {
+    modoMapa.value = modo;
+    if (modo !== '3d' && modoSeleccion.value === 'edificio') {
+        modoSeleccion.value = 'manual';
+        mapa?.getCanvas().style.setProperty('cursor', '');
+    }
+    aplicarModo3D();
+};
+
+const activarSeleccionEdificio = () => {
+    modoSeleccion.value = modoSeleccion.value === 'edificio' ? 'manual' : 'edificio';
+    if (modoSeleccion.value === 'edificio' && modoMapa.value !== '3d') {
+        modoMapa.value = '3d';
+        aplicarModo3D();
+    }
+    if (mapa && controlesDibujo) {
+        controlesDibujo.changeMode('simple_select');
+        mapa.getCanvas().style.cursor = modoSeleccion.value === 'edificio' ? 'pointer' : '';
+    }
+};
+
+const limpiarDatosTecho = () => {
+    datosTecho.geojson = '';
+    datosTecho.area_m2 = 0;
+    datosTecho.perimetro_m = null;
+    datosTecho.latitud = 0;
+    datosTecho.longitud = 0;
+    datosTecho.area_util_m2 = null;
+    datosGeo.value = null;
+};
+
+const procesarPoligono = async (geojson: GeoJSON.Feature<GeoJSON.Polygon>) => {
+    const ring = geojson.geometry.coordinates[0];
+    if (!ring || ring.length < 3) return;
+    const coordenadas: [number, number][] = ring.map(
+        ([lng, lat]: number[]) => [lat!, lng!] as [number, number]
+    );
+    const centroide = coordenadas.reduce(
+        (bounds, [lat, lng]) => bounds.extend([lng, lat]),
+        new mapboxgl.LngLatBounds([coordenadas[0]![1], coordenadas[0]![0]], [coordenadas[0]![1], coordenadas[0]![0]])
+    ).getCenter();
+    const area = calcularAreaM2(coordenadas);
+    const perimetro = calcularPerimetroM(coordenadas);
+
+    datosTecho.geojson = JSON.stringify(geojson);
+    datosTecho.area_m2 = parseFloat(area.toFixed(2));
+    datosTecho.perimetro_m = perimetro;
+    datosTecho.latitud = parseFloat(centroide.lat.toFixed(7));
+    datosTecho.longitud = parseFloat(centroide.lng.toFixed(7));
+    datosTecho.area_util_m2 = parseFloat((area * 0.85).toFixed(2));
+
+    cargandoNasa.value = true;
+    const geo = await consultarNasa(datosTecho.latitud, datosTecho.longitud);
+    if (geo) {
+        datosGeo.value = geo;
+        calcularConfiguracionAutomatica(geo, datosTecho.latitud);
+    }
+    cargandoNasa.value = false;
+};
+
+onMounted(() => {
+    if (!MAPBOX_TOKEN) {
+        errorBusqueda.value = 'Falta configurar VITE_MAPBOX_ACCESS_TOKEN para mostrar el mapa.';
+        return;
+    }
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+    mapa = new mapboxgl.Map({
+        container: mapaRef.value!,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [-102.5528, 23.6345],
+        zoom: 5,
+        pitch: 0,
+        bearing: 0,
+        antialias: true
     });
-    mapa.addControl(controles);
+    mapa.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    mapa.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+    controlesDibujo = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: { polygon: true, trash: true },
+        defaultMode: 'draw_polygon'
+    });
+    mapa.addControl(controlesDibujo, 'top-left');
+    mapa.on('load', () => {
+        if (!mapa) return;
+        mapa.addSource('mapbox-dem', {
+            type: 'raster-dem',
+            url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            tileSize: 512,
+            maxzoom: 14
+        });
+        if (!mapa.getLayer('edificios-3d')) {
+            mapa.addLayer({
+                id: 'edificios-3d',
+                type: 'fill-extrusion',
+                source: 'composite',
+                'source-layer': 'building',
+                minzoom: 15,
+                layout: {
+                    visibility: 'none'
+                },
+                filter: ['==', ['get', 'extrude'], 'true'],
+                paint: {
+                    'fill-extrusion-color': '#aab4c3',
+                    'fill-extrusion-height': ['coalesce', ['get', 'height'], 8],
+                    'fill-extrusion-base': ['coalesce', ['get', 'min_height'], 0],
+                    'fill-extrusion-opacity': 0.82
+                }
+            });
+        }
+        aplicarModo3D();
+    });
 
-    // Evento dibujo completado
-    mapa.on((L as any).Draw.Event.CREATED, async (e: any) => {
-        capaEdicion!.clearLayers();
-        capaEdicion!.addLayer(e.layer);
+    mapa.on('draw.create', async (e) => {
+        if (!controlesDibujo) return;
+        const geojson = (e as { features: GeoJSON.Feature[] }).features[0];
+        if (!geojson || geojson.geometry.type !== 'Polygon') return;
+        const features = controlesDibujo.getAll().features;
+        const idsToRemove = features
+            .filter((feature) => feature.id !== geojson.id)
+            .map((feature) => feature.id)
+            .filter((id): id is string => typeof id === 'string');
+        if (idsToRemove.length) controlesDibujo.delete(idsToRemove);
+        await procesarPoligono(geojson as GeoJSON.Feature<GeoJSON.Polygon>);
+    });
 
-        const geojson = e.layer.toGeoJSON();
-        const coordenadas: [number, number][] = geojson.geometry.coordinates[0].map(
-            ([lng, lat]: [number, number]) => [lat, lng]
-        );
-
-        const centroide = e.layer.getBounds().getCenter();
-        const area = calcularAreaM2(coordenadas);
-        const perimetro = calcularPerimetroM(coordenadas);
-
-        datosTecho.geojson = JSON.stringify(geojson);
-        datosTecho.area_m2 = parseFloat(area.toFixed(2));
-        datosTecho.perimetro_m = perimetro;
-        datosTecho.latitud = parseFloat(centroide.lat.toFixed(7));
-        datosTecho.longitud = parseFloat(centroide.lng.toFixed(7));
-        datosTecho.area_util_m2 = parseFloat((area * 0.85).toFixed(2));
-
-        cargandoNasa.value = true;
-        const geo = await consultarNasa(datosTecho.latitud, datosTecho.longitud);
-        if (geo) datosGeo.value = geo;
-        cargandoNasa.value = false;
+    mapa.on('click', (evento) => {
+        if (modoSeleccion.value !== 'edificio' || !controlesDibujo) return;
+        const edificio = mapa!.queryRenderedFeatures(evento.point, { layers: ['edificios-3d'] })[0];
+        if (!edificio || edificio.geometry.type !== 'Polygon') {
+            errorBusqueda.value = 'Acerca más el mapa y haz clic sobre un edificio 3D.';
+            return;
+        }
+        errorBusqueda.value = '';
+        const existentes = controlesDibujo.getAll().features
+            .map((feature) => feature.id)
+            .filter((id): id is string => typeof id === 'string');
+        if (existentes.length) controlesDibujo.delete(existentes);
+        const seleccionado: GeoJSON.Feature<GeoJSON.Polygon> = {
+            type: 'Feature',
+            properties: { ...edificio.properties, fuente: 'mapbox-building' },
+            geometry: edificio.geometry
+        };
+        const ids = controlesDibujo.add(seleccionado);
+        controlesDibujo.changeMode('simple_select', { featureIds: ids });
+        void procesarPoligono(seleccionado);
     });
 
     // Evento borrado
-    mapa.on((L as any).Draw.Event.DELETED, () => {
-        datosTecho.geojson = '';
-        datosTecho.area_m2 = 0;
-        datosTecho.perimetro_m = null;
-        datosTecho.latitud = 0;
-        datosTecho.longitud = 0;
-        datosTecho.area_util_m2 = null;
-        datosGeo.value = null;
+    mapa.on('draw.delete', () => {
+        limpiarDatosTecho();
     });
 });
 const calcularConfiguracionAutomatica = (geo: DatosGeograficos, lat: number) => {
@@ -498,7 +606,7 @@ const usarUbicacionActual = () => {
         (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            mapa?.setView([lat, lng], 18);
+            mapa?.flyTo({ center: [lng, lat], zoom: 18 });
             cargandoUbicacion.value = false;
         },
         (err) => {
@@ -744,6 +852,34 @@ const guardarYAvanzar = async () => {
 .panel-header p { color: #666; font-size: 0.85rem; margin: 0; }
 
 #mapa { height: 520px; width: 100%; }
+
+.mapa-toolbar {
+    position: absolute;
+    z-index: 2;
+    display: flex;
+    gap: 0.4rem;
+    margin: 0.75rem;
+    padding: 0.3rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.mapa-modo {
+    padding: 0.45rem 0.7rem;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #334155;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.mapa-modo.activo {
+    background: #1e3a8a;
+    color: white;
+}
 
 .instrucciones {
     padding: 1rem 1.5rem;

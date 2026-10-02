@@ -1,5 +1,4 @@
 
-Chatia · VUE
 <template>
   <div class="contenedor-flotante">
     <Transition name="fade">
