@@ -85,7 +85,7 @@ body {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 9999;
+  z-index: 10001;
 }
 
 .app-main {
