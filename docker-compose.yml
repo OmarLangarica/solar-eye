@@ -26,6 +26,7 @@ services:
       DATABASE_PASSWORD: 123456
       DATABASE_NAME: solar_eye
       SIMULADOR_PYTHON: http://simulator:8000
+      OPEN_METEO_API_KEY: ${OPEN_METEO_API_KEY:-}
     ports:
       - "3001:3001"
   simulator:
