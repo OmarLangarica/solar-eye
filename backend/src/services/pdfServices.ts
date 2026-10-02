@@ -276,6 +276,37 @@ export const generaReportePDF = async (datos: {
         justify-content: flex-end;
     }
 
+    .barra-par {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 2px;
+        width: 100%;
+        flex: 1;
+    }
+
+    .barra-ideal,
+    .barra-real {
+        width: 40%;
+        min-height: 3px;
+        border-radius: 3px 3px 0 0;
+    }
+
+    .barra-ideal { background: #94a3b8; }
+    .barra-real { background: #22c55e; }
+
+    .leyenda-produccion {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 10px;
+        color: #555;
+        font-size: 10px;
+    }
+
+    .leyenda-produccion span { display: inline-flex; align-items: center; gap: 5px; }
+    .leyenda-produccion i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
     .barra {
         width: 100%;
         background: linear-gradient(to top, #04142c, #1d4f91);
@@ -575,15 +606,23 @@ export const generaReportePDF = async (datos: {
         const meses = resultados.produccion_mensual_detalle ?? resultados.produccion_mensual ?? [];
         if (!meses.length) return '<p style="color:#999">No hay datos de producción mensual</p>';
 
-        const maxProd = Math.max(...meses.map((m: any) => m.produccion_kwh));
+        const produccionIdealMes = (m: any) => Number(m.produccion_ideal_kwh ?? m.produccion_kwh ?? 0);
+        const produccionRealMes = (m: any) => Number(m.produccion_real_kwh ?? m.produccion_kwh ?? 0);
+        const maxProd = Math.max(...meses.map(produccionIdealMes));
 
         const barras = meses.map((m: any) => {
-            const pct = maxProd > 0 ? (m.produccion_kwh / maxProd) * 100 : 0;
+            const ideal = produccionIdealMes(m);
+            const real = produccionRealMes(m);
+            const pctIdeal = maxProd > 0 ? (ideal / maxProd) * 100 : 0;
+            const pctReal = maxProd > 0 ? (real / maxProd) * 100 : 0;
             const nombreCorto = m.mes.substring(0, 3);
             return `
                 <div class="barra-wrap">
-                    <div class="barra-valor">${Math.round(m.produccion_kwh)}</div>
-                    <div class="barra" style="height:${pct}%"></div>
+                    <div class="barra-valor">${Math.round(real)}</div>
+                    <div class="barra-par">
+                        <div class="barra-ideal" style="height:${pctIdeal}%"></div>
+                        <div class="barra-real" style="height:${pctReal}%"></div>
+                    </div>
                     <div class="barra-label">${nombreCorto}</div>
                 </div>
             `;
@@ -592,7 +631,9 @@ export const generaReportePDF = async (datos: {
         const filas = meses.map((m: any) => `
             <tr>
                 <td>${m.mes}</td>
-                <td class="valor-positivo">${Number(m.produccion_kwh).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                <td>${produccionIdealMes(m).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                <td class="valor-positivo">${produccionRealMes(m).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                <td>${typeof m.perdida_suciedad_pct === 'number' ? `${m.perdida_suciedad_pct.toFixed(2)}%` : '—'}</td>
                 <td>${m.irradiancia_poa_kwh_m2 ?? '—'}</td>
                 <td>${m.temp_celda_promedio_c ?? '—'}°C</td>
             </tr>
@@ -600,8 +641,12 @@ export const generaReportePDF = async (datos: {
 
         return `
             <div class="seccion">
-                <div class="seccion-titulo">Producción mensual (kWh)</div>
+                <div class="seccion-titulo">Producción ideal vs. real mensual (kWh)</div>
                 <div class="grafica-barras">${barras}</div>
+                <div class="leyenda-produccion">
+                    <span><i style="background:#94a3b8"></i>Ideal sin suciedad</span>
+                    <span><i style="background:#22c55e"></i>Real estimada</span>
+                </div>
             </div>
             <div class="seccion">
                 <div class="seccion-titulo">Detalle por mes</div>
@@ -609,7 +654,9 @@ export const generaReportePDF = async (datos: {
                     <thead>
                         <tr>
                             <th>Mes</th>
-                            <th>Producción (kWh)</th>
+                            <th>Ideal (kWh)</th>
+                            <th>Real estimada (kWh)</th>
+                            <th>Suciedad</th>
                             <th>Irradiancia POA (kWh/m²)</th>
                             <th>Temp. Celda (°C)</th>
                         </tr>
@@ -817,6 +864,73 @@ ${(() => {
                         <div class="perdida-nombre">Performance Ratio</div>
                     </div>
                 </div>
+            </div>
+        `;
+    })()}
+
+    ${(() => {
+        const perdidas = resultados.perdidas ?? resultados.perdidas_json ?? {};
+        const mantenimiento = resultados.mantenimiento_optimo ?? perdidas.mantenimiento_optimo ?? null;
+        const modelo = resultados.modelo_usado ?? perdidas.modelo_usado ?? 'No disponible';
+        const fuente = resultados.fuente_datos_suciedad ?? perdidas.fuente_datos_suciedad ?? 'No disponible';
+        const suciedadAnual = resultados.suciedad_pct_anual ?? perdidas.suciedad_pct_anual ?? perdidas.suciedad_pct;
+        const perdidaKwh = resultados.perdida_kwh_anual ?? perdidas.perdida_kwh_anual;
+        const perdidaMxn = resultados.perdida_mxn_anual ?? perdidas.perdida_mxn_anual;
+        const moneda = (valor: number) => Number(valor ?? 0).toLocaleString('es-MX', {
+            style: 'currency', currency: 'MXN', minimumFractionDigits: 2
+        });
+
+        const fechas = mantenimiento?.fechas_limpieza_recomendadas ?? [];
+        const fechasHtml = fechas.length
+            ? fechas.map((fecha: string) => `<span style="display:inline-block;background:#e0f2fe;color:#075985;padding:4px 8px;border-radius:5px;margin:2px;font-size:10px;">${new Date(`${fecha}T00:00:00Z`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}</span>`).join('')
+            : '<span style="color:#666;font-size:11px;">No se recomiendan limpiezas manuales para este costo y tarifa.</span>';
+
+        const escenarios = mantenimiento?.escenarios ?? [];
+        const escenariosHtml = escenarios.length ? `
+            <div class="seccion" style="margin-top:18px;">
+                <div class="seccion-titulo">Comparación económica de escenarios</div>
+                <table class="tabla">
+                    <thead><tr><th>Frecuencia</th><th>Limpiezas/año</th><th>Pérdida</th><th>Costo total</th><th>Ahorro neto</th></tr></thead>
+                    <tbody>${escenarios.map((escenario: any) => `
+                        <tr>
+                            <td>${escenario.intervalo_dias === null ? 'Sin limpieza manual' : `Cada ${escenario.intervalo_dias} días`}</td>
+                            <td>${escenario.limpiezas_anuales}</td>
+                            <td>${Number(escenario.suciedad_pct_anual ?? 0).toFixed(2)}%</td>
+                            <td>${moneda(escenario.costo_total_mxn)}</td>
+                            <td class="valor-positivo">${moneda(escenario.ahorro_neto_mxn)}</td>
+                        </tr>
+                    `).join('')}</tbody>
+                </table>
+            </div>
+        ` : '';
+
+        return `
+            <div class="seccion" style="margin-top:20px;">
+                <div class="seccion-titulo">Estimación de suciedad y mantenimiento</div>
+                <div class="info-grid">
+                    <div class="info-fila"><span class="info-label">Modelo</span><span class="info-valor">${modelo}</span></div>
+                    <div class="info-fila"><span class="info-label">Pérdida anual</span><span class="info-valor">${Number(suciedadAnual ?? 0).toFixed(2)}%</span></div>
+                    <div class="info-fila"><span class="info-label">Energía perdida estimada</span><span class="info-valor">${Number(perdidaKwh ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 2 })} kWh/año</span></div>
+                    <div class="info-fila"><span class="info-label">Valor de energía perdida</span><span class="info-valor">${moneda(perdidaMxn)}</span></div>
+                </div>
+                <div style="margin-top:10px;font-size:10px;color:#555;">
+                    Fuente de partículas: ${fuente}.
+                    ${String(fuente).includes('Open-Meteo') ? 'Atribución: CAMS Global vía Open-Meteo.' : ''}
+                </div>
+                ${mantenimiento ? `
+                    <div class="info-grid" style="margin-top:12px;">
+                        <div class="info-fila"><span class="info-label">Frecuencia recomendada</span><span class="info-valor">${mantenimiento.intervalo_dias === null ? 'Sin limpieza manual' : `Cada ${mantenimiento.intervalo_dias} días`}</span></div>
+                        <div class="info-fila"><span class="info-label">Limpiezas al año</span><span class="info-valor">${mantenimiento.limpiezas_anuales}</span></div>
+                        <div class="info-fila"><span class="info-label">Costo anual de limpiezas</span><span class="info-valor">${moneda(mantenimiento.costo_anual_limpiezas_mxn)}</span></div>
+                        <div class="info-fila"><span class="info-label">Ahorro neto estimado</span><span class="info-valor ok">${moneda(mantenimiento.ahorro_neto_mxn)}</span></div>
+                    </div>
+                    <div style="margin-top:14px;">
+                        <div style="font-size:11px;font-weight:700;color:#04142c;margin-bottom:6px;">Calendario aproximado para los próximos 12 meses</div>
+                        <div>${fechasHtml}</div>
+                        <div style="font-size:9px;color:#777;margin-top:5px;">Fechas orientativas según el intervalo calculado; una lluvia suficiente puede adelantar la limpieza natural.</div>
+                    </div>
+                    ${escenariosHtml}
+                ` : '<p style="margin-top:10px;color:#666;font-size:11px;">No hay análisis de mantenimiento disponible para esta simulación.</p>'}
             </div>
         `;
     })()}
