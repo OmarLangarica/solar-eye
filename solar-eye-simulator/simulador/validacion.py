@@ -8,7 +8,7 @@ from simulador.motor import simula_sistema
 
 POTENCIA_PRUEBA_KWP = 1.0
 AREA_PRUEBA_M2 = POTENCIA_PRUEBA_KWP / 0.205  # área para 1 kWp con eficiencia 20.5%
-TOLERANCIA_PCT = 20  # % de diferencia aceptable vs PVGIS
+TOLERANCIA_PCT = 10  # % de diferencia aceptable vs PVGIS sin pérdidas globales adicionales
 
 casos = [
     {"nombre": "Culiacán, Sinaloa", "lat": 24.80, "lon": -107.38},
@@ -24,7 +24,7 @@ def obtiene_referencia_pvgis(lat: float, lon: float, kwp: float) -> float | None
         "lat": lat,
         "lon": lon,
         "peakpower": kwp,
-        "loss": 14,
+        "loss": 0,
         "outputformat": "json",
         "browser": 0
     }
@@ -44,11 +44,11 @@ def obtiene_referencia_pvgis(lat: float, lon: float, kwp: float) -> float | None
 print("=" * 70)
 print("VALIDACIÓN DEL MOTOR DE SIMULACIÓN SOLAR EYE")
 print(f"Sistema de prueba: {POTENCIA_PRUEBA_KWP} kWp ({AREA_PRUEBA_M2:.2f} m²)")
-print(f"Tolerancia aceptada vs PVGIS: ±{TOLERANCIA_PCT}%")
+print(f"Tolerancia aceptada vs PVGIS (loss=0; pérdidas físicas aplicadas por Solar Eye): ±{TOLERANCIA_PCT}%")
 print("=" * 70)
 
 for caso in casos:
-    print(f"\n📍 {caso['nombre']} (lat={caso['lat']}, lon={caso['lon']})")
+    print(f"\nUbicación: {caso['nombre']} (lat={caso['lat']}, lon={caso['lon']})")
     try:
         resultado = simula_sistema(
             lat=caso["lat"],
@@ -79,13 +79,13 @@ for caso in casos:
             print(f"  Diferencia: {diferencia_pct:.1f}%")
 
             if diferencia_pct <= TOLERANCIA_PCT:
-                print(f"  Estado: ✅ OK (dentro de ±{TOLERANCIA_PCT}%)")
+                print(f"  Estado: OK (dentro de ±{TOLERANCIA_PCT}%)")
             else:
-                print(f"  Estado: ⚠️  Diferencia mayor a {TOLERANCIA_PCT}%")
+                print(f"  Estado: Diferencia mayor a {TOLERANCIA_PCT}%")
         else:
             print("  PVGIS no disponible para esta ubicación (sin referencia)")
 
     except Exception as e:
-        print(f"  ❌ ERROR: {e}")
+        print(f"  ERROR: {e}")
 
 print("\n" + "=" * 70)

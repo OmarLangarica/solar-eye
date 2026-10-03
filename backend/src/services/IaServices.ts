@@ -165,20 +165,22 @@ export const analizarReciboIA = async (imagenBase64: string): Promise<any> => {
 Instrucciones importantes:
 - Extrae el valor que aparece en el recibo como "Total a pagar" o el valor total final del recibo.
 - Extrae el consumo total de kWh del periodo facturado del recibo.
-- Si el recibo es bimestral, devuelve el total del periodo bimestral; el backend dividirá entre 2 para convertir a mensual.
+- Devuelve los totales tal como aparecen en el recibo; no conviertas ni dividas valores según el periodo.
 - No uses montos de cargos, recargos parciales o subtotales; usa el monto total final.
 - Si aparece un código de tarifa CFE, extrae exactamente ese código.
+- Si aparece "No. Hilos", extrae el número (2, 3 o 4); si no aparece claramente, devuelve null.
 - Si no puedes encontrar un valor claro, devuelve null para ese campo.
 
 Datos a extraer:
 - consumoKwh: el consumo total del periodo en kWh (número, o null si no se ve)
 - costoMx: el costo total del periodo en MXN (número, o null si no se ve)
 - tarifaCfe: la tarifa CFE exacta, debe ser uno de estos valores: 1, 1A, 1B, 1C, 1D, 1E, 1F, DAC. Devuelve null si no se encuentra claramente. No inventes valores.
+- numeroHilos: número de hilos del servicio (2, 3, 4 o null).
 - numRecibo: el número de recibo (string, o null)
 - periodo_facturacion: el tipo de periodo de facturación ("mensual" o "bimestral", o null)
 - tarifa_kwh_mxn: la tarifa en MXN por kWh (número con 4 decimales, calcula como costoMx/consumoKwh si no aparece explícitamente, o null si no se puede calcular)
 
-Ejemplo de respuesta: {"consumoKwh": 86.5, "costoMx": 306, "tarifaCfe": "1A", "numRecibo": "REC-2026-001", "periodo_facturacion": "bimestral", "tarifa_kwh_mxn": 3.5341}`;
+Ejemplo de respuesta: {"consumoKwh": 86.5, "costoMx": 306, "tarifaCfe": "1A", "numeroHilos": 2, "numRecibo": "REC-2026-001", "periodo_facturacion": "bimestral", "tarifa_kwh_mxn": 3.5341}`;
 
     const allowedTarifas = ['1', '1A', '1B', '1C', '1D', '1E', '1F', 'DAC'];
     const allowedPeriodos = ['mensual', 'bimestral'];
@@ -326,6 +328,11 @@ Ejemplo de respuesta: {"consumoKwh": 86.5, "costoMx": 306, "tarifaCfe": "1A", "n
             datosExtraidos.tarifaCfe = normalizeTarifaCfe(datosExtraidos.tarifaCfe);
         }
 
+        const numeroHilos = parseNumero(datosExtraidos.numeroHilos);
+        datosExtraidos.numeroHilos = [2, 3, 4].includes(Number(numeroHilos))
+            ? Number(numeroHilos)
+            : null;
+
         const periodoNormalizado = normalizePeriodoFacturacion(datosExtraidos.periodo_facturacion);
         if (periodoNormalizado) {
             datosExtraidos.periodo_facturacion = periodoNormalizado;
@@ -334,11 +341,6 @@ Ejemplo de respuesta: {"consumoKwh": 86.5, "costoMx": 306, "tarifaCfe": "1A", "n
         let consumoKwh = parseNumero(datosExtraidos.consumoKwh);
         let costoMx = parseNumero(datosExtraidos.costoMx);
         let tarifaKwh = parseNumero(datosExtraidos.tarifa_kwh_mxn);
-
-        if (periodoNormalizado === 'bimestral') {
-            if (consumoKwh !== null) consumoKwh = parseFloat((consumoKwh / 2).toFixed(2));
-            if (costoMx !== null) costoMx = parseFloat((costoMx / 2).toFixed(2));
-        }
 
         if (tarifaKwh === null && consumoKwh && costoMx && consumoKwh > 0) {
             tarifaKwh = parseFloat((costoMx / consumoKwh).toFixed(4));

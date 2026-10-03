@@ -95,28 +95,28 @@
         <div class="tarjeta tarjeta-produccion">
           <div class="tarjeta-icono"><i class="bi bi-lightning-charge"></i></div>
           <div class="tarjeta-info">
-            <span class="tarjeta-label">Producción anual</span>
+            <span class="tarjeta-label">Producción anual estimada</span>
             <span class="tarjeta-valor">{{ resultados.produccion_anual_kwh.toLocaleString() }} kWh</span>
           </div>
         </div>
         <div class="tarjeta tarjeta-ahorro">
           <div class="tarjeta-icono"><i class="bi bi-cash-coin"></i></div>
           <div class="tarjeta-info">
-            <span class="tarjeta-label">Ahorro mensual</span>
+            <span class="tarjeta-label">Ahorro mensual estimado</span>
             <span class="tarjeta-valor">$ {{ resultados.ahorro_mensual_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}</span>
           </div>
         </div>
         <div class="tarjeta tarjeta-cobertura">
           <div class="tarjeta-icono"><i class="bi bi-bar-chart"></i></div>
           <div class="tarjeta-info">
-            <span class="tarjeta-label">Cobertura del consumo</span>
+            <span class="tarjeta-label">Cobertura anual estimada</span>
             <span class="tarjeta-valor">{{ resultados.porcentaje_cobertura.toFixed(1) }}%</span>
           </div>
         </div>
         <div class="tarjeta tarjeta-retorno">
           <div class="tarjeta-icono"><i class="bi bi-calendar-event"></i></div>
           <div class="tarjeta-info">
-            <span class="tarjeta-label">Retorno de inversión</span>
+            <span class="tarjeta-label">Retorno estimado</span>
             <span class="tarjeta-valor">{{ resultados.retorno_inversion_anios.toFixed(1) }} años</span>
           </div>
         </div>
@@ -132,8 +132,8 @@
         </div>
 
         <div class="card card-grafica">
-          <h3><i class="bi bi-graph-up-arrow"></i> Proyección de ahorro acumulado a 25 años</h3>
-          <p class="card-subtitulo">Se compara el costo acumulado de seguir con CFE contra la inversión solar fija.</p>
+          <h3><i class="bi bi-graph-up-arrow"></i> Proyección estimada a 25 años</h3>
+          <p class="card-subtitulo">Usa el costo promedio del recibo y supuestos fijos; no reproduce una facturación de CFE.</p>
           <div class="payback-banner" v-if="textoPaybackEstimado">
             Retorno estimado en {{ textoPaybackEstimado }} años.
           </div>
@@ -190,7 +190,21 @@
                   <span class="perdida-valor">{{ resultados.suciedad_pct_anual ?? resultados.perdidas.suciedad_pct }}%</span>
                   <span class="perdida-nombre">Suciedad</span>
               </div>
-              <div class="perdida-item">
+                <div class="perdida-item" v-if="resultados.perdidas.iam_pct !== undefined">
+                  <div class="perdida-barra-wrap">
+                    <div class="perdida-barra" :style="{ height: `${resultados.perdidas.iam_pct * 4}px` }"></div>
+                  </div>
+                  <span class="perdida-valor">{{ resultados.perdidas.iam_pct }}%</span>
+                  <span class="perdida-nombre">Reflexión IAM</span>
+                </div>
+                <div class="perdida-item" v-if="resultados.perdidas.inversor_pct !== undefined">
+                  <div class="perdida-barra-wrap">
+                    <div class="perdida-barra" :style="{ height: `${resultados.perdidas.inversor_pct * 4}px` }"></div>
+                  </div>
+                  <span class="perdida-valor">{{ resultados.perdidas.inversor_pct }}%</span>
+                  <span class="perdida-nombre">Inversor</span>
+                </div>
+                <div class="perdida-item">
                   <div class="perdida-barra-wrap">
                       <div class="perdida-barra"
                           :style="{ height: `${resultados.perdidas.cableado_pct * 4}px` }">
@@ -321,7 +335,7 @@
             <h3><i class="bi bi-cash-coin"></i> Análisis económico</h3>
             <div class="tabla-datos">
               <div class="fila-dato">
-                <span>Costo de instalación</span>
+                <span>Inversión estimada</span>
                 <span class="valor-destacado">$ {{ resultados.costo_total_instalacion_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }} MXN</span>
               </div>
               <div class="fila-dato">
@@ -333,7 +347,7 @@
                 <span class="valor-positivo">$ {{ resultados.ahorro_anual_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }} MXN</span>
               </div>
               <div class="fila-dato destacada fila-ahorro-25">
-                <span>Ahorro en 25 años</span>
+                <span>Ahorro estimado en 25 años</span>
                 <span class="valor-positivo grande valor-ahorro-25">$ {{ resultados.ahorro_vida_util_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }} MXN</span>
               </div>
               <div class="fila-dato">
@@ -344,22 +358,25 @@
           </div>
 
           <div v-show="mostrarSeccion('finanzas')" class="card card-finanzas">
-            <h3><i class="bi bi-bar-chart"></i> Proyección tarifaria CFE</h3>
-            <p class="card-subtitulo">Con un incremento estimado del {{ resultados.tasa_incremento_tarifa_pct }}% anual:</p>
+            <h3><i class="bi bi-bar-chart"></i> Escenario estimado de costo de energía</h3>
+            <p class="card-subtitulo">Con un incremento supuesto del {{ resultados.tasa_incremento_tarifa_pct }}% anual:</p>
             <div class="tabla-datos">
               <div class="fila-dato">
-                <span>Precio actual kWh</span>
+                <span>Costo promedio actual del recibo/kWh</span>
                 <span>$ {{ Number(consumo?.tarifa_kwh_mxn ?? 0).toFixed(4) }} MXN</span>
               </div>
               <div class="fila-dato">
-                <span>Precio en 5 años</span>
+                <span>Costo promedio estimado en 5 años</span>
                 <span class="valor-advertencia">$ {{ resultados.precio_kwh_proyectado_anio5.toFixed(4) }} MXN</span>
               </div>
               <div class="fila-dato">
-                <span>Precio en 10 años</span>
+                <span>Costo promedio estimado en 10 años</span>
                 <span class="valor-advertencia">$ {{ resultados.precio_kwh_proyectado_anio10.toFixed(4) }} MXN</span>
               </div>
             </div>
+            <p class="card-subtitulo">
+              Estimación, no cotización: anualiza el consumo de un recibo, usa su costo promedio por kWh, un costo fijo de instalación de $18,000 MXN/kWp, un aumento supuesto de 5% y degradación de 0.5% anual. No modela estacionalidad, bloques, subsidios, cargos fijos, descuento financiero, reemplazo del inversor ni reglas de interconexión de CFE.
+            </p>
           </div>
         </div>
 
@@ -384,6 +401,9 @@
                 <span>{{ resultados.excedente_kwh.toLocaleString() }} kWh</span>
               </div>
             </div>
+            <p class="card-subtitulo">
+              Equivalencias estimadas con factores fijos de 0.45 kg CO₂/kWh y 21.77 kg CO₂ por árbol; no son mediciones del sitio.
+            </p>
             <div class="barra-container">
               <div class="barra-label">
                 <span>Cobertura solar</span>
@@ -398,10 +418,9 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                     <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 00-3.42 0z"/>
                 </svg>
-                El sistema genera un excedente de 
-                <strong>{{ resultados.excedente_kwh.toLocaleString('es-MX') }} kWh/año</strong> 
-                — más del 50% de tu producción no se aprovecha. 
-                Considera reducir el área del techo para optimizar la inversión.
+                El excedente anual estimado es de
+                <strong>{{ resultados.excedente_kwh.toLocaleString('es-MX') }} kWh</strong>.
+                Revisa la cantidad de módulos y el esquema de compensación: esta simulación no calcula créditos de energía CFE.
             </div>
           </div>
 
@@ -529,12 +548,26 @@
                   <div class="componente-configuracion-grid">
                     <div class="componente-dato"><span>Potencia instalada</span><strong>{{ resultados.potencia_kwp }} kWp</strong></div>
                     <div class="componente-dato"><span>Paneles instalados</span><strong>{{ resultados.numero_paneles }} módulos</strong></div>
+                    <div class="componente-dato" v-if="ratioDcAc !== null"><span>Ratio DC/AC</span><strong>{{ ratioDcAc.toFixed(2) }}</strong></div>
                   </div>
+                  <p class="card-subtitulo" v-if="ratioDcAc !== null">
+                    {{ ratioDcAc < 0.8 || ratioDcAc > 1.35
+                      ? 'Fuera del rango de referencia interno (0.80-1.35); revisa el inversor.'
+                      : 'Dentro del rango de referencia interno (0.80-1.35).' }}
+                    Este rango no sustituye la ficha ni la validación eléctrica del fabricante.
+                  </p>
+                  <p class="card-subtitulo" v-if="resultados.inversor_recomendacion">
+                    {{ resultados.inversor_recomendacion }}
+                  </p>
                 </section>
               </div>
           </div>
 
           <!-- Card Modelado Eléctrico -->
+            <div v-show="mostrarSeccion('tecnico')" class="card card-electrico" v-if="resultados?.modelado_electrico?.error">
+              <h3><i class="bi bi-exclamation-triangle"></i> Configuración eléctrica no válida</h3>
+              <p class="card-subtitulo">{{ resultados.modelado_electrico.error }}</p>
+            </div>
           <div v-show="mostrarSeccion('tecnico')" class="card card-electrico" v-if="resultados?.modelado_electrico && !resultados.modelado_electrico.error">
               <h3>
                   <i class="bi bi-lightning-charge"></i>
@@ -547,15 +580,19 @@
               </div>
 
               <!-- Compatibilidad general -->
-              <div class="electrico-compatible" :class="resultados.modelado_electrico.compatible ? 'compatible' : 'incompatible'">
-                  <svg v-if="resultados.modelado_electrico.compatible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <div class="electrico-compatible" :class="sistemaCompatible ? 'compatible' : 'incompatible'">
+                  <svg v-if="sistemaCompatible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                       <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>
                   </svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                       <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
                   </svg>
-                  {{ resultados.modelado_electrico.compatible ? 'Sistema eléctrico compatible' : 'Revisar compatibilidad eléctrica' }}
+                    {{ sistemaCompatible ? 'Voltajes y ratio DC/AC compatibles' : 'Revisar compatibilidad eléctrica' }}
               </div>
+
+                  <div class="electrico-sugerencia">
+                    La fase del servicio CFE no se capturó; debe confirmarse con el recibo o la instalación antes de elegir el inversor.
+                  </div>
 
               <!-- Sugerencia cuando hay incompatibilidad -->
               <div class="electrico-sugerencia" v-if="resultados.modelado_electrico.sugerencia">
@@ -642,6 +679,12 @@
                           {{ resultados.modelado_electrico.voltaje_mppt_min_v }}-{{ resultados.modelado_electrico.voltaje_mppt_max_v }} V
                       </span>
                   </div>
+                    <div class="electrico-fila" v-if="resultados.modelado_electrico.voltaje_arranque_v">
+                      <span class="electrico-label">Voltaje de arranque</span>
+                      <span class="electrico-valor" :class="resultados.modelado_electrico.arranque_dentro_limite ? 'ok' : 'error'">
+                        {{ resultados.modelado_electrico.voltaje_arranque_v }} V
+                      </span>
+                    </div>
                   <div class="electrico-fila">
                       <span class="electrico-label">Vmp calor en MPPT</span>
                       <span class="electrico-valor" :class="resultados.modelado_electrico.mppt_dentro_rango ? 'ok' : 'error'">
@@ -669,7 +712,7 @@
     </div>
 
     <div v-else class="sin-datos">
-      No se encontraron resultados para esta simulación.
+      {{ error || 'No se encontraron resultados para esta simulación.' }}
     </div>
 
   </div>
@@ -712,6 +755,16 @@ const resultados = ref<ResultadosCalculo | null>(null);
 const techo = ref<DatosTecho | null>(null);
 const geo = ref<DatosGeograficos | null>(null);
 const consumo = ref<ConsumoElectrico | null>(null);
+const ratioDcAc = computed(() => {
+  const potenciaDc = Number(resultados.value?.potencia_kwp ?? 0);
+  const potenciaAc = Number(resultados.value?.inversor_potencia_kw ?? 0);
+  return potenciaDc > 0 && potenciaAc > 0 ? potenciaDc / potenciaAc : null;
+});
+const sistemaCompatible = computed(() => {
+  const ratio = ratioDcAc.value;
+  return Boolean(resultados.value?.modelado_electrico?.compatible)
+    && ratio !== null && ratio >= 0.8 && ratio <= 1.35;
+});
 const comparativaCanvas = ref<HTMLCanvasElement | null>(null);
 const proyeccionCanvas = ref<HTMLCanvasElement | null>(null);
 const comparativaChart = ref<Chart<'bar'> | null>(null);
@@ -812,6 +865,7 @@ const normalizaResultados = (data: Partial<ResultadosCalculo>): ResultadosCalcul
         inversor_potencia_kw: data.inversor_potencia_kw
             ? Number(data.inversor_potencia_kw)
             : componentes?.inversor_potencia_kw ?? undefined,
+        inversor_recomendacion: data.inversor_recomendacion ?? componentes?.inversor_recomendacion ?? undefined,
         potencia_kwp: data.potencia_kwp
             ? Number(data.potencia_kwp)
             : componentes?.potencia_kwp ?? undefined,
@@ -939,7 +993,7 @@ const renderGraficaProyeccion = () => {
     data: {
       labels: proyeccion.etiquetas,
       datasets: [
-        { label: 'Costo acumulado sin solar (CFE)', data: proyeccion.serieSinSolar, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.16)', fill: true, tension: 0.3, pointRadius: 0 },
+        { label: 'Costo acumulado estimado sin solar', data: proyeccion.serieSinSolar, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.16)', fill: true, tension: 0.3, pointRadius: 0 },
         { label: 'Costo acumulado con solar', data: proyeccion.serieConSolar, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.12)', fill: true, tension: 0, pointRadius: 0, borderDash: [8, 6] },
         { label: proyeccion.anioPayback ? `Payback estimado (${proyeccion.anioPayback.toFixed(1)} años)` : 'Payback estimado', data: puntosPayback, borderColor: '#16a34a', backgroundColor: '#16a34a', pointRadius: 6, pointHoverRadius: 7, showLine: false }
       ]
@@ -1009,11 +1063,29 @@ onMounted(async () => {
     return;
   }
 
+  let componentesActivos = false;
+  try {
+    const componentes = JSON.parse(sessionStorage.getItem(`componentes_${simulacion_id}`) ?? 'null');
+    componentesActivos = Boolean(
+      componentes?.panel_id && componentes?.inversor_id &&
+      Number(componentes?.panel_potencia_wp) > 0 &&
+      Number(componentes?.panel_area_m2) > 0 &&
+      Number(componentes?.cantidad_paneles) > 0
+    );
+  } catch {
+    componentesActivos = false;
+  }
+  if (!componentesActivos) {
+    if (!resultadosExistentes) {
+      error.value = 'No hay una selección de componentes vigente para calcular. Vuelve al paso 3.';
+    }
+    return;
+  }
+
   const techoParseado = { ...techo.value, area_m2: Number(techo.value.area_m2), area_util_m2: Number(techo.value.area_util_m2), factor_sombra: Number(techo.value.factor_sombra), angulo_inclinacion_deg: Number(techo.value.angulo_inclinacion_deg), latitud: Number(techo.value.latitud), longitud: Number(techo.value.longitud) };
-  const geoParseado = { ...geo.value, horas_sol_pico_diarias: Number(geo.value.horas_sol_pico_diarias), irradiacion_anual_kwh_m2: Number(geo.value.irradiacion_anual_kwh_m2), temperatura_promedio_anual: Number(geo.value.temperatura_promedio_anual), altitud_msnm: Number(geo.value.altitud_msnm), velocidad_viento_promedio: Number(geo.value.velocidad_viento_promedio) };
   const consumoParseado = { ...consumo.value, consumo_mensual_kwh: Number(consumo.value.consumo_mensual_kwh), consumo_anual_kwh: Number(consumo.value.consumo_anual_kwh), tarifa_kwh_mxn: Number(consumo.value.tarifa_kwh_mxn), costo_mensual_mxn: Number(consumo.value.costo_mensual_mxn) };
 
-  const calculados = await calcularResultadosPvlib(consumoParseado, techoParseado, geoParseado, simulacion_id);  await guardarResultados(calculados);
+  const calculados = await calcularResultadosPvlib(consumoParseado, techoParseado, simulacion_id);  await guardarResultados(calculados);
   resultados.value = normalizaResultados(calculados);
   console.log('consumo_mensual_predicho:', resultados.value?.consumo_mensual_predicho);
   console.log('resultados:', resultados.value);

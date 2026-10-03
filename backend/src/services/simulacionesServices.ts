@@ -424,6 +424,7 @@ export const ejecutaModeladoElectrico = async (params: {
     coef_temp_voc: number;
     voltaje_mppt_min: number;
     voltaje_mppt_max: number;
+    voltaje_arranque_v?: number;
     voltaje_max_entrada: number;
     corriente_max_entrada: number;
     numero_mppt: number;

@@ -55,7 +55,7 @@ class ParametrosSimulacion(BaseModel):
     potencia_kwp: float = Field(..., gt=0.0, le=10000.0,
         description="Potencia pico instalada en kWp (> 0)")
     area_util_m2: float = Field(..., gt=0.0, le=100000.0,
-        description="Área útil del techo en m² (> 0)")
+        description="Área total ocupada por los módulos instalados en m² (> 0)")
     factor_sombra: float = Field(0.95, ge=0.0, le=1.0,
         description="Factor de sombra (0=sombra total, 1=sin sombra)")
     eficiencia_panel: float = Field(0.205, gt=0.0, le=1.0,
@@ -70,12 +70,12 @@ class ParametrosSimulacion(BaseModel):
         """
         Verifica que el área y la potencia sean consistentes.
         potencia_kwp debería aproximarse a area_util_m2 × eficiencia_panel.
-        Tolerancia ±50% para permitir flexibilidad en configuraciones reales.
+        Tolerancia ±5% para rechazar arreglos con potencia y área incoherentes.
         """
         potencia_por_area = self.area_util_m2 * self.eficiencia_panel
         if potencia_por_area > 0:
             discrepancia = abs(self.potencia_kwp - potencia_por_area) / potencia_por_area
-            if discrepancia > 0.5:
+            if discrepancia > 0.05:
                 raise ValueError(
                     f"Inconsistencia entre área y potencia: "
                     f"área de {self.area_util_m2}m² con eficiencia {self.eficiencia_panel} "
@@ -113,8 +113,7 @@ async def simular(params: ParametrosSimulacion):
             factor_sombra=params.factor_sombra,
             eficiencia_panel=params.eficiencia_panel,
             coef_temp_panel=params.coef_temp_panel,
-            eficiencia_inversor=params.eficiencia_inversor,
-            tz=tz
+            eficiencia_inversor=params.eficiencia_inversor
         )
 
         resultado["timezone_detectada"] = tz
@@ -161,8 +160,7 @@ async def test_simulacion():
             factor_sombra=0.95,
             eficiencia_panel=eficiencia,
             coef_temp_panel=-0.0035,
-            eficiencia_inversor=0.97,
-            tz=tz
+            eficiencia_inversor=0.97
         )
         resultado["timezone_detectada"] = tz
         return {"ok": True, "resultado": resultado}
@@ -184,14 +182,14 @@ async def test_escalabilidad():
             lat=24.80, lon=-107.38, tilt=15.0, azimut=180.0,
             potencia_kwp=5.0, area_util_m2=5.0 / 0.205,
             factor_sombra=1.0, eficiencia_panel=0.205,
-            coef_temp_panel=-0.0035, eficiencia_inversor=0.97, tz=tz
+            coef_temp_panel=-0.0035, eficiencia_inversor=0.97
         )
 
         resultado_10kwp = simula_sistema(
             lat=24.80, lon=-107.38, tilt=15.0, azimut=180.0,
             potencia_kwp=10.0, area_util_m2=10.0 / 0.205,
             factor_sombra=1.0, eficiencia_panel=0.205,
-            coef_temp_panel=-0.0035, eficiencia_inversor=0.97, tz=tz
+            coef_temp_panel=-0.0035, eficiencia_inversor=0.97
         )
 
         prod_5 = resultado_5kwp["produccion_anual_kwh"]
@@ -264,6 +262,7 @@ class ParametrosElectricos(BaseModel):
     # Inversor
     voltaje_mppt_min: float = Field(..., gt=0)
     voltaje_mppt_max: float = Field(..., gt=0)
+    voltaje_arranque_v: float = Field(0.0, ge=0)
     voltaje_max_entrada: float = Field(..., gt=0)
     corriente_max_entrada: float = Field(..., gt=0)
     numero_mppt: int = Field(..., gt=0)
@@ -285,6 +284,7 @@ async def calcular_strings(params: ParametrosElectricos):
             coef_temp_voc=params.coef_temp_voc,
             voltaje_mppt_min=params.voltaje_mppt_min,
             voltaje_mppt_max=params.voltaje_mppt_max,
+            voltaje_arranque_v=params.voltaje_arranque_v,
             voltaje_max_entrada=params.voltaje_max_entrada,
             corriente_max_entrada=params.corriente_max_entrada,
             numero_mppt=params.numero_mppt,

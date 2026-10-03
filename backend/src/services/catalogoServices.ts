@@ -9,6 +9,8 @@ export const obtienePaneles = async () => {
              FROM paneles p
              JOIN fabricantes f ON p.fabricante_id = f.id
              WHERE p.activo = TRUE
+             AND p.potencia_wp > 0 AND p.area_m2 > 0 AND p.eficiencia > 0
+             AND ABS(p.potencia_wp - p.area_m2 * 1000 * p.eficiencia) / NULLIF(p.potencia_wp, 0) <= 0.05
              ORDER BY f.nombre ASC, p.potencia_wp DESC`
         );
         return results;
@@ -23,7 +25,10 @@ export const encuentraPanel = async (id: number) => {
             `SELECT p.*, f.nombre AS fabricante_nombre
              FROM paneles p
              JOIN fabricantes f ON p.fabricante_id = f.id
-             WHERE p.id = ? AND p.activo = TRUE LIMIT 1`,
+             WHERE p.id = ? AND p.activo = TRUE
+             AND p.potencia_wp > 0 AND p.area_m2 > 0 AND p.eficiencia > 0
+             AND ABS(p.potencia_wp - p.area_m2 * 1000 * p.eficiencia) / NULLIF(p.potencia_wp, 0) <= 0.05
+             LIMIT 1`,
             [id]
         );
         return results;
@@ -70,8 +75,8 @@ export const encuentraInversor = async (id: number) => {
 export const sugiereInversores = async (potenciaKwp: number) => {
     try {
         // Ratio DC/AC típico: 0.8 a 1.35
-        const minKw = potenciaKwp * 0.75;
-        const maxKw = potenciaKwp * 1.35;
+        const minKw = potenciaKwp / 1.35;
+        const maxKw = potenciaKwp / 0.8;
 
         const [results] = await conexion.query(
             `SELECT i.*, f.nombre AS fabricante_nombre,
@@ -94,9 +99,13 @@ export const sugiereInversores = async (potenciaKwp: number) => {
 
 export const obtieneComponentesEmpresa = async (empresa_id: number, tipo?: string) => {
     try {
+        const panelConsistente = `AND (tipo <> 'panel' OR (
+            potencia_wp > 0 AND area_m2 > 0 AND eficiencia > 0
+            AND ABS(potencia_wp - area_m2 * 1000 * eficiencia) / NULLIF(potencia_wp, 0) <= 0.05
+        ))`;
         const query = tipo
-            ? `SELECT * FROM componentes_empresa WHERE empresa_id = ? AND tipo = ? AND activo = TRUE ORDER BY modelo ASC`
-            : `SELECT * FROM componentes_empresa WHERE empresa_id = ? AND activo = TRUE ORDER BY tipo ASC, modelo ASC`;
+            ? `SELECT * FROM componentes_empresa WHERE empresa_id = ? AND tipo = ? AND activo = TRUE ${panelConsistente} ORDER BY modelo ASC`
+            : `SELECT * FROM componentes_empresa WHERE empresa_id = ? AND activo = TRUE ${panelConsistente} ORDER BY tipo ASC, modelo ASC`;
         const params = tipo ? [empresa_id, tipo] : [empresa_id];
         const [results] = await conexion.query(query, params);
         return results;

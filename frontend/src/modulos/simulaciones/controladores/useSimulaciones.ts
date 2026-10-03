@@ -197,7 +197,6 @@ export const useSimulaciones = () => {
     const calcularResultadosPvlib = async (
     consumo: ConsumoElectrico,
     techo: DatosTecho,
-    geo: DatosGeograficos,
     simulacion_id: number
 ): Promise<ResultadosCalculo> => {
     try {
@@ -208,44 +207,138 @@ export const useSimulaciones = () => {
         const componentesRaw = sessionStorage.getItem(`componentes_${simulacion_id}`);
         const componentes = componentesRaw ? JSON.parse(componentesRaw) : null;
 
-        // Specs reales del panel/inversor o valores por defecto
-        const eficienciaPanel    = componentes?.panel_eficiencia   ?? 0.205;
-        const coefTempPanel      = componentes?.panel_coef_temp     ?? -0.0035;
-        const eficienciaInversor = componentes?.inversor_eficiencia ?? 0.97;
-        const areaPanel          = componentes?.panel_area_m2       ?? 1.96;
-        const potenciaWp         = componentes?.panel_potencia_wp   ?? 410;
+        const eficienciaPanel = Number(componentes?.panel_eficiencia);
+        const coefTempPanel = Number(componentes?.panel_coef_temp);
+        let eficienciaInversor = Number(componentes?.inversor_eficiencia);
+        const areaPanel = Number(componentes?.panel_area_m2);
+        const potenciaWp = Number(componentes?.panel_potencia_wp);
+        const areaUtilM2 = Number(techo?.area_util_m2);
 
-        // Dimensionar por consumo anual sin superar la capacidad física del techo.
-        const panelesMaximos = Math.floor(Number(techo.area_util_m2 ?? 0) / areaPanel);
-        const irradiacionAnual = Number(geo?.irradiacion_anual_kwh_m2) || 0;
-        const produccionPanelEstimada = irradiacionAnual > 0
-            ? (irradiacionAnual * potenciaWp / 1000) * eficienciaInversor * Number(techo.factor_sombra ?? 1) * 0.85
-            : 0;
-        const cantidadNecesaria = produccionPanelEstimada > 0
-            ? Math.ceil(Number(consumo.consumo_anual_kwh) / produccionPanelEstimada)
-            : 0;
-        const cantidadPaneles = Math.max(
-            1,
-            Math.min(panelesMaximos || 1, cantidadNecesaria || panelesMaximos || 1)
-        );
-        const potenciaKwp     = (cantidadPaneles * potenciaWp) / 1000;
+        if (
+            !componentes?.panel_id || !componentes?.inversor_id ||
+            !Number.isFinite(eficienciaPanel) || eficienciaPanel <= 0 ||
+            !Number.isFinite(coefTempPanel) ||
+            !Number.isFinite(eficienciaInversor) || eficienciaInversor <= 0 ||
+            !Number.isFinite(areaPanel) || areaPanel <= 0 ||
+            !Number.isFinite(potenciaWp) || potenciaWp <= 0
+        ) {
+            error.value = 'Faltan especificaciones válidas de los componentes. Regresa al paso 3 y selecciónalos nuevamente.';
+            throw new Error(error.value);
+        }
 
-        console.log('llamando a pvlib...');
-        // Llamar al microservicio Python con specs reales
-        const respPvlib = await simulacionesApi.post('/pvlib', {
+        const consumoAnual = Number(consumo.consumo_anual_kwh);
+        if (!Number.isFinite(areaUtilM2) || areaUtilM2 <= 0 || !Number.isFinite(consumoAnual) || consumoAnual <= 0) {
+            error.value = 'Faltan un área útil de techo o un consumo anual válidos para dimensionar el sistema.';
+            throw new Error(error.value);
+        }
+
+        const panelesMaximos = Math.floor(areaUtilM2 / areaPanel);
+        if (panelesMaximos < 1) {
+            error.value = 'El área útil del techo no alcanza para instalar un panel del modelo seleccionado.';
+            throw new Error(error.value);
+        }
+
+        const parametrosPvlib = (cantidad: number) => ({
             lat: Number(techo.latitud),
             lon: Number(techo.longitud),
             tilt: Number(techo.angulo_inclinacion_deg),
             azimut: Number(techo.azimut_deg) || 180,
-            potencia_kwp: potenciaKwp,
-            area_util_m2: cantidadPaneles * areaPanel,
+            potencia_kwp: (cantidad * potenciaWp) / 1000,
+            area_util_m2: cantidad * areaPanel,
             factor_sombra: Number(techo.factor_sombra),
             eficiencia_panel: eficienciaPanel,
             coef_temp_panel: coefTempPanel,
             eficiencia_inversor: eficienciaInversor
         });
-        console.log('pvlib respondió:', respPvlib.data);
-        const pvlib = respPvlib.data;
+
+        console.log('estimando producción de un panel con datos meteorológicos locales...');
+        const respuestaUnPanel = await simulacionesApi.post('/pvlib', parametrosPvlib(1));
+        const produccionAnualPorPanel = Number(respuestaUnPanel.data.produccion_anual_kwh);
+        if (!Number.isFinite(produccionAnualPorPanel) || produccionAnualPorPanel <= 0) {
+            error.value = 'El modelo solar no devolvió una producción válida para dimensionar los paneles.';
+            throw new Error(error.value);
+        }
+
+        const cantidadNecesaria = Math.ceil(consumoAnual / produccionAnualPorPanel);
+        const cantidadPaneles = Math.max(1, Math.min(panelesMaximos, cantidadNecesaria));
+        const potenciaKwp = (cantidadPaneles * potenciaWp) / 1000;
+
+        const tarifaDomestica = ['1', '1A', '1B', '1C', '1D', '1E', '1F']
+            .includes(String(consumo.tipo_tarifa ?? '').toUpperCase());
+        const numeroHilos = sessionStorage.getItem(`numero_hilos_${simulacion_id}`);
+        const soloMonofasico = numeroHilos === '2' || (!numeroHilos && tarifaDomestica);
+        const potenciaInversorMin = potenciaKwp / 1.35;
+        const potenciaInversorMax = potenciaKwp / 0.8;
+        let inversorRecomendacion = '';
+
+        try {
+            const respuestaInversores = await catalogoApi.get('/inversores');
+            const inversoresCatalogo: InversorSolar[] = Array.isArray(respuestaInversores.data)
+                ? respuestaInversores.data
+                : [];
+            const inversoresPorFase = inversoresCatalogo
+                .filter((inversor) => !soloMonofasico
+                    || String(inversor.fases ?? '').toLowerCase().includes('mono'));
+            const inversorActualEnCatalogo = inversoresCatalogo.find(
+                (inversor) => Number(inversor.id) === Number(componentes.inversor_id)
+            );
+            const potenciaActual = Number(componentes.inversor_potencia_kw);
+            const faseActual = inversorActualEnCatalogo?.fases ?? componentes.inversor_fases;
+            const seleccionActualValida = potenciaActual >= potenciaInversorMin
+                && potenciaActual <= potenciaInversorMax
+                && (!soloMonofasico || String(faseActual ?? '').toLowerCase().includes('mono'));
+            const inversoresEnRango = inversoresPorFase
+                .filter((inversor) => {
+                    const potencia = Number(inversor.potencia_nominal_kw);
+                    return potencia >= potenciaInversorMin
+                        && potencia <= potenciaInversorMax;
+                })
+                .sort((a, b) => Number(a.potencia_nominal_kw) - Number(b.potencia_nominal_kw))[0];
+            const inversorRespaldo = inversoresPorFase
+                .sort((a, b) => {
+                    const distancia = (inversor: InversorSolar) => {
+                        const potencia = Number(inversor.potencia_nominal_kw);
+                        return potencia < potenciaInversorMin
+                            ? potenciaInversorMin - potencia
+                            : potencia > potenciaInversorMax
+                                ? potencia - potenciaInversorMax
+                                : 0;
+                    };
+                    return distancia(a) - distancia(b)
+                        || Number(a.potencia_nominal_kw) - Number(b.potencia_nominal_kw);
+                })[0];
+            const inversorRecomendado = seleccionActualValida
+                ? null
+                : inversoresEnRango ?? inversorRespaldo;
+
+            if (inversorRecomendado) {
+                componentes.inversor_id = inversorRecomendado.id;
+                componentes.inversor_modelo = `${inversorRecomendado.fabricante_nombre} ${inversorRecomendado.modelo}`;
+                componentes.inversor_potencia_kw = Number(inversorRecomendado.potencia_nominal_kw);
+                componentes.inversor_eficiencia = Number(inversorRecomendado.eficiencia_maxima);
+                componentes.inversor_fases = inversorRecomendado.fases;
+                componentes.inversor_voltaje_arranque_v = inversorRecomendado.voltaje_arranque_v ?? null;
+                eficienciaInversor = Number(inversorRecomendado.eficiencia_maxima);
+                const ratioDCAC = potenciaKwp / componentes.inversor_potencia_kw;
+                inversorRecomendacion = inversoresEnRango
+                    ? `Recomendado para ${cantidadPaneles} paneles (${potenciaKwp.toFixed(2)} kWp): ${componentes.inversor_modelo}, ${componentes.inversor_potencia_kw} kW.`
+                    : `No hay inversor dentro de ${potenciaInversorMin.toFixed(2)}-${potenciaInversorMax.toFixed(2)} kW. Se usa el más cercano (${componentes.inversor_modelo}, ${componentes.inversor_potencia_kw} kW), pero el ratio DC/AC ${ratioDCAC.toFixed(2)} queda fuera de 0.80-1.35.`;
+            } else if (seleccionActualValida) {
+                inversorRecomendacion = `El inversor seleccionado (${componentes.inversor_modelo}, ${potenciaActual} kW) conserva un ratio DC/AC dentro de 0.80-1.35 para ${cantidadPaneles} paneles.`;
+            } else {
+                inversorRecomendacion = `No hay inversor${soloMonofasico ? ' monofásico' : ''} en el catálogo para ${potenciaKwp.toFixed(2)} kWp. No se pudo elegir un respaldo de fase compatible.`;
+            }
+        } catch (err) {
+            console.error('No se pudo obtener una recomendación de inversor:', err);
+            inversorRecomendacion = 'No se pudo validar una recomendación de inversor con el catálogo disponible.';
+        }
+
+        componentes.inversor_recomendacion = inversorRecomendacion;
+        sessionStorage.setItem(`componentes_${simulacion_id}`, JSON.stringify(componentes));
+
+        console.log('llamando a pvlib con el arreglo dimensionado por consumo...');
+        const respuestaPvlib = await simulacionesApi.post('/pvlib', parametrosPvlib(cantidadPaneles));
+        const pvlib = respuestaPvlib.data;
 
         let analisisSuciedad: {
             suciedad_pct_anual: number;
@@ -304,11 +397,43 @@ export const useSimulaciones = () => {
 
 
         // Datos base
-        const produccionMensualDetalle: ProduccionMensual[] = analisisSuciedad?.produccion_mensual_detalle ?? pvlib.produccion_mensual;
-        const produccionAnual  = analisisSuciedad
-            ? produccionMensualDetalle.reduce((total, mes) => total + Number(mes.produccion_real_kwh ?? mes.produccion_kwh), 0)
-            : pvlib.produccion_anual_kwh;
-        const consumoAnual     = Number(consumo.consumo_anual_kwh);
+        const suciedadPct = Number(analisisSuciedad?.suciedad_pct_anual ?? 2);
+        const produccionMensualDetalle: ProduccionMensual[] = analisisSuciedad
+            ? analisisSuciedad.produccion_mensual_detalle
+            : pvlib.produccion_mensual.map((mes: ProduccionMensual) => ({
+                ...mes,
+                produccion_ideal_kwh: mes.produccion_kwh,
+                produccion_real_kwh: mes.produccion_kwh * (1 - suciedadPct / 100),
+                perdida_suciedad_pct: suciedadPct
+            }));
+        const produccionAnual = produccionMensualDetalle.reduce(
+            (total, mes) => total + Number(mes.produccion_real_kwh ?? mes.produccion_kwh),
+            0
+        );
+        const factorSuciedadReal = pvlib.produccion_anual_kwh > 0
+            ? produccionAnual / pvlib.produccion_anual_kwh
+            : 1;
+        const perdidasCalculadas = pvlib.perdidas ? (() => {
+            const perdidasConSuciedad = {
+                ...pvlib.perdidas,
+                suciedad_pct: suciedadPct,
+                performance_ratio: pvlib.performance_ratio * factorSuciedadReal
+            };
+            const factoresRestantes = [
+                perdidasConSuciedad.temperatura_pct,
+                perdidasConSuciedad.suciedad_pct,
+                perdidasConSuciedad.cableado_pct,
+                perdidasConSuciedad.mismatch_pct,
+                perdidasConSuciedad.disponibilidad_pct,
+                perdidasConSuciedad.sombra_pct,
+                perdidasConSuciedad.inversor_pct ?? 0,
+                perdidasConSuciedad.iam_pct ?? 0
+            ].map((porcentaje) => 1 - Number(porcentaje) / 100);
+            return {
+                ...perdidasConSuciedad,
+                total_pct: Number(((1 - factoresRestantes.reduce((total, factor) => total * factor, 1)) * 100).toFixed(2))
+            };
+        })() : undefined;
         const consumoMensual   = Number(consumo.consumo_mensual_kwh);
         const tarifaKwh        = Number(consumo.tarifa_kwh_mxn);
 
@@ -326,7 +451,7 @@ export const useSimulaciones = () => {
         let anioPayback      = 0;
 
         for (let anio = 1; anio <= 25; anio++) {
-            const tarifaAnio     = tarifaKwh * Math.pow(1 + tasaIncremento, anio);
+            const tarifaAnio     = tarifaKwh * Math.pow(1 + tasaIncremento, anio - 1);
             const produccionAnio = produccionAnual * Math.pow(1 - degradacion, anio - 1);
             // Solo ahorras la energía que consumes, no el excedente
             const energiaAhorrada = Math.min(produccionAnio, consumoAnual);
@@ -350,7 +475,7 @@ export const useSimulaciones = () => {
 
         // Impacto ambiental
         const co2AnualKg        = produccionAnual * 0.45;
-        const co2VidaUtilKg     = co2AnualKg * 25;
+        const co2VidaUtilKg = co2AnualKg * (1 - Math.pow(1 - degradacion, 25)) / degradacion;
         const arbolesEquivalentes = Math.round(co2AnualKg / 21.77);
         
         return {
@@ -374,13 +499,7 @@ export const useSimulaciones = () => {
             // Campos pvlib
             performance_ratio:          pvlib.performance_ratio,
             produccion_mensual_detalle: produccionMensualDetalle,
-            perdidas: pvlib.perdidas && analisisSuciedad ? {
-                ...pvlib.perdidas,
-                suciedad_pct: analisisSuciedad.suciedad_pct_anual,
-                total_pct: Number(pvlib.perdidas.total_pct ?? 0)
-                    - Number(pvlib.perdidas.suciedad_pct ?? 0)
-                    + analisisSuciedad.suciedad_pct_anual
-            } : pvlib.perdidas,
+            perdidas: perdidasCalculadas,
             suciedad_pct_anual: analisisSuciedad?.suciedad_pct_anual,
             modelo_usado: analisisSuciedad?.modelo_usado,
             fuente_datos_suciedad: analisisSuciedad?.fuente_datos_suciedad,
@@ -393,13 +512,14 @@ export const useSimulaciones = () => {
             panel_potencia_wp:  componentes?.panel_potencia_wp  ?? undefined,
             inversor_modelo:    componentes?.inversor_modelo     ?? undefined,
             inversor_potencia_kw: componentes?.inversor_potencia_kw ?? undefined,
+            inversor_recomendacion: inversorRecomendacion,
             potencia_kwp:       parseFloat(potenciaKwp.toFixed(2)),
             modelado_electrico:  modeladoElectrico ?? undefined,
             consumo_mensual_predicho: consumoMensualPredicho ?? undefined,
         };
 
     } catch (err: any) {
-        error.value = 'Error en el motor de simulación';
+        if (!error.value) error.value = 'Error en el motor de simulación';
         throw err;
     } finally {
         cargando.value = false;
@@ -423,6 +543,7 @@ const calcularModeladoElectrico = async (
             coef_temp_voc: Number(panel.coef_temp_voc),
             voltaje_mppt_min: Number(inversor.voltaje_mppt_min),
             voltaje_mppt_max: Number(inversor.voltaje_mppt_max),
+                voltaje_arranque_v: Number(inversor.voltaje_arranque_v) || 0,
             voltaje_max_entrada: Number(inversor.voltaje_max_entrada),
             corriente_max_entrada: Number(inversor.corriente_max_entrada),
             numero_mppt: Number(inversor.numero_mppt),
