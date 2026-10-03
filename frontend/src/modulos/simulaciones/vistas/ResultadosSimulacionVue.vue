@@ -234,46 +234,48 @@
       </div>
 
           <div v-if="resultados.mantenimiento_optimo" class="card card-mantenimiento">
-            <h3><i class="bi bi-droplet-half"></i> Plan de limpieza recomendado</h3>
+            <h3><i class="bi bi-droplet-half"></i> ¿Conviene limpiar los paneles?</h3>
             <p class="card-subtitulo">
-              Estimación con un costo de {{ resultados.mantenimiento_optimo.costo_limpieza_por_visita_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }} por visita.
+              Comparamos el costo de limpiar con el dinero que se pierde por la suciedad. Cada visita cuesta {{ resultados.mantenimiento_optimo.costo_limpieza_por_visita_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}.
             </p>
             <p v-if="resultados.fuente_datos_suciedad?.includes('Open-Meteo')" class="fuente-suciedad">
-              Partículas CAMS Global consultadas mediante
+              Datos de contaminación del aire consultados en
               <a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.
             </p>
             <div class="mantenimiento-resumen">
               <div>
-                <span>Frecuencia óptima</span>
+                <span>Plan recomendado</span>
                 <strong>{{ resultados.mantenimiento_optimo.intervalo_dias === null ? 'Sin limpieza manual' : `Cada ${resultados.mantenimiento_optimo.intervalo_dias} días` }}</strong>
               </div>
               <div>
-                <span>Limpiezas al año</span>
+                <span>Visitas al año</span>
                 <strong>{{ resultados.mantenimiento_optimo.limpiezas_anuales }}</strong>
               </div>
               <div>
-                <span>Costo anual</span>
+                <span>Costo anual de limpieza</span>
                 <strong>{{ resultados.mantenimiento_optimo.costo_anual_limpiezas_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</strong>
               </div>
               <div>
-                <span>Ahorro neto estimado</span>
-                <strong class="ahorro-neto">{{ resultados.mantenimiento_optimo.ahorro_neto_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</strong>
+                <span>{{ resultados.mantenimiento_optimo.intervalo_dias === null ? 'Resultado' : 'Ahorro anual estimado' }}</span>
+                <strong v-if="resultados.mantenimiento_optimo.intervalo_dias === null">No limpiar a mano</strong>
+                <strong v-else class="ahorro-neto">{{ resultados.mantenimiento_optimo.ahorro_neto_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</strong>
               </div>
             </div>
             <div class="calendario-limpieza">
-              <strong>Calendario sugerido</strong>
-              <p>Fechas aproximadas según el intervalo calculado; una lluvia suficiente puede adelantar la limpieza natural.</p>
+              <strong>Fechas estimadas de limpieza</strong>
+              <p>Son fechas aproximadas. La lluvia puede limpiar los paneles antes.</p>
               <div v-if="resultados.mantenimiento_optimo.fechas_limpieza_recomendadas.length" class="fechas-limpieza">
                 <span v-for="fecha in resultados.mantenimiento_optimo.fechas_limpieza_recomendadas" :key="fecha">
                   {{ formateaFecha(fecha) }}
                 </span>
               </div>
-              <p v-else>No se recomiendan limpiezas manuales para este costo y tarifa.</p>
+              <p v-else>Con estos datos, limpiar a mano cuesta más de lo que se ahorra.</p>
             </div>
             <div class="tabla-scroll">
+              <p class="card-subtitulo">La energía perdida es el porcentaje que se estima perder por suciedad. En la última columna, un valor negativo significa gasto extra y uno positivo significa ahorro frente a no limpiar.</p>
               <table class="tabla-mensual tabla-escenarios">
                 <thead>
-                  <tr><th>Frecuencia</th><th>Limpiezas/año</th><th>Pérdida</th><th>Costo total</th><th>Ahorro neto</th></tr>
+                  <tr><th>Plan</th><th>Visitas al año</th><th>Energía perdida</th><th>Costo anual total</th><th>Diferencia frente a no limpiar</th></tr>
                 </thead>
                 <tbody>
                   <tr v-for="(escenario, indice) in resultados.mantenimiento_optimo.escenarios" :key="`${escenario.intervalo_dias ?? 'sin-limpieza'}-${indice}`">
@@ -281,7 +283,7 @@
                     <td>{{ escenario.limpiezas_anuales }}</td>
                     <td>{{ escenario.suciedad_pct_anual }}%</td>
                     <td>{{ escenario.costo_total_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</td>
-                    <td class="ahorro-neto">{{ escenario.ahorro_neto_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</td>
+                    <td :class="escenario.ahorro_neto_mxn < 0 ? 'balance-negativo' : 'ahorro-neto'">{{ escenario.ahorro_neto_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -1551,6 +1553,7 @@ const descargarPDF = () => {
 .mantenimiento-resumen span { color: #64748b; font-size: 0.75rem; }
 .mantenimiento-resumen strong { color: #123b6d; font-size: 0.9rem; }
 .ahorro-neto { color: #16a34a !important; font-weight: 700; }
+.balance-negativo { color: #dc2626; font-weight: 700; }
 .tabla-escenarios { min-width: 600px; }
 .fuente-suciedad { margin: -0.55rem 0 1rem; color: #64748b; font-size: 0.75rem; }
 .fuente-suciedad a { color: #1d4f91; }
