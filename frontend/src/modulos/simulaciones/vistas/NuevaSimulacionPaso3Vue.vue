@@ -59,8 +59,11 @@
         <div class="card">
             <h2>Paso 3 — Selección de componentes</h2>
             <p class="subtitulo">
-                Elige el panel solar e inversor para tu sistema.
+                Elige el panel solar y un inversor preliminar para tu sistema.
                 El área útil disponible es <strong>{{ areaUtil }} m²</strong>.
+                La cantidad final se dimensiona con el consumo del recibo en el siguiente paso.
+                La recomendación final del inversor se recalcula con esa cantidad y la fase del servicio.
+                Verifica los datos del catálogo con la ficha técnica oficial antes de instalar.
             </p>
 
             <div v-if="cargando" class="estado-carga">
@@ -157,6 +160,7 @@ const avanzar = () => {
             inversor_modelo: `${seleccion.value.inversor.fabricante_nombre} ${seleccion.value.inversor.modelo}`,
             inversor_potencia_kw: seleccion.value.inversor.potencia_nominal_kw,
             inversor_eficiencia: seleccion.value.inversor.eficiencia_maxima,
+            inversor_fases: seleccion.value.inversor.fases,
             cantidad_paneles: seleccion.value.cantidadPaneles,
             potencia_kwp: seleccion.value.potenciaKwp
         })

@@ -80,12 +80,13 @@
                 Inversor
             </h3>
 
-            <div class="recomendado-badge" v-if="inversorRecomendado">
+            <div class="recomendado-badge" v-if="mensajeRecomendacion">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L2 9.27l6.91-1.01z"/>
                 </svg>
-                Recomendado para tu sistema: {{ inversorRecomendado.fabricante_nombre }} {{ inversorRecomendado.modelo }}
+                {{ mensajeRecomendacion }}
             </div>
+
             <div class="filtro-fabricante" v-if="filtroOrigen === 'catalogo'">
                 <button
                     :class="{ activo: fabricanteInversorSel === null }"
@@ -107,8 +108,7 @@
                     :key="inversor.id"
                     class="componente-card"
                     :class="{
-                        seleccionado: inversorSeleccionado?.id === inversor.id,
-                        recomendado: inversorRecomendado?.id === inversor.id && inversorSeleccionado?.id !== inversor.id
+                        seleccionado: inversorSeleccionado?.id === inversor.id
                     }"
                     @click="seleccionarInversor(inversor)">
                     <div class="componente-header">
@@ -124,6 +124,7 @@
                         <span>{{ inversor.fases }}</span>
                         <span>{{ inversor.tipo }}</span>
                         <span>{{ inversor.numero_mppt }} MPPT</span>
+                        <span>Arranque: {{ inversor.voltaje_arranque_v || '—' }} V</span>
                     </div>
                 </div>
             </div>
@@ -134,11 +135,11 @@
             <h4>Resumen del sistema</h4>
             <div class="resumen-grid">
                 <div class="resumen-item">
-                    <span class="resumen-label">Paneles</span>
+                    <span class="resumen-label">Máximo por área del techo</span>
                     <span class="resumen-valor">{{ cantidadPaneles }}</span>
                 </div>
                 <div class="resumen-item">
-                    <span class="resumen-label">Potencia DC</span>
+                    <span class="resumen-label">Potencia DC máxima</span>
                     <span class="resumen-valor">{{ potenciaDcKwp.toFixed(2) }} kWp</span>
                 </div>
                 <div class="resumen-item">
@@ -146,7 +147,7 @@
                     <span class="resumen-valor">{{ inversorSeleccionado.potencia_nominal_kw }} kW</span>
                 </div>
                 <div class="resumen-item">
-                    <span class="resumen-label">Ratio DC/AC</span>
+                    <span class="resumen-label">Ratio a capacidad máxima</span>
                     <span class="resumen-valor" :class="claseRatio">{{ ratioDcAc.toFixed(2) }}</span>
                 </div>
             </div>
@@ -198,6 +199,7 @@ const fabricantesInversor = ref<{ id: number; nombre: string }[]>([]);
 const panelSeleccionado = ref<PanelSolar | null>(null);
 const inversorSeleccionado = ref<InversorSolar | null>(null);
 const inversorRecomendado = ref<InversorSolar | null>(null);
+const mensajeRecomendacion = ref('');
 const fabricantePanelSel = ref<number | null>(null);
 const fabricanteInversorSel = ref<number | null>(null);
 
@@ -234,6 +236,7 @@ const cargarComponentesEmpresa = async () => {
             eficiencia_maxima: Number(i.eficiencia_maxima),
             voltaje_mppt_min: Number(i.voltaje_mppt_min),
             voltaje_mppt_max: Number(i.voltaje_mppt_max),
+            voltaje_arranque_v: Number(i.voltaje_arranque_v) || 0,
             voltaje_max_entrada: Number(i.voltaje_max_entrada),
             corriente_max_entrada: Number(i.corriente_max_entrada),
             numero_mppt: Number(i.numero_mppt),
@@ -320,7 +323,7 @@ const mensajeCompatibilidad = computed(() => {
     if (!ratioDcAc.value) return '';
     if (ratioDcAc.value < 0.8) return 'Inversor sobredimensionado. Considera uno de menor potencia.';
     if (ratioDcAc.value > 1.35) return 'Arreglo excede la capacidad del inversor. Considera uno de mayor potencia.';
-    return `Compatibilidad correcta — Ratio DC/AC: ${ratioDcAc.value.toFixed(2)} (rango óptimo: 0.80 - 1.35)`;
+    return `Ratio para capacidad máxima: ${ratioDcAc.value.toFixed(2)} (referencia interna: 0.80 - 1.35)`;
 });
 
 // ─── Selección ────────────────────────────────────────────────
@@ -332,30 +335,56 @@ const seleccionarInversor = (inversor: InversorSolar) => {
     inversorSeleccionado.value = inversor;
 };
 
-// ─── Sugerencia automática de inversor ───────────────────────
-const cargarSugerencia = async () => {
-    if (potenciaDcKwp.value === 0) return;
-    try {
-        const resp = await catalogoApi.get(`/sugerir-inversor?potencia_kwp=${potenciaDcKwp.value}`);
-        const sugerencias = Array.isArray(resp.data) ? resp.data : [];
-        if (sugerencias.length > 0) {
-            inversorRecomendado.value = sugerencias[0];
-            if (!inversorSeleccionado.value) {
-                inversorSeleccionado.value = sugerencias[0];
-                fabricanteInversorSel.value = sugerencias[0].fabricante_id;
-            }
-        }
-    } catch (err) {
-        console.error('Error al obtener sugerencia de inversor:', err);
+const actualizaRecomendacion = () => {
+    if (!panelSeleccionado.value || potenciaDcKwp.value <= 0) {
+        inversorRecomendado.value = null;
+        mensajeRecomendacion.value = '';
+        return;
+    }
+
+    const potenciaMinima = potenciaDcKwp.value / 1.35;
+    const potenciaMaxima = potenciaDcKwp.value / 0.8;
+    const disponibles = [...inversoresEmpresa.value, ...inversores.value];
+    const compatibles = disponibles
+        .filter((inversor) => Number(inversor.potencia_nominal_kw) >= potenciaMinima
+            && Number(inversor.potencia_nominal_kw) <= potenciaMaxima)
+        .sort((a, b) => Number(a.potencia_nominal_kw) - Number(b.potencia_nominal_kw));
+    const respaldo = [...disponibles].sort((a, b) => {
+        const distancia = (inversor: InversorSolar) => {
+            const potencia = Number(inversor.potencia_nominal_kw);
+            return potencia < potenciaMinima
+                ? potenciaMinima - potencia
+                : potencia > potenciaMaxima
+                    ? potencia - potenciaMaxima
+                    : 0;
+        };
+        return distancia(a) - distancia(b)
+            || Number(a.potencia_nominal_kw) - Number(b.potencia_nominal_kw);
+    })[0];
+
+    const recomendacion = compatibles[0] ?? respaldo ?? null;
+    inversorRecomendado.value = recomendacion;
+    if (!recomendacion) {
+        mensajeRecomendacion.value = 'No hay inversores disponibles en el catálogo.';
+        return;
+    }
+
+    const ratio = potenciaDcKwp.value / Number(recomendacion.potencia_nominal_kw);
+    mensajeRecomendacion.value = compatibles.length > 0
+        ? `Sugerencia para ${cantidadPaneles.value} paneles (${potenciaDcKwp.value.toFixed(2)} kWp): ${recomendacion.fabricante_nombre} ${recomendacion.modelo} (${recomendacion.potencia_nominal_kw} kW).`
+        : `No hay inversor en el rango ${potenciaMinima.toFixed(2)}-${potenciaMaxima.toFixed(2)} kW; se sugiere el más cercano (${recomendacion.fabricante_nombre} ${recomendacion.modelo}), con ratio ${ratio.toFixed(2)} fuera de rango.`;
+
+    const potenciaSeleccionada = Number(inversorSeleccionado.value?.potencia_nominal_kw ?? 0);
+    const ratioSeleccionado = potenciaSeleccionada > 0 ? potenciaDcKwp.value / potenciaSeleccionada : 0;
+    if (ratioSeleccionado < 0.8 || ratioSeleccionado > 1.35) {
+        inversorSeleccionado.value = recomendacion;
     }
 };
 
-watch(potenciaDcKwp, () => {
-    cargarSugerencia();
-});
+watch([panelSeleccionado, cantidadPaneles], actualizaRecomendacion);
 
 // ─── Emitir selección ─────────────────────────────────────────
-watch([panelSeleccionado, inversorSeleccionado], () => {
+watch([panelSeleccionado, inversorSeleccionado, cantidadPaneles], () => {
     if (panelSeleccionado.value && inversorSeleccionado.value) {
         emit('seleccion', {
             panel: panelSeleccionado.value,
@@ -400,6 +429,7 @@ onMounted(async () => {
             eficiencia_europea: Number(i.eficiencia_europea),
             voltaje_mppt_min: Number(i.voltaje_mppt_min),
             voltaje_mppt_max: Number(i.voltaje_mppt_max),
+            voltaje_arranque_v: Number(i.voltaje_arranque_v) || 0,
             voltaje_max_entrada: Number(i.voltaje_max_entrada),
             corriente_max_entrada: Number(i.corriente_max_entrada),
         }));
@@ -420,9 +450,6 @@ onMounted(async () => {
             panelSeleccionado.value = panelDefault;
             fabricantePanelSel.value = panelDefault.fabricante_id;
         }
-
-        // ← Llamar sugerencia explícitamente después de tener panel y área
-        await cargarSugerencia();
 
     } catch (err) {
         console.error('Error al cargar catálogo:', err);

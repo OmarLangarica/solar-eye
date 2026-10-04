@@ -95,45 +95,37 @@
         <div class="tarjeta tarjeta-produccion">
           <div class="tarjeta-icono"><i class="bi bi-lightning-charge"></i></div>
           <div class="tarjeta-info">
-            <span class="tarjeta-label">Producción anual</span>
+            <span class="tarjeta-label">Producción anual estimada</span>
             <span class="tarjeta-valor">{{ resultados.produccion_anual_kwh.toLocaleString() }} kWh</span>
           </div>
         </div>
         <div class="tarjeta tarjeta-ahorro">
           <div class="tarjeta-icono"><i class="bi bi-cash-coin"></i></div>
           <div class="tarjeta-info">
-            <span class="tarjeta-label">Ahorro mensual</span>
+            <span class="tarjeta-label">Ahorro mensual estimado</span>
             <span class="tarjeta-valor">$ {{ resultados.ahorro_mensual_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }}</span>
           </div>
         </div>
         <div class="tarjeta tarjeta-cobertura">
           <div class="tarjeta-icono"><i class="bi bi-bar-chart"></i></div>
           <div class="tarjeta-info">
-            <span class="tarjeta-label">Cobertura del consumo</span>
+            <span class="tarjeta-label">Cobertura anual estimada</span>
             <span class="tarjeta-valor">{{ resultados.porcentaje_cobertura.toFixed(1) }}%</span>
           </div>
         </div>
         <div class="tarjeta tarjeta-retorno">
           <div class="tarjeta-icono"><i class="bi bi-calendar-event"></i></div>
           <div class="tarjeta-info">
-            <span class="tarjeta-label">Retorno de inversión</span>
+            <span class="tarjeta-label">Retorno estimado</span>
             <span class="tarjeta-valor">{{ resultados.retorno_inversion_anios.toFixed(1) }} años</span>
           </div>
         </div>
       </div>
 
-      <div v-show="mostrarSeccion('resumen')" class="graficas-grid" v-if="resultados && consumo">
-        <div class="card card-grafica">
-          <h3><i class="bi bi-bar-chart-line"></i> Producción ideal vs. real por suciedad</h3>
-          <p class="card-subtitulo">Comparación mensual con la pérdida estimada por lluvia y suciedad.</p>
-          <div class="canvas-wrap">
-            <canvas ref="comparativaCanvas"></canvas>
-          </div>
-        </div>
-
-        <div class="card card-grafica">
-          <h3><i class="bi bi-graph-up-arrow"></i> Proyección de ahorro acumulado a 25 años</h3>
-          <p class="card-subtitulo">Se compara el costo acumulado de seguir con CFE contra la inversión solar fija.</p>
+      <div v-show="mostrarSeccion('resumen')" class="graficas-grid graficas-grid--resumen" v-if="resultados && consumo">
+        <div class="card card-grafica card-grafica--proyeccion">
+          <h3><i class="bi bi-graph-up-arrow"></i> Proyección estimada a 25 años</h3>
+          <p class="card-subtitulo">Usa el costo promedio del recibo y supuestos fijos; no reproduce una facturación de CFE.</p>
           <div class="payback-banner" v-if="textoPaybackEstimado">
             Retorno estimado en {{ textoPaybackEstimado }} años.
           </div>
@@ -190,7 +182,21 @@
                   <span class="perdida-valor">{{ resultados.suciedad_pct_anual ?? resultados.perdidas.suciedad_pct }}%</span>
                   <span class="perdida-nombre">Suciedad</span>
               </div>
-              <div class="perdida-item">
+                <div class="perdida-item" v-if="resultados.perdidas.iam_pct !== undefined">
+                  <div class="perdida-barra-wrap">
+                    <div class="perdida-barra" :style="{ height: `${resultados.perdidas.iam_pct * 4}px` }"></div>
+                  </div>
+                  <span class="perdida-valor">{{ resultados.perdidas.iam_pct }}%</span>
+                  <span class="perdida-nombre">Reflexión IAM</span>
+                </div>
+                <div class="perdida-item" v-if="resultados.perdidas.inversor_pct !== undefined">
+                  <div class="perdida-barra-wrap">
+                    <div class="perdida-barra" :style="{ height: `${resultados.perdidas.inversor_pct * 4}px` }"></div>
+                  </div>
+                  <span class="perdida-valor">{{ resultados.perdidas.inversor_pct }}%</span>
+                  <span class="perdida-nombre">Inversor</span>
+                </div>
+                <div class="perdida-item">
                   <div class="perdida-barra-wrap">
                       <div class="perdida-barra"
                           :style="{ height: `${resultados.perdidas.cableado_pct * 4}px` }">
@@ -233,47 +239,49 @@
           </div>
       </div>
 
-          <div v-if="resultados.mantenimiento_optimo" class="card card-mantenimiento">
-            <h3><i class="bi bi-droplet-half"></i> Plan de limpieza recomendado</h3>
+          <div v-if="resultados.mantenimiento_optimo" v-show="mostrarSeccion('mantenimiento')" class="card card-mantenimiento">
+            <h3><i class="bi bi-droplet-half"></i> ¿Conviene limpiar los paneles?</h3>
             <p class="card-subtitulo">
-              Estimación con un costo de {{ resultados.mantenimiento_optimo.costo_limpieza_por_visita_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }} por visita.
+              Comparamos el costo de limpiar con el dinero que se pierde por la suciedad. Cada visita cuesta {{ resultados.mantenimiento_optimo.costo_limpieza_por_visita_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}.
             </p>
             <p v-if="resultados.fuente_datos_suciedad?.includes('Open-Meteo')" class="fuente-suciedad">
-              Partículas CAMS Global consultadas mediante
+              Datos de contaminación del aire consultados en
               <a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.
             </p>
             <div class="mantenimiento-resumen">
               <div>
-                <span>Frecuencia óptima</span>
+                <span>Plan recomendado</span>
                 <strong>{{ resultados.mantenimiento_optimo.intervalo_dias === null ? 'Sin limpieza manual' : `Cada ${resultados.mantenimiento_optimo.intervalo_dias} días` }}</strong>
               </div>
               <div>
-                <span>Limpiezas al año</span>
+                <span>Visitas al año</span>
                 <strong>{{ resultados.mantenimiento_optimo.limpiezas_anuales }}</strong>
               </div>
               <div>
-                <span>Costo anual</span>
+                <span>Costo anual de limpieza</span>
                 <strong>{{ resultados.mantenimiento_optimo.costo_anual_limpiezas_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</strong>
               </div>
               <div>
-                <span>Ahorro neto estimado</span>
-                <strong class="ahorro-neto">{{ resultados.mantenimiento_optimo.ahorro_neto_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</strong>
+                <span>{{ resultados.mantenimiento_optimo.intervalo_dias === null ? 'Resultado' : 'Ahorro anual estimado' }}</span>
+                <strong v-if="resultados.mantenimiento_optimo.intervalo_dias === null">No limpiar a mano</strong>
+                <strong v-else class="ahorro-neto">{{ resultados.mantenimiento_optimo.ahorro_neto_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</strong>
               </div>
             </div>
             <div class="calendario-limpieza">
-              <strong>Calendario sugerido</strong>
-              <p>Fechas aproximadas según el intervalo calculado; una lluvia suficiente puede adelantar la limpieza natural.</p>
+              <strong>Fechas estimadas de limpieza</strong>
+              <p>Son fechas aproximadas. La lluvia puede limpiar los paneles antes.</p>
               <div v-if="resultados.mantenimiento_optimo.fechas_limpieza_recomendadas.length" class="fechas-limpieza">
                 <span v-for="fecha in resultados.mantenimiento_optimo.fechas_limpieza_recomendadas" :key="fecha">
                   {{ formateaFecha(fecha) }}
                 </span>
               </div>
-              <p v-else>No se recomiendan limpiezas manuales para este costo y tarifa.</p>
+              <p v-else>Con estos datos, limpiar a mano cuesta más de lo que se ahorra.</p>
             </div>
             <div class="tabla-scroll">
+              <p class="card-subtitulo">La energía perdida es el porcentaje que se estima perder por suciedad. En la última columna, un valor negativo significa gasto extra y uno positivo significa ahorro frente a no limpiar.</p>
               <table class="tabla-mensual tabla-escenarios">
                 <thead>
-                  <tr><th>Frecuencia</th><th>Limpiezas/año</th><th>Pérdida</th><th>Costo total</th><th>Ahorro neto</th></tr>
+                  <tr><th>Plan</th><th>Visitas al año</th><th>Energía perdida</th><th>Costo anual total</th><th>Diferencia frente a no limpiar</th></tr>
                 </thead>
                 <tbody>
                   <tr v-for="(escenario, indice) in resultados.mantenimiento_optimo.escenarios" :key="`${escenario.intervalo_dias ?? 'sin-limpieza'}-${indice}`">
@@ -281,12 +289,20 @@
                     <td>{{ escenario.limpiezas_anuales }}</td>
                     <td>{{ escenario.suciedad_pct_anual }}%</td>
                     <td>{{ escenario.costo_total_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</td>
-                    <td class="ahorro-neto">{{ escenario.ahorro_neto_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</td>
+                    <td :class="escenario.ahorro_neto_mxn < 0 ? 'balance-negativo' : 'ahorro-neto'">{{ escenario.ahorro_neto_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
+
+            <div v-show="mostrarSeccion('mantenimiento')" class="card card-grafica card-mantenimiento-grafica" v-if="resultados && consumo">
+              <h3><i class="bi bi-bar-chart-line"></i> Producción ideal vs. real por suciedad</h3>
+              <p class="card-subtitulo">Comparación mensual con la pérdida estimada por lluvia y suciedad.</p>
+              <div class="canvas-wrap">
+                <canvas ref="comparativaCanvas"></canvas>
+              </div>
+            </div>
 
       <!-- Card producción mensual detallada -->
       <div v-show="mostrarSeccion('energia')" class="card card-produccion-detalle" v-if="resultados?.produccion_mensual_detalle">
@@ -319,7 +335,7 @@
             <h3><i class="bi bi-cash-coin"></i> Análisis económico</h3>
             <div class="tabla-datos">
               <div class="fila-dato">
-                <span>Costo de instalación</span>
+                <span>Inversión estimada</span>
                 <span class="valor-destacado">$ {{ resultados.costo_total_instalacion_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }} MXN</span>
               </div>
               <div class="fila-dato">
@@ -331,7 +347,7 @@
                 <span class="valor-positivo">$ {{ resultados.ahorro_anual_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }} MXN</span>
               </div>
               <div class="fila-dato destacada fila-ahorro-25">
-                <span>Ahorro en 25 años</span>
+                <span>Ahorro estimado en 25 años</span>
                 <span class="valor-positivo grande valor-ahorro-25">$ {{ resultados.ahorro_vida_util_mxn.toLocaleString('es-MX', { minimumFractionDigits: 2 }) }} MXN</span>
               </div>
               <div class="fila-dato">
@@ -342,19 +358,19 @@
           </div>
 
           <div v-show="mostrarSeccion('finanzas')" class="card card-finanzas">
-            <h3><i class="bi bi-bar-chart"></i> Proyección tarifaria CFE</h3>
-            <p class="card-subtitulo">Con un incremento estimado del {{ resultados.tasa_incremento_tarifa_pct }}% anual:</p>
+            <h3><i class="bi bi-bar-chart"></i> Escenario estimado de costo de energía</h3>
+            <p class="card-subtitulo">Con un incremento supuesto del {{ resultados.tasa_incremento_tarifa_pct }}% anual:</p>
             <div class="tabla-datos">
               <div class="fila-dato">
-                <span>Precio actual kWh</span>
+                <span>Costo promedio actual del recibo/kWh</span>
                 <span>$ {{ Number(consumo?.tarifa_kwh_mxn ?? 0).toFixed(4) }} MXN</span>
               </div>
               <div class="fila-dato">
-                <span>Precio en 5 años</span>
+                <span>Costo promedio estimado en 5 años</span>
                 <span class="valor-advertencia">$ {{ resultados.precio_kwh_proyectado_anio5.toFixed(4) }} MXN</span>
               </div>
               <div class="fila-dato">
-                <span>Precio en 10 años</span>
+                <span>Costo promedio estimado en 10 años</span>
                 <span class="valor-advertencia">$ {{ resultados.precio_kwh_proyectado_anio10.toFixed(4) }} MXN</span>
               </div>
             </div>
@@ -382,6 +398,9 @@
                 <span>{{ resultados.excedente_kwh.toLocaleString() }} kWh</span>
               </div>
             </div>
+            <p class="card-subtitulo">
+              Equivalencias estimadas con factores fijos de 0.45 kg CO₂/kWh y 21.77 kg CO₂ por árbol; no son mediciones del sitio.
+            </p>
             <div class="barra-container">
               <div class="barra-label">
                 <span>Cobertura solar</span>
@@ -396,10 +415,9 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                     <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 00-3.42 0z"/>
                 </svg>
-                El sistema genera un excedente de 
-                <strong>{{ resultados.excedente_kwh.toLocaleString('es-MX') }} kWh/año</strong> 
-                — más del 50% de tu producción no se aprovecha. 
-                Considera reducir el área del techo para optimizar la inversión.
+                El excedente anual estimado es de
+                <strong>{{ resultados.excedente_kwh.toLocaleString('es-MX') }} kWh</strong>.
+                Revisa la cantidad de módulos y el esquema de compensación: esta simulación no calcula créditos de energía CFE.
             </div>
           </div>
 
@@ -527,12 +545,17 @@
                   <div class="componente-configuracion-grid">
                     <div class="componente-dato"><span>Potencia instalada</span><strong>{{ resultados.potencia_kwp }} kWp</strong></div>
                     <div class="componente-dato"><span>Paneles instalados</span><strong>{{ resultados.numero_paneles }} módulos</strong></div>
+                    <div class="componente-dato" v-if="ratioDcAc !== null"><span>Ratio DC/AC</span><strong>{{ ratioDcAc.toFixed(2) }}</strong></div>
                   </div>
                 </section>
               </div>
           </div>
 
           <!-- Card Modelado Eléctrico -->
+            <div v-show="mostrarSeccion('tecnico')" class="card card-electrico" v-if="resultados?.modelado_electrico?.error">
+              <h3><i class="bi bi-exclamation-triangle"></i> Configuración eléctrica no válida</h3>
+              <p class="card-subtitulo">{{ resultados.modelado_electrico.error }}</p>
+            </div>
           <div v-show="mostrarSeccion('tecnico')" class="card card-electrico" v-if="resultados?.modelado_electrico && !resultados.modelado_electrico.error">
               <h3>
                   <i class="bi bi-lightning-charge"></i>
@@ -545,15 +568,19 @@
               </div>
 
               <!-- Compatibilidad general -->
-              <div class="electrico-compatible" :class="resultados.modelado_electrico.compatible ? 'compatible' : 'incompatible'">
-                  <svg v-if="resultados.modelado_electrico.compatible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <div class="electrico-compatible" :class="sistemaCompatible ? 'compatible' : 'incompatible'">
+                  <svg v-if="sistemaCompatible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                       <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>
                   </svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                       <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
                   </svg>
-                  {{ resultados.modelado_electrico.compatible ? 'Sistema eléctrico compatible' : 'Revisar compatibilidad eléctrica' }}
+                    {{ sistemaCompatible ? 'Voltajes y ratio DC/AC compatibles' : 'Revisar compatibilidad eléctrica' }}
               </div>
+
+                  <div class="electrico-sugerencia">
+                    La fase del servicio CFE no se capturó; debe confirmarse con el recibo o la instalación antes de elegir el inversor.
+                  </div>
 
               <!-- Sugerencia cuando hay incompatibilidad -->
               <div class="electrico-sugerencia" v-if="resultados.modelado_electrico.sugerencia">
@@ -640,6 +667,12 @@
                           {{ resultados.modelado_electrico.voltaje_mppt_min_v }}-{{ resultados.modelado_electrico.voltaje_mppt_max_v }} V
                       </span>
                   </div>
+                    <div class="electrico-fila" v-if="resultados.modelado_electrico.voltaje_arranque_v">
+                      <span class="electrico-label">Voltaje de arranque</span>
+                      <span class="electrico-valor" :class="resultados.modelado_electrico.arranque_dentro_limite ? 'ok' : 'error'">
+                        {{ resultados.modelado_electrico.voltaje_arranque_v }} V
+                      </span>
+                    </div>
                   <div class="electrico-fila">
                       <span class="electrico-label">Vmp calor en MPPT</span>
                       <span class="electrico-valor" :class="resultados.modelado_electrico.mppt_dentro_rango ? 'ok' : 'error'">
@@ -667,7 +700,7 @@
     </div>
 
     <div v-else class="sin-datos">
-      No se encontraron resultados para esta simulación.
+      {{ error || 'No se encontraron resultados para esta simulación.' }}
     </div>
 
   </div>
@@ -710,6 +743,16 @@ const resultados = ref<ResultadosCalculo | null>(null);
 const techo = ref<DatosTecho | null>(null);
 const geo = ref<DatosGeograficos | null>(null);
 const consumo = ref<ConsumoElectrico | null>(null);
+const ratioDcAc = computed(() => {
+  const potenciaDc = Number(resultados.value?.potencia_kwp ?? 0);
+  const potenciaAc = Number(resultados.value?.inversor_potencia_kw ?? 0);
+  return potenciaDc > 0 && potenciaAc > 0 ? potenciaDc / potenciaAc : null;
+});
+const sistemaCompatible = computed(() => {
+  const ratio = ratioDcAc.value;
+  return Boolean(resultados.value?.modelado_electrico?.compatible)
+    && ratio !== null && ratio >= 0.8 && ratio <= 1.35;
+});
 const comparativaCanvas = ref<HTMLCanvasElement | null>(null);
 const proyeccionCanvas = ref<HTMLCanvasElement | null>(null);
 const comparativaChart = ref<Chart<'bar'> | null>(null);
@@ -717,17 +760,18 @@ const proyeccionChart = ref<Chart<'line'> | null>(null);
 const authStore = useAuthStore();
 const mostrarModal = ref(false);
 
-type FiltroResultado = 'todo' | 'resumen' | 'finanzas' | 'energia' | 'sistema' | 'tecnico' | 'impacto';
+type FiltroResultado = 'todo' | 'resumen' | 'finanzas' | 'energia' | 'sistema' | 'tecnico' | 'impacto' | 'mantenimiento';
 
 const filtroActivo = ref<FiltroResultado>('todo');
 const filtrosResultados: { id: FiltroResultado; nombre: string; icono: string }[] = [
-  { id: 'todo', nombre: 'Todo', icono: 'bi bi-grid-1x2' },
+  { id: 'todo', nombre: 'Todos', icono: 'bi bi-grid-1x2' },
   { id: 'resumen', nombre: 'Resumen', icono: 'bi bi-speedometer2' },
   { id: 'finanzas', nombre: 'Finanzas', icono: 'bi bi-cash-coin' },
   { id: 'energia', nombre: 'Energía', icono: 'bi bi-lightning-charge' },
   { id: 'sistema', nombre: 'Sistema', icono: 'bi bi-cpu' },
   { id: 'tecnico', nombre: 'Técnico', icono: 'bi bi-tools' },
-  { id: 'impacto', nombre: 'Impacto', icono: 'bi bi-leaf' }
+  { id: 'impacto', nombre: 'Impacto', icono: 'bi bi-leaf' },
+  { id: 'mantenimiento', nombre: 'Mantenimiento', icono: 'bi bi-droplet-half' }
 ];
 
 const mostrarSeccion = (seccion: FiltroResultado) => filtroActivo.value === 'todo' || filtroActivo.value === seccion;
@@ -810,6 +854,7 @@ const normalizaResultados = (data: Partial<ResultadosCalculo>): ResultadosCalcul
         inversor_potencia_kw: data.inversor_potencia_kw
             ? Number(data.inversor_potencia_kw)
             : componentes?.inversor_potencia_kw ?? undefined,
+        inversor_recomendacion: data.inversor_recomendacion ?? componentes?.inversor_recomendacion ?? undefined,
         potencia_kwp: data.potencia_kwp
             ? Number(data.potencia_kwp)
             : componentes?.potencia_kwp ?? undefined,
@@ -937,7 +982,7 @@ const renderGraficaProyeccion = () => {
     data: {
       labels: proyeccion.etiquetas,
       datasets: [
-        { label: 'Costo acumulado sin solar (CFE)', data: proyeccion.serieSinSolar, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.16)', fill: true, tension: 0.3, pointRadius: 0 },
+        { label: 'Costo acumulado estimado sin solar', data: proyeccion.serieSinSolar, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.16)', fill: true, tension: 0.3, pointRadius: 0 },
         { label: 'Costo acumulado con solar', data: proyeccion.serieConSolar, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.12)', fill: true, tension: 0, pointRadius: 0, borderDash: [8, 6] },
         { label: proyeccion.anioPayback ? `Payback estimado (${proyeccion.anioPayback.toFixed(1)} años)` : 'Payback estimado', data: puntosPayback, borderColor: '#16a34a', backgroundColor: '#16a34a', pointRadius: 6, pointHoverRadius: 7, showLine: false }
       ]
@@ -1007,11 +1052,29 @@ onMounted(async () => {
     return;
   }
 
+  let componentesActivos = false;
+  try {
+    const componentes = JSON.parse(sessionStorage.getItem(`componentes_${simulacion_id}`) ?? 'null');
+    componentesActivos = Boolean(
+      componentes?.panel_id && componentes?.inversor_id &&
+      Number(componentes?.panel_potencia_wp) > 0 &&
+      Number(componentes?.panel_area_m2) > 0 &&
+      Number(componentes?.cantidad_paneles) > 0
+    );
+  } catch {
+    componentesActivos = false;
+  }
+  if (!componentesActivos) {
+    if (!resultadosExistentes) {
+      error.value = 'No hay una selección de componentes vigente para calcular. Vuelve al paso 3.';
+    }
+    return;
+  }
+
   const techoParseado = { ...techo.value, area_m2: Number(techo.value.area_m2), area_util_m2: Number(techo.value.area_util_m2), factor_sombra: Number(techo.value.factor_sombra), angulo_inclinacion_deg: Number(techo.value.angulo_inclinacion_deg), latitud: Number(techo.value.latitud), longitud: Number(techo.value.longitud) };
-  const geoParseado = { ...geo.value, horas_sol_pico_diarias: Number(geo.value.horas_sol_pico_diarias), irradiacion_anual_kwh_m2: Number(geo.value.irradiacion_anual_kwh_m2), temperatura_promedio_anual: Number(geo.value.temperatura_promedio_anual), altitud_msnm: Number(geo.value.altitud_msnm), velocidad_viento_promedio: Number(geo.value.velocidad_viento_promedio) };
   const consumoParseado = { ...consumo.value, consumo_mensual_kwh: Number(consumo.value.consumo_mensual_kwh), consumo_anual_kwh: Number(consumo.value.consumo_anual_kwh), tarifa_kwh_mxn: Number(consumo.value.tarifa_kwh_mxn), costo_mensual_mxn: Number(consumo.value.costo_mensual_mxn) };
 
-  const calculados = await calcularResultadosPvlib(consumoParseado, techoParseado, geoParseado, simulacion_id);  await guardarResultados(calculados);
+  const calculados = await calcularResultadosPvlib(consumoParseado, techoParseado, simulacion_id);  await guardarResultados(calculados);
   resultados.value = normalizaResultados(calculados);
   console.log('consumo_mensual_predicho:', resultados.value?.consumo_mensual_predicho);
   console.log('resultados:', resultados.value);
@@ -1203,12 +1266,14 @@ const descargarPDF = () => {
 /* Gráficas */
 .graficas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
 .card-grafica { min-height: 340px; }
+.graficas-grid--resumen .card-grafica--proyeccion { grid-column: 1 / -1; }
 .canvas-wrap { position: relative; height: 250px; margin-top: 0.8rem; }
 .payback-banner { margin-top: 0.5rem; padding: 0.55rem 0.75rem; border-radius: 6px; background: #ecfdf5; color: #166534; font-size: 0.82rem; font-weight: 600; }
 .payback-banner.sin-retorno { background: #fff7ed; color: #9a3412; }
 
 /* Flujo masonry: cada card ocupa el siguiente espacio disponible sin heredar la altura de otra. */
 .grid-resultados { column-count: 2; column-gap: 1.25rem; column-fill: balance; }
+.grid-resultados.filtro-mantenimiento { column-count: 1; }
 .columna { display: contents; }
 .grid-resultados .card { display: inline-block; width: 100%; margin: 0 0 1.25rem; vertical-align: top; break-inside: avoid; }
 .card-produccion-detalle { min-width: 0; overflow-x: auto; }
@@ -1551,6 +1616,7 @@ const descargarPDF = () => {
 .mantenimiento-resumen span { color: #64748b; font-size: 0.75rem; }
 .mantenimiento-resumen strong { color: #123b6d; font-size: 0.9rem; }
 .ahorro-neto { color: #16a34a !important; font-weight: 700; }
+.balance-negativo { color: #dc2626; font-weight: 700; }
 .tabla-escenarios { min-width: 600px; }
 .fuente-suciedad { margin: -0.55rem 0 1rem; color: #64748b; font-size: 0.75rem; }
 .fuente-suciedad a { color: #1d4f91; }

@@ -18,6 +18,8 @@ def calcula_strings(
     corriente_max_entrada: float,
     numero_mppt: int,
     numero_entradas_por_mppt: int,
+    voltaje_arranque_v: float = 0.0,
+    corriente_max_isc_entrada: float = 0.0,
     temp_min_sitio: float = 5.0,
     temp_max_celda: float = 70.0
 ) -> dict:
@@ -57,10 +59,13 @@ def calcula_strings(
 
     # Límite inferior MPPT: Vmp_calor × n ≥ voltaje_mppt_min
     min_paneles_serie_mppt = math.ceil(voltaje_mppt_min / vmp_calor)
+    min_paneles_serie_arranque = (
+        math.ceil(voltaje_arranque_v / vmp_calor) if voltaje_arranque_v > 0 else 0
+    )
 
     # Paneles por string: máximo compatible con todos los límites
     max_serie = min(max_paneles_serie_voc, max_paneles_serie_mppt_max)
-    min_serie = min_paneles_serie_mppt
+    min_serie = max(min_paneles_serie_mppt, min_paneles_serie_arranque)
 
     if max_serie < min_serie:
         return {
@@ -87,9 +92,11 @@ def calcula_strings(
         if strings_necesarios > total_entradas:
             continue  # No caben en el inversor
 
-        # Paneles reales instalados (puede haber un string incompleto)
+        # No permitir strings que requieran agregar módulos fuera de la propuesta.
         paneles_reales = paneles_serie * strings_necesarios
         paneles_sobrantes = paneles_reales - cantidad_paneles
+        if paneles_sobrantes:
+            continue
 
         # Voltajes y corrientes del arreglo
         voc_string  = voc_panel * paneles_serie
@@ -102,13 +109,18 @@ def calcula_strings(
         # Validaciones eléctricas
         voc_ok  = voc_frio_string <= voltaje_max_entrada
         mppt_ok = voltaje_mppt_min <= vmp_calor_string <= voltaje_mppt_max
+        arranque_ok = voltaje_arranque_v <= 0 or vmp_calor_string >= voltaje_arranque_v
 
         # Corriente por MPPT (no total) — cada MPPT maneja sus propios strings
         strings_por_mppt = math.ceil(strings_necesarios / numero_mppt)
         isc_por_mppt = isc_panel * strings_por_mppt
-        isc_ok = isc_por_mppt <= corriente_max_entrada
+        imp_por_mppt = imp_panel * strings_por_mppt
 
-        if not (voc_ok and mppt_ok):
+        operacion_ok = imp_por_mppt <= corriente_max_entrada
+        isc_verificada = corriente_max_isc_entrada > 0
+        isc_ok = (isc_por_mppt <= corriente_max_isc_entrada) if isc_verificada else True
+
+        if not (voc_ok and mppt_ok and arranque_ok):
             continue
 
         # Pérdida por paneles sobrantes (menos es mejor)
@@ -132,26 +144,32 @@ def calcula_strings(
                 "isc_total_a": round(isc_total, 2),
                 "imp_total_a": round(imp_total, 2),
                 "isc_por_mppt_a": round(isc_por_mppt, 2),
+                "imp_por_mppt_a": round(imp_por_mppt, 2),
                 "strings_por_mppt": strings_por_mppt,
                 "corriente_dentro_limite": isc_ok,
+                "corriente_operacion_ok": operacion_ok,
+                "isc_verificada": isc_verificada,
+                "corriente_max_entrada_a": corriente_max_entrada,
+                "corriente_max_isc_entrada_a": corriente_max_isc_entrada,
                 # Potencia DC
                 "potencia_dc_kw": round((vmp_string * imp_total) / 1000, 2),
                 # Validaciones
                 "voc_dentro_limite": voc_ok,
                 "mppt_dentro_rango": mppt_ok,
-                "corriente_dentro_limite": isc_ok,
                 # Temperaturas usadas
                 "temp_min_sitio_c": temp_min_sitio,
                 "temp_max_celda_c": temp_max_celda,
                 # Límites del inversor
                 "voltaje_mppt_min_v": voltaje_mppt_min,
                 "voltaje_mppt_max_v": voltaje_mppt_max,
+                "voltaje_arranque_v": voltaje_arranque_v,
+                "arranque_dentro_limite": arranque_ok,
                 "voltaje_max_entrada_v": voltaje_max_entrada,
             }
 
     if not mejor_config:
         return {
-            "error": f"No se encontró configuración válida para {cantidad_paneles} paneles. "
+            "error": f"No se encontró una configuración exacta, sin paneles adicionales, para {cantidad_paneles} paneles. "
                      f"Rango válido: {min_serie}-{max_serie} paneles/string, "
                      f"{total_entradas} entradas disponibles."
         }
@@ -161,6 +179,7 @@ def calcula_strings(
     compatible = (
         cfg["voc_dentro_limite"] and
         cfg["mppt_dentro_rango"] and
+        cfg["arranque_dentro_limite"] and
         cfg["corriente_dentro_limite"]
     )
 
@@ -168,30 +187,28 @@ def calcula_strings(
     cfg["resumen"] = (
         f"{cfg['strings_paralelo']} strings × {cfg['paneles_serie']} paneles/string | "
         f"Voc={cfg['voc_frio_string_v']}V (máx {voltaje_max_entrada}V) | "
-        f"Vmp={cfg['vmp_calor_string_v']}V (MPPT {voltaje_mppt_min}-{voltaje_mppt_max}V)"
+        f"Vmp={cfg['vmp_calor_string_v']}V (MPPT {voltaje_mppt_min}-{voltaje_mppt_max}V, arranque {voltaje_arranque_v}V)"
     )
 
-    # ─── 6. Sugerencia si hay incompatibilidad por corriente ─────
-    if not cfg["corriente_dentro_limite"]:
-        # Calcular cuántos strings por MPPT son aceptables
-        max_strings_por_mppt = math.floor(corriente_max_entrada / isc_panel)
-        max_strings_total = max_strings_por_mppt * numero_mppt
+        # ─── 6. Sugerencias y advertencias de corriente ──────────────
+    cfg["advertencias"] = []
+    cfg["sugerencia"] = None
 
-        if max_strings_total < strings_necesarios:
-            # Necesita más MPPT o inversor con mayor corriente
-            cfg["sugerencia"] = (
-                f"La corriente por MPPT ({cfg['isc_por_mppt_a']}A) excede el límite "
-                f"del inversor ({corriente_max_entrada}A). "
-                f"Opciones: "
-                f"(1) Reducir a {max_strings_total} strings ({max_strings_total * cfg['paneles_serie']} paneles máximo), "
-                f"(2) Usar un inversor con mayor corriente de entrada o más entradas MPPT."
-            )
-        else:
-            cfg["sugerencia"] = (
-                f"Redistribuir strings: máximo {max_strings_por_mppt} string(s) por MPPT "
-                f"para no exceder {corriente_max_entrada}A."
-            )
-    else:
-        cfg["sugerencia"] = None
+    if not cfg["corriente_dentro_limite"]:
+        cfg["sugerencia"] = (
+            f"El Isc por MPPT ({cfg['isc_por_mppt_a']} A) excede el límite de "
+            f"cortocircuito del inversor ({corriente_max_isc_entrada} A). "
+            f"Usa un inversor con mayor corriente de cortocircuito."
+        )
+    if not cfg["corriente_operacion_ok"]:
+        cfg["advertencias"].append(
+            f"La corriente de operación ({cfg['imp_por_mppt_a']} A) supera la entrada máxima "
+            f"del inversor ({corriente_max_entrada} A). El inversor limitará corriente; "
+            f"hay una pérdida pequeña de producción, no es un riesgo de seguridad."
+        )
+    if not cfg["isc_verificada"]:
+        cfg["advertencias"].append(
+            "El catálogo no tiene el límite de Isc de este inversor; verifícalo en la ficha técnica."
+        )
 
     return cfg

@@ -105,7 +105,7 @@
                     </div>
                     <div class="fila-doble">
                         <div class="grupo">
-                            <label>Consumo mensual (kWh) *</label>
+                            <label>Consumo del periodo (kWh) *</label>
                             <input
                                 v-model.number="consumoValue"
                                 type="number"
@@ -116,7 +116,7 @@
                             <span class="error-msg" v-if="consumoError">{{ consumoError }}</span>
                         </div>
                         <div class="grupo">
-                            <label>Costo mensual (MXN) *</label>
+                            <label>Total del recibo (MXN) *</label>
                             <input
                                 v-model.number="costoValue"
                                 type="number"
@@ -157,6 +157,16 @@
                     </div>
 
                     <div class="grupo">
+                        <label>Número de hilos del servicio <span class="opcional">(opcional)</span></label>
+                        <select v-model="numeroHilosValue">
+                            <option value="">No especificado</option>
+                            <option value="2">2 hilos (monofásico)</option>
+                            <option value="3">3 hilos</option>
+                            <option value="4">4 hilos</option>
+                        </select>
+                    </div>
+
+                    <div class="grupo">
                         <label>Número de recibo <span class="opcional">(opcional)</span></label>
                         <input
                             v-model="reciboValue"
@@ -167,8 +177,9 @@
 
                     <!-- Tarifa calculada automáticamente -->
                     <div class="tarifa-calculada" v-if="tarifaKwh > 0">
-                        <span class="tarifa-label">Tarifa por kWh calculada:</span>
+                        <span class="tarifa-label">Costo promedio del recibo por kWh:</span>
                         <span class="tarifa-valor">$ {{ tarifaKwh.toFixed(4) }} MXN/kWh</span>
+                        <small>No es la tarifa marginal de CFE; se usa solo como aproximación para el ahorro.</small>
                     </div>
 
                     <div class="mensaje error-msg-box" v-if="error">{{ error }}</div>
@@ -189,15 +200,15 @@
                     <div class="ayuda-item">
                         <span class="ayuda-icono"></span>
                         <div>
-                            <strong>Consumo mensual (kWh)</strong>
-                            <p>En tu recibo de CFE aparece como "kWh consumidos" o "energía consumida".</p>
+                            <strong>Consumo del periodo (kWh)</strong>
+                            <p>Captura el total de kWh del periodo tal como aparece en el recibo. Selecciona si es mensual o bimestral.</p>
                         </div>
                     </div>
                     <div class="ayuda-item">
                         <span class="ayuda-icono"></span>
                         <div>
-                            <strong>Costo mensual</strong>
-                            <p>El total a pagar que aparece en el recibo. Si es bimestral divídelo entre 2.</p>
+                            <strong>Total del recibo</strong>
+                            <p>Captura el total final a pagar del mismo periodo, sin dividirlo.</p>
                         </div>
                     </div>
                     <div class="ayuda-item">
@@ -280,7 +291,8 @@ const { value: costoValue, errorMessage: costoError } = useField<number>('costo_
 const { value: tarifaValue, errorMessage: tarifaError } = useField<string>('tipo_tarifa');
 const { value: periodoValue, errorMessage: periodoError } = useField<string>('periodo_facturacion');
 const { value: reciboValue } = useField<string>('numero_recibo');
-
+const numeroHilosValue = ref('');
+const avisoTarifaIA = ref(false);
 const dragging = ref(false);
 const imagenPreview = ref<string | undefined>(undefined);
 const archivoRecibo = ref<File | null>(null);
@@ -297,19 +309,28 @@ const tarifaKwh = computed(() => {
 });
 
 const onSubmit = handleSubmit(async (values) => {
-    const consumoAnual = values.consumo_mensual_kwh * 12;
+    const mesesPeriodo = values.periodo_facturacion === 'bimestral' ? 2 : 1;
+    const consumoMensual = values.consumo_mensual_kwh / mesesPeriodo;
+    const costoMensual = values.costo_mensual_mxn / mesesPeriodo;
+    const consumoAnual = consumoMensual * 12;
     const tarifa = tarifaKwh.value;
 
     const consumo = {
         simulacion_id,
-        consumo_mensual_kwh: values.consumo_mensual_kwh,
+        consumo_mensual_kwh: consumoMensual,
         consumo_anual_kwh: consumoAnual,
         tarifa_kwh_mxn: parseFloat(tarifa.toFixed(4)),
-        costo_mensual_mxn: values.costo_mensual_mxn,
+        costo_mensual_mxn: costoMensual,
         tipo_tarifa: values.tipo_tarifa,
         numero_recibo: values.numero_recibo ?? null,
         periodo_facturacion: values.periodo_facturacion
     };
+
+    if (numeroHilosValue.value) {
+        sessionStorage.setItem(`numero_hilos_${simulacion_id}`, numeroHilosValue.value);
+    } else {
+        sessionStorage.removeItem(`numero_hilos_${simulacion_id}`);
+    }
 
     const consumoExistente = await obtieneConsumoElectrico(simulacion_id);
 
@@ -381,6 +402,9 @@ const procesarArchivo = async (file: File) => {
         }
         if (resultado.periodo_facturacion) {
             periodoValue.value = resultado.periodo_facturacion;
+        }
+        if (resultado.numeroHilos) {
+            numeroHilosValue.value = String(resultado.numeroHilos);
         }
         console.log("Datos extraídos exitosamente del recibo");
     }

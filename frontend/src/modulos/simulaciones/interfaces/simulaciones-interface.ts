@@ -86,6 +86,7 @@ export interface ResultadosCalculo {
     panel_potencia_wp?: number;
     inversor_modelo?: string;
     inversor_potencia_kw?: number;
+    inversor_recomendacion?: string;
     potencia_kwp?: number;
     modelado_electrico?: ModeladoElectrico;
     consumo_mensual_predicho?: ConsumoMensualPredicho[];
@@ -131,6 +132,8 @@ export interface PorcentajePerdidas {
     mismatch_pct: number;
     disponibilidad_pct: number;
     sombra_pct: number;
+    inversor_pct?: number;
+    iam_pct?: number;
     total_pct: number;
     performance_ratio: number;
     suciedad_pct_anual?: number;
@@ -176,6 +179,7 @@ export interface InversorSolar {
     eficiencia_europea: number;
     voltaje_mppt_min: number;
     voltaje_mppt_max: number;
+    voltaje_arranque_v?: number;
     voltaje_max_entrada: number;
     corriente_max_entrada: number;
     numero_mppt: number;
@@ -207,6 +211,8 @@ export interface ModeladoElectrico {
     temp_max_celda_c: number;
     voltaje_mppt_min_v: number;
     voltaje_mppt_max_v: number;
+    voltaje_arranque_v?: number;
+    arranque_dentro_limite?: boolean;
     voltaje_max_entrada_v: number;
     compatible: boolean;
     resumen: string;

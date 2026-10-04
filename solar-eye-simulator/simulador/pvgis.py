@@ -3,6 +3,7 @@ import numpy as np
 import os
 import json
 import hashlib
+import pvlib
 
 CACHE_DIR         = os.path.join(os.path.dirname(__file__), "..", "cache_tmy")
 INFO_CIUDADES_DIR = os.path.join(os.path.dirname(__file__), "..", "info_ciudades")
@@ -23,7 +24,7 @@ def _cache_path(lat: float, lon: float) -> str:
     os.makedirs(CACHE_DIR, exist_ok=True)
     key = f"{round(lat, 3)}_{round(lon, 3)}"
     nombre = hashlib.md5(key.encode()).hexdigest()
-    return os.path.join(CACHE_DIR, f"tmy_{nombre}.csv")
+    return os.path.join(CACHE_DIR, f"pvgis_tmy_{nombre}.csv")
 
 
 def detecta_ciudad(lat: float, lon: float) -> str | None:
@@ -62,7 +63,13 @@ def _parsea_json_nasa(data: dict) -> pd.DataFrame:
         "Gb(n)": list(p.get("ALLSKY_SFC_SW_DNI", {}).values()),
         "T2m":   list(p.get("T2M", {}).values()),
         "WS10m": list(p.get("WS10M", {}).values()),
-    }).replace(-999.0, 0).clip(lower=0)
+    }).replace(-999.0, np.nan)
+
+    for columna in ("G(h)", "Gd(h)", "Gb(n)", "WS10m"):
+        cols_numericas[columna] = cols_numericas[columna].clip(lower=0)
+
+    if cols_numericas.isna().any().any():
+        raise ValueError("Los datos meteorológicos contienen valores faltantes o inválidos")
 
     df = pd.DataFrame({
         "time_key":      keys,
@@ -82,8 +89,8 @@ def _parsea_json_nasa(data: dict) -> pd.DataFrame:
 
 def construye_tmy_desde_jsons(lat: float, lon: float) -> pd.DataFrame:
     """
-    Construye TMY leyendo q1-q4.json.
-    Busca primero en info_ciudades/<ciudad>/ según coordenadas.
+    Construye una serie horaria NASA POWER 2019 leyendo q1-q4.json.
+    Selecciona el conjunto precargado por ciudad según las coordenadas.
     """
     ciudad = detecta_ciudad(lat, lon)
 
@@ -121,24 +128,47 @@ def construye_tmy_desde_jsons(lat: float, lon: float) -> pd.DataFrame:
 
 def obtiene_tmy(lat: float, lon: float) -> pd.DataFrame:
     """
-    Obtiene TMY con caché en CSV.
-    Primera vez: lee info_ciudades/<ciudad>/q1-q4.json → genera caché
-    Siguientes:  carga CSV directo (~0.5 seg)
+    Obtiene TMY horario de PVGIS-ERA5 (2005-2020) y lo cachea por coordenadas.
     """
     ruta = _cache_path(lat, lon)
 
     if os.path.exists(ruta):
         try:
-            print(f"Cargando TMY desde caché...")
-            df = pd.read_csv(ruta)
-            print(f"TMY cargado: {len(df)} horas")
+            print("Cargando PVGIS TMY desde caché...")
+            df = pd.read_csv(ruta, index_col="time_utc", parse_dates=["time_utc"])
+            if df.index.tz is None:
+                df.index = df.index.tz_localize("UTC")
+            else:
+                df.index = df.index.tz_convert("UTC")
+            print(f"PVGIS TMY cargado: {len(df)} horas")
             return df
         except Exception as e:
             print(f"Caché corrupta, reconstruyendo: {e}")
             os.remove(ruta)
 
-    print("Construyendo TMY desde archivos JSON locales...")
-    df = construye_tmy_desde_jsons(lat, lon)
-    df.to_csv(ruta, index=False)
-    print(f"TMY guardado en caché: {ruta}")
-    return df
+    try:
+        print("Consultando PVGIS-ERA5 TMY para las coordenadas exactas...")
+        respuesta_pvgis = pvlib.iotools.get_pvgis_tmy(
+            lat,
+            lon,
+            startyear=2005,
+            endyear=2020,
+            timeout=60
+        )
+        df = respuesta_pvgis[0]
+        columnas = ["ghi", "dni", "dhi", "temp_air", "wind_speed"]
+        faltantes = [columna for columna in columnas if columna not in df.columns]
+        if faltantes or len(df) != 8760:
+            raise ValueError(f"TMY PVGIS incompleto: faltan {faltantes}; horas recibidas: {len(df)}")
+
+        df = df[columnas].copy()
+        if df.index.tz is None:
+            raise ValueError("PVGIS devolvió horas sin zona horaria; no se puede calcular posición solar con seguridad")
+        df.index = df.index.tz_convert("UTC")
+        df.to_csv(ruta, index_label="time_utc")
+        print(f"PVGIS TMY guardado en caché: {ruta}")
+        return df
+    except Exception as exc:
+        raise RuntimeError(
+            f"No se pudo obtener un TMY válido de PVGIS para ({lat}, {lon}): {exc}"
+        ) from exc

@@ -349,6 +349,7 @@ CREATE TABLE inversores (
     eficiencia_europea DECIMAL(5,4),
     voltaje_mppt_min DECIMAL(6,2) NOT NULL,
     voltaje_mppt_max DECIMAL(6,2) NOT NULL,
+    voltaje_arranque_v DECIMAL(6,2) DEFAULT 0,
     voltaje_max_entrada DECIMAL(6,2) NOT NULL,
     corriente_max_entrada DECIMAL(6,2) NOT NULL,
     numero_mppt INT NOT NULL DEFAULT 1,
@@ -541,3 +542,32 @@ INSERT INTO inversores (fabricante_id, modelo, potencia_nominal_kw, potencia_max
 ((SELECT id FROM fabricantes WHERE nombre='Growatt'), 'MIN 5000TL-X', 5.00, 5.50, 0.9750, 0.9710, 60.00, 500.00, 550.00, 12.50, 2, 1, 'String', 'monofasico', 10),
 ((SELECT id FROM fabricantes WHERE nombre='Growatt'), 'MOD 10KTL3-X', 10.00, 11.00, 0.9810, 0.9770, 160.00, 1000.00, 1100.00, 22.00, 2, 2, 'String', 'trifasico', 10),
 ((SELECT id FROM fabricantes WHERE nombre='Growatt'), 'MOD 15KTL3-X', 15.00, 16.50, 0.9820, 0.9780, 160.00, 1000.00, 1100.00, 22.00, 2, 2, 'String', 'trifasico', 10);
+
+-- Specs from official Growatt MIC 1500-3300TL-X datasheet (2022 AU edition).
+-- https://au.growatt.com/upload/file/20221220/b1606ec7c633f233313d1f9d17ddafc0.pdf
+-- Huawei values from its official SUN2000-2/3/3.68/4/4.6/5/6KTL-L1 specs table.
+-- https://solar.huawei.com/en/products/SUN2000-3-4-5-6KTL-L1/specs/
+INSERT INTO inversores (fabricante_id, modelo, potencia_nominal_kw, potencia_maxima_kw,
+    eficiencia_maxima, eficiencia_europea, voltaje_mppt_min, voltaje_mppt_max,
+    voltaje_arranque_v, voltaje_max_entrada, corriente_max_entrada, numero_mppt,
+    numero_entradas_por_mppt, tipo, fases, garantia_anios)
+SELECT f.id, datos.modelo, datos.potencia_nominal_kw, datos.potencia_maxima_kw,
+       datos.eficiencia_maxima, datos.eficiencia_europea, datos.voltaje_mppt_min,
+       datos.voltaje_mppt_max, datos.voltaje_arranque_v, datos.voltaje_max_entrada,
+       datos.corriente_max_entrada, datos.numero_mppt, datos.numero_entradas_por_mppt,
+       'String', 'monofasico', 10
+FROM fabricantes f
+JOIN (
+    SELECT 'Growatt' AS fabricante, 'MIC 1500TL-X' AS modelo, 1.50 AS potencia_nominal_kw,
+           1.50 AS potencia_maxima_kw, 0.9740 AS eficiencia_maxima, 0.9700 AS eficiencia_europea,
+           50.00 AS voltaje_mppt_min, 500.00 AS voltaje_mppt_max, 50.00 AS voltaje_arranque_v,
+           500.00 AS voltaje_max_entrada, 13.00 AS corriente_max_entrada, 1 AS numero_mppt,
+           1 AS numero_entradas_por_mppt
+    UNION ALL
+    SELECT 'Huawei', 'SUN2000-2KTL-L1', 2.00, 2.00, 0.9820, 0.9670,
+           90.00, 560.00, 100.00, 600.00, 12.50, 2, 1
+) AS datos ON datos.fabricante = f.nombre
+WHERE NOT EXISTS (
+    SELECT 1 FROM inversores existente
+    WHERE existente.fabricante_id = f.id AND existente.modelo = datos.modelo
+);

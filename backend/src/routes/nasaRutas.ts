@@ -155,7 +155,7 @@ router.post('/suciedad', async (req: Request, res: Response) => {
                     costo_perdida_mxn: Number(escenario.dineroPerdidoMxn.toFixed(2)),
                     costo_anual_limpiezas_mxn: Number(escenario.costoLimpiezaAnualMxn.toFixed(2)),
                     costo_total_mxn: Number(escenario.costoTotalMxn.toFixed(2)),
-                    ahorro_neto_mxn: Number(Math.max(0, escenarioSinLimpieza.costoTotalMxn - escenario.costoTotalMxn).toFixed(2))
+                    ahorro_neto_mxn: Number((escenarioSinLimpieza.costoTotalMxn - escenario.costoTotalMxn).toFixed(2))
                 }))
             },
             produccion_mensual_detalle: produccionMensualDetalle
