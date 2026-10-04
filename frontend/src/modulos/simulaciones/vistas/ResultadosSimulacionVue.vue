@@ -122,16 +122,8 @@
         </div>
       </div>
 
-      <div v-show="mostrarSeccion('resumen')" class="graficas-grid" v-if="resultados && consumo">
-        <div class="card card-grafica">
-          <h3><i class="bi bi-bar-chart-line"></i> Producción ideal vs. real por suciedad</h3>
-          <p class="card-subtitulo">Comparación mensual con la pérdida estimada por lluvia y suciedad.</p>
-          <div class="canvas-wrap">
-            <canvas ref="comparativaCanvas"></canvas>
-          </div>
-        </div>
-
-        <div class="card card-grafica">
+      <div v-show="mostrarSeccion('resumen')" class="graficas-grid graficas-grid--resumen" v-if="resultados && consumo">
+        <div class="card card-grafica card-grafica--proyeccion">
           <h3><i class="bi bi-graph-up-arrow"></i> Proyección estimada a 25 años</h3>
           <p class="card-subtitulo">Usa el costo promedio del recibo y supuestos fijos; no reproduce una facturación de CFE.</p>
           <div class="payback-banner" v-if="textoPaybackEstimado">
@@ -247,7 +239,7 @@
           </div>
       </div>
 
-          <div v-if="resultados.mantenimiento_optimo" class="card card-mantenimiento">
+          <div v-if="resultados.mantenimiento_optimo" v-show="mostrarSeccion('mantenimiento')" class="card card-mantenimiento">
             <h3><i class="bi bi-droplet-half"></i> ¿Conviene limpiar los paneles?</h3>
             <p class="card-subtitulo">
               Comparamos el costo de limpiar con el dinero que se pierde por la suciedad. Cada visita cuesta {{ resultados.mantenimiento_optimo.costo_limpieza_por_visita_mxn.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) }}.
@@ -303,6 +295,14 @@
               </table>
             </div>
           </div>
+
+            <div v-show="mostrarSeccion('mantenimiento')" class="card card-grafica card-mantenimiento-grafica" v-if="resultados && consumo">
+              <h3><i class="bi bi-bar-chart-line"></i> Producción ideal vs. real por suciedad</h3>
+              <p class="card-subtitulo">Comparación mensual con la pérdida estimada por lluvia y suciedad.</p>
+              <div class="canvas-wrap">
+                <canvas ref="comparativaCanvas"></canvas>
+              </div>
+            </div>
 
       <!-- Card producción mensual detallada -->
       <div v-show="mostrarSeccion('energia')" class="card card-produccion-detalle" v-if="resultados?.produccion_mensual_detalle">
@@ -374,9 +374,6 @@
                 <span class="valor-advertencia">$ {{ resultados.precio_kwh_proyectado_anio10.toFixed(4) }} MXN</span>
               </div>
             </div>
-            <p class="card-subtitulo">
-              Estimación, no cotización: anualiza el consumo de un recibo, usa su costo promedio por kWh, un costo fijo de instalación de $18,000 MXN/kWp, un aumento supuesto de 5% y degradación de 0.5% anual. No modela estacionalidad, bloques, subsidios, cargos fijos, descuento financiero, reemplazo del inversor ni reglas de interconexión de CFE.
-            </p>
           </div>
         </div>
 
@@ -550,15 +547,6 @@
                     <div class="componente-dato"><span>Paneles instalados</span><strong>{{ resultados.numero_paneles }} módulos</strong></div>
                     <div class="componente-dato" v-if="ratioDcAc !== null"><span>Ratio DC/AC</span><strong>{{ ratioDcAc.toFixed(2) }}</strong></div>
                   </div>
-                  <p class="card-subtitulo" v-if="ratioDcAc !== null">
-                    {{ ratioDcAc < 0.8 || ratioDcAc > 1.35
-                      ? 'Fuera del rango de referencia interno (0.80-1.35); revisa el inversor.'
-                      : 'Dentro del rango de referencia interno (0.80-1.35).' }}
-                    Este rango no sustituye la ficha ni la validación eléctrica del fabricante.
-                  </p>
-                  <p class="card-subtitulo" v-if="resultados.inversor_recomendacion">
-                    {{ resultados.inversor_recomendacion }}
-                  </p>
                 </section>
               </div>
           </div>
@@ -772,17 +760,18 @@ const proyeccionChart = ref<Chart<'line'> | null>(null);
 const authStore = useAuthStore();
 const mostrarModal = ref(false);
 
-type FiltroResultado = 'todo' | 'resumen' | 'finanzas' | 'energia' | 'sistema' | 'tecnico' | 'impacto';
+type FiltroResultado = 'todo' | 'resumen' | 'finanzas' | 'energia' | 'sistema' | 'tecnico' | 'impacto' | 'mantenimiento';
 
 const filtroActivo = ref<FiltroResultado>('todo');
 const filtrosResultados: { id: FiltroResultado; nombre: string; icono: string }[] = [
-  { id: 'todo', nombre: 'Todo', icono: 'bi bi-grid-1x2' },
+  { id: 'todo', nombre: 'Todos', icono: 'bi bi-grid-1x2' },
   { id: 'resumen', nombre: 'Resumen', icono: 'bi bi-speedometer2' },
   { id: 'finanzas', nombre: 'Finanzas', icono: 'bi bi-cash-coin' },
   { id: 'energia', nombre: 'Energía', icono: 'bi bi-lightning-charge' },
   { id: 'sistema', nombre: 'Sistema', icono: 'bi bi-cpu' },
   { id: 'tecnico', nombre: 'Técnico', icono: 'bi bi-tools' },
-  { id: 'impacto', nombre: 'Impacto', icono: 'bi bi-leaf' }
+  { id: 'impacto', nombre: 'Impacto', icono: 'bi bi-leaf' },
+  { id: 'mantenimiento', nombre: 'Mantenimiento', icono: 'bi bi-droplet-half' }
 ];
 
 const mostrarSeccion = (seccion: FiltroResultado) => filtroActivo.value === 'todo' || filtroActivo.value === seccion;
@@ -1277,12 +1266,14 @@ const descargarPDF = () => {
 /* Gráficas */
 .graficas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
 .card-grafica { min-height: 340px; }
+.graficas-grid--resumen .card-grafica--proyeccion { grid-column: 1 / -1; }
 .canvas-wrap { position: relative; height: 250px; margin-top: 0.8rem; }
 .payback-banner { margin-top: 0.5rem; padding: 0.55rem 0.75rem; border-radius: 6px; background: #ecfdf5; color: #166534; font-size: 0.82rem; font-weight: 600; }
 .payback-banner.sin-retorno { background: #fff7ed; color: #9a3412; }
 
 /* Flujo masonry: cada card ocupa el siguiente espacio disponible sin heredar la altura de otra. */
 .grid-resultados { column-count: 2; column-gap: 1.25rem; column-fill: balance; }
+.grid-resultados.filtro-mantenimiento { column-count: 1; }
 .columna { display: contents; }
 .grid-resultados .card { display: inline-block; width: 100%; margin: 0 0 1.25rem; vertical-align: top; break-inside: avoid; }
 .card-produccion-detalle { min-width: 0; overflow-x: auto; }
