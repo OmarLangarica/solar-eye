@@ -292,7 +292,7 @@ const { value: tarifaValue, errorMessage: tarifaError } = useField<string>('tipo
 const { value: periodoValue, errorMessage: periodoError } = useField<string>('periodo_facturacion');
 const { value: reciboValue } = useField<string>('numero_recibo');
 const numeroHilosValue = ref('');
-
+const avisoTarifaIA = ref(false);
 const dragging = ref(false);
 const imagenPreview = ref<string | undefined>(undefined);
 const archivoRecibo = ref<File | null>(null);

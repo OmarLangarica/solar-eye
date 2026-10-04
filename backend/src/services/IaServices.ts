@@ -160,28 +160,27 @@ export const analizarReciboIA = async (imagenBase64: string): Promise<any> => {
         throw new Error('GEMINI_API_KEY no configurada. El chat y el lector de recibos requieren esta variable.');
     }
 
-    const instruccionVision = `Analiza la imagen o PDF de este recibo de CFE y extrae los datos exactos del periodo mostrado en el recibo. No inventes valores. Devuelve únicamente un objeto JSON válido sin ningún texto adicional, sin bloques de código y sin explicaciones.
+        const instruccionVision = `Analiza la imagen o PDF de este recibo de CFE y extrae los datos exactos del periodo mostrado. No inventes valores. Devuelve únicamente un objeto JSON válido, sin texto adicional, sin bloques de código y sin explicaciones.
 
-Instrucciones importantes:
-- Extrae el valor que aparece en el recibo como "Total a pagar" o el valor total final del recibo.
-- Extrae el consumo total de kWh del periodo facturado del recibo.
-- Devuelve los totales tal como aparecen en el recibo; no conviertas ni dividas valores según el periodo.
-- No uses montos de cargos, recargos parciales o subtotales; usa el monto total final.
-- Si aparece un código de tarifa CFE, extrae exactamente ese código.
-- Si aparece "No. Hilos", extrae el número (2, 3 o 4); si no aparece claramente, devuelve null.
+Reglas importantes:
+- TARIFA: copia primero, en "tarifaLiteral", los caracteres que aparecen justo después de "TARIFA:" en el recibo, hasta antes de la siguiente etiqueta. El texto puede venir pegado a la etiqueta siguiente, por ejemplo "TARIFA:1FNO. MEDIDOR:MD164A": en ese caso el literal es "1F". Después, en "tarifaCfe", pon el código completo. Si hay una letra después del 1 (1A, 1B, 1C, 1D, 1E o 1F), esa letra ES parte de la tarifa: nunca la omitas ni la reduzcas a "1". Usa "1" solo si después del 1 no hay ninguna letra. Valores válidos: 1A, 1B, 1C, 1D, 1E, 1F, DAC, 1.
+- COSTO: costoMx debe ser el importe de "Fac. del Periodo" (energía más IVA del periodo), que aparece en el "Desglose del importe a pagar". NO uses "Total" ni "Total a pagar", porque pueden incluir adeudos anteriores o pagos. Si no existe "Fac. del Periodo", usa el total.
+- CONSUMO: el total de kWh del periodo facturado (columna "Total periodo" de Energía kWh).
+- No conviertas ni dividas valores según el periodo.
+- Si aparece "No. Hilos", extrae el número (2, 3 o 4); si no, null.
 - Si no puedes encontrar un valor claro, devuelve null para ese campo.
 
 Datos a extraer:
-- consumoKwh: el consumo total del periodo en kWh (número, o null si no se ve)
-- costoMx: el costo total del periodo en MXN (número, o null si no se ve)
-- tarifaCfe: la tarifa CFE exacta, debe ser uno de estos valores: 1, 1A, 1B, 1C, 1D, 1E, 1F, DAC. Devuelve null si no se encuentra claramente. No inventes valores.
-- numeroHilos: número de hilos del servicio (2, 3, 4 o null).
+- tarifaLiteral: texto exacto que aparece después de "TARIFA:" (string, o null)
+- tarifaCfe: la tarifa CFE completa (string, o null)
+- consumoKwh: consumo total del periodo en kWh (número, o null)
+- costoMx: importe de "Fac. del Periodo" en MXN (número, o null)
+- numeroHilos: número de hilos del servicio (2, 3, 4 o null)
 - numRecibo: el número de recibo (string, o null)
-- periodo_facturacion: el tipo de periodo de facturación ("mensual" o "bimestral", o null)
-- tarifa_kwh_mxn: la tarifa en MXN por kWh (número con 4 decimales, calcula como costoMx/consumoKwh si no aparece explícitamente, o null si no se puede calcular)
+- periodo_facturacion: "mensual" o "bimestral" (o null)
+- tarifa_kwh_mxn: costoMx dividido entre consumoKwh con 4 decimales (o null si no se puede calcular)
 
-Ejemplo de respuesta: {"consumoKwh": 86.5, "costoMx": 306, "tarifaCfe": "1A", "numeroHilos": 2, "numRecibo": "REC-2026-001", "periodo_facturacion": "bimestral", "tarifa_kwh_mxn": 3.5341}`;
-
+Ejemplo de respuesta: {"tarifaLiteral": "1A", "consumoKwh": 86.5, "costoMx": 306, "tarifaCfe": "1A", "numeroHilos": 2, "numRecibo": "REC-2026-001", "periodo_facturacion": "bimestral", "tarifa_kwh_mxn": 3.5376}`;
     const allowedTarifas = ['1', '1A', '1B', '1C', '1D', '1E', '1F', 'DAC'];
     const allowedPeriodos = ['mensual', 'bimestral'];
 
@@ -323,6 +322,13 @@ Ejemplo de respuesta: {"consumoKwh": 86.5, "costoMx": 306, "tarifaCfe": "1A", "n
             const num = Number(String(valor).replace(/[^0-9.,-]/g, '').replace(',', '.'));
             return Number.isFinite(num) ? num : null;
         };
+
+        // Si la IA copió el texto literal junto a "TARIFA:", ese texto manda sobre el código resumido.
+        if (datosExtraidos.tarifaLiteral) {
+            const desdeLiteral = normalizeTarifaCfe(datosExtraidos.tarifaLiteral);
+            if (desdeLiteral) datosExtraidos.tarifaCfe = desdeLiteral;
+        }
+        console.log('Tarifa leída -> literal:', datosExtraidos.tarifaLiteral, '| código:', datosExtraidos.tarifaCfe);
 
         if (datosExtraidos.tarifaCfe) {
             datosExtraidos.tarifaCfe = normalizeTarifaCfe(datosExtraidos.tarifaCfe);

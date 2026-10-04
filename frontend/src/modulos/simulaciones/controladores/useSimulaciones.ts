@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import simulacionesApi, { nasaApi } from '../api/simulacionesApi';
 import { analizarReciboConIA } from '../api/simulacionesApi'; 
 import catalogoApi from '../api/catalogoApi';
+import { calculaAhorroAnual, facturaMensual } from './tarifasCfe';
 import type { PanelSolar, InversorSolar, ModeladoElectrico } from '../interfaces/simulaciones-interface';
 import type {
     Simulacion, SimulacionNueva,
@@ -437,39 +438,63 @@ export const useSimulaciones = () => {
         const consumoMensual   = Number(consumo.consumo_mensual_kwh);
         const tarifaKwh        = Number(consumo.tarifa_kwh_mxn);
 
-        // Cálculos económicos
+                // Cálculos económicos
         const porcentajeCobertura = Math.min((produccionAnual / consumoAnual) * 100, 100);
         const excedente           = Math.max(produccionAnual - consumoAnual, 0);
-        const ahorroMensual       = Math.min(produccionAnual / 12, consumoMensual) * tarifaKwh;
-        const ahorroAnual         = ahorroMensual * 12;
         const costoInstalacion    = potenciaKwp * 18000;
 
-        // Proyección a 25 años
         const tasaIncremento = 0.05;
         const degradacion    = 0.005;
-        let ahorroAcumulado  = 0;
-        let anioPayback      = 0;
 
-        for (let anio = 1; anio <= 25; anio++) {
-            const tarifaAnio     = tarifaKwh * Math.pow(1 + tasaIncremento, anio - 1);
-            const produccionAnio = produccionAnual * Math.pow(1 - degradacion, anio - 1);
-            // Solo ahorras la energía que consumes, no el excedente
-            const energiaAhorrada = Math.min(produccionAnio, consumoAnual);
-            const ahorroAnio      = energiaAhorrada * tarifaAnio;
-            ahorroAcumulado += ahorroAnio;
+        // Consumo y producción mes por mes (ene a dic)
+        const consumoPorMes: number[] = Array.from({ length: 12 }, (_, i) => {
+            const m = Array.isArray(consumoMensualPredicho)
+                ? consumoMensualPredicho.find((x: any) => x.numero_mes === i + 1)
+                : null;
+            return Number(m?.consumo_estimado_kwh ?? consumoMensual);
+        });
+        const produccionPorMes: number[] = Array.from({ length: 12 }, (_, i) => {
+            const m: any = produccionMensualDetalle.find((x: any) => x.numero_mes === i + 1);
+            return Number(m?.produccion_real_kwh ?? m?.produccion_kwh ?? 0);
+        });
 
-            // Log de verificación para los primeros 3 años
-            if (anio <= 3) {
-                console.log(`Año ${anio}: tarifa=$${tarifaAnio.toFixed(4)}, produccion=${produccionAnio.toFixed(0)}, energia_ahorrada=${energiaAhorrada.toFixed(0)}, ahorro=$${ahorroAnio.toFixed(0)}`);
-            }
+        // Ahorro por bloques de la tarifa CFE. Si la tarifa no está en tarifasCfe.ts, usa el método anterior.
+        const tarifaCfe = String(consumo.tipo_tarifa ?? '').toUpperCase();
+        const ahorroBloques = calculaAhorroAnual(consumoPorMes, produccionPorMes, tarifaCfe);
 
-            if (anioPayback === 0 && ahorroAcumulado >= costoInstalacion) {
-                anioPayback = anio;
-            }
+        if (ahorroBloques) {
+            console.log(`Ahorro por bloques (${tarifaCfe}): sin solar=$${ahorroBloques.facturaSinSolar.toFixed(2)}, con solar=$${ahorroBloques.facturaConSolar.toFixed(2)}, ahorro=$${ahorroBloques.ahorroAnual.toFixed(2)}, crédito final=${ahorroBloques.creditoFinalKwh.toFixed(0)} kWh`);
+            ahorroBloques.avisos.forEach((a) => console.warn(a));
+            console.log('Calibración recibo ene-mar (247 kWh x2 meses):', ((facturaMensual(247, tarifaCfe, 1)?.total ?? 0) * 2).toFixed(2), '— el recibo dice 1,014.41');
+        } else {
+            console.warn(`La tarifa ${tarifaCfe} no está en tarifasCfe.ts: se usa el precio promedio por kWh.`);
         }
 
+        const ahorroAnual   = ahorroBloques
+            ? ahorroBloques.ahorroAnual
+            : Math.min(produccionAnual / 12, consumoMensual) * tarifaKwh * 12;
+        const ahorroMensual = ahorroAnual / 12;
 
-        const retornoInversion = anioPayback || 25;
+        // Proyección a 25 años (degradación de paneles + alza tarifaria)
+        let ahorroAcumulado  = 0;
+        let retornoInversion = 25;
+        let pagado           = false;
+
+        for (let anio = 1; anio <= 25; anio++) {
+            const factorTarifa = Math.pow(1 + tasaIncremento, anio - 1);
+            const factorProd   = Math.pow(1 - degradacion, anio - 1);
+            const ahorroBase   = ahorroBloques
+                ? calculaAhorroAnual(consumoPorMes, produccionPorMes.map((p) => p * factorProd), tarifaCfe)!.ahorroAnual
+                : Math.min(produccionAnual * factorProd, consumoAnual) * tarifaKwh;
+            const ahorroAnio   = ahorroBase * factorTarifa;
+            const previo       = ahorroAcumulado;
+            ahorroAcumulado   += ahorroAnio;
+
+            if (!pagado && ahorroAnio > 0 && ahorroAcumulado >= costoInstalacion) {
+                retornoInversion = parseFloat(((anio - 1) + (costoInstalacion - previo) / ahorroAnio).toFixed(1));
+                pagado = true;
+            }
+        }
         const precioAnio5      = tarifaKwh * Math.pow(1 + tasaIncremento, 5);
         const precioAnio10     = tarifaKwh * Math.pow(1 + tasaIncremento, 10);
 
